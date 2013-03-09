@@ -1,0 +1,1 @@
+require 'sphinx_integration'
