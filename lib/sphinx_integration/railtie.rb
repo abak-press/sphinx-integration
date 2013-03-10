@@ -1,5 +1,6 @@
 require 'sphinx_integration'
 require 'rails'
+require 'thinking-sphinx'
 
 module SphinxIntegration
   class Railtie < Rails::Railtie
