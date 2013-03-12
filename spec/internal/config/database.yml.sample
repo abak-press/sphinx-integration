@@ -1,7 +1,7 @@
 test:
   adapter:      'postgresql'
   database:     'sphinx-integration'
-  username:     'merkushin'
-  host: 'localhost'
-  port: 5437
-  min_messages: warning
+  username:     'root'
+  host:         'localhost'
+  port:         5432
+  min_messages: 'warning'
