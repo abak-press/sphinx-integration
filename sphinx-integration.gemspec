@@ -19,14 +19,14 @@ Gem::Specification.new do |gem|
 
   gem.add_runtime_dependency 'redis-mutex', '~> 2.1.0'
   gem.add_runtime_dependency 'mysql2', '~> 0.2.19b5'
+  gem.add_runtime_dependency 'pg'
   gem.add_runtime_dependency 'innertube'
   gem.add_runtime_dependency 'thinking-sphinx', '= 2.0.14'
-  #gem.add_runtime_dependency 'core', '~> 0.0.1'
-
 
   gem.add_development_dependency "rake"
   gem.add_development_dependency "bundler"
   gem.add_development_dependency "rspec"
+  gem.add_development_dependency 'rails', '~> 3.0.19'
   gem.add_development_dependency "rspec-rails"
   gem.add_development_dependency 'combustion'
   gem.add_development_dependency "mock_redis"
