@@ -4,7 +4,7 @@ require 'spec_helper'
 describe 'ThinkingSphinx Index extension' do
 
   let(:index) do
-    index = ThinkingSphinx::Index::Builder.generate(Post, nil) do
+    index = ThinkingSphinx::Index::Builder.generate(ModelWithDisk, nil) do
       indexes 'content', :as => :content
       has 'region_id', :type => :integer, :as => :region_id
       set_property :rt => true
@@ -35,7 +35,7 @@ describe 'ThinkingSphinx Index extension' do
 
   describe '#to_riddle_for_rt' do
     subject { index.to_riddle_for_rt }
-    its(:name){ should eql 'post_rt' }
+    its(:name){ should eql 'model_with_disk_rt' }
     its(:rt_field){ should have(1).item }
     its(:rt_attr_uint){ should eql [:sphinx_internal_id, :sphinx_deleted, :class_crc, :region_id] }
   end

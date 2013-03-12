@@ -26,9 +26,11 @@ module SphinxIntegration::Extensions::ActiveRecord
       @ts_max_matches ||= ThinkingSphinx::Configuration.instance.configuration.searchd.max_matches || 5000
     end
 
-    def define_secondary_index(args = {}, &block)
-      args ||= {}
-      define_index(args[:name], &block)
+    def define_secondary_index(*args, &block)
+      options = args.extract_options!
+      name = args.first || options[:name]
+      raise ArgumentError unless name
+      define_index(name, &block)
 
       self.sphinx_index_blocks << lambda {
         self.sphinx_indexes.last.merged_with_core = true
@@ -40,11 +42,6 @@ module SphinxIntegration::Extensions::ActiveRecord
       self.sphinx_indexes = []
       self.sphinx_facets = []
       self.defined_indexes = false
-    end
-
-    def rt_index_names
-      define_indexes
-      sphinx_indexes.collect(&:rt_name)
     end
 
     def rt_indexed_by_sphinx?
