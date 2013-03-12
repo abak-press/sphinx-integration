@@ -12,8 +12,6 @@ module SphinxIntegration::Extensions::Source
     config = nil
 
     if slave_db_key
-      db_config = YAML.load(IO.read("#{Rails.root}/config/database.yml")).with_indifferent_access
-
       if slave_db_key.is_a?(String)
         slave_db_key = "#{Rails.env}_#{slave_db_key}"
       else
@@ -38,6 +36,10 @@ module SphinxIntegration::Extensions::Source
     source.mysql_ssl_ca   = config[:sslca]   if config[:sslca]
     source.mysql_ssl_cert = config[:sslcert] if config[:sslcert]
     source.mysql_ssl_key  = config[:sslkey]  if config[:sslkey]
+  end
+
+  def db_config
+    @db_config ||= YAML.load(IO.read("#{Rails.root}/config/database.yml")).with_indifferent_access
   end
 
 end
