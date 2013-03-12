@@ -35,6 +35,13 @@ module SphinxIntegration::Extensions::ActiveRecord
       }
     end
 
+    def reset_indexes
+      self.sphinx_index_blocks = []
+      self.sphinx_indexes = []
+      self.sphinx_facets = []
+      self.defined_indexes = false
+    end
+
     def rt_index_names
       define_indexes
       sphinx_indexes.collect(&:rt_name)
