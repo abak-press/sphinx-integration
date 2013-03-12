@@ -1,6 +1,5 @@
 module SphinxIntegration
   autoload :SphinxHelper, 'sphinx_integration/sphinx_helper'
-  autoload :DeltaSupport, 'sphinx_integration/delta_support'
   autoload :Mysql, 'sphinx_integration/mysql'
   autoload :Transmitter, 'sphinx_integration/transmitter'
 end
