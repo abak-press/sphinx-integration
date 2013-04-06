@@ -5,11 +5,11 @@ require 'sphinx/integration/version'
 
 Gem::Specification.new do |gem|
   gem.name          = 'sphinx-integration'
-  gem.version       = SphinxIntegration::VERSION
+  gem.version       = Sphinx::Integration::VERSION
   gem.authors       = ["merkushin"]
   gem.email         = ["merkushin.m.s@gmail.com"]
   gem.description   = %q{Sphinx Integration}
-  gem.summary       = %{sphinx-integration-#{SphinxIntegration::VERSION}}
+  gem.summary       = %{sphinx-integration-#{Sphinx::Integration::VERSION}}
   gem.homepage      = ''
 
   gem.files         = `git ls-files`.split($/)
@@ -17,6 +17,7 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
 
+  gem.add_runtime_dependency 'redis-classy', '~> 1.2.0'
   gem.add_runtime_dependency 'redis-mutex', '~> 2.1.0'
   gem.add_runtime_dependency 'mysql2', '~> 0.2.19b5'
   gem.add_runtime_dependency 'pg'

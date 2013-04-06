@@ -18,7 +18,13 @@ ActiveRecord::Schema.define do
   end
 
   create_table(:model_with_rt_rubrics, :force => true) do |t|
-    t.string :model_with_rt_id
+    t.integer :model_with_rt_id
+    t.integer :rubric_id
+    t.timestamps
+  end
+
+  create_table(:model_with_disk_rubrics, :force => true) do |t|
+    t.integer :model_with_disk_id
     t.integer :rubric_id
     t.timestamps
   end

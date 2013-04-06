@@ -7,9 +7,8 @@ module Sphinx::Integration::Extensions::ActiveRecord
 
     delegate :create, :destroy, :update, :to => :transmitter, :prefix => true
 
-    after_commit :transmitter_create, :on => :create
-    after_commit :transmitter_update, :on => :update
-    after_commit :transmitter_destroy, :on => :destroy
+    after_commit :transmitter_replace, :on => :save
+    after_commit :transmitter_delete, :on => :destroy
   end
 
   module InstanceMethods

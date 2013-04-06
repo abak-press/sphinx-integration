@@ -1,7 +1,9 @@
-module Sphinx::Integration
-  autoload :SphinxHelper, 'sphinx/integration/sphinx_helper'
-  autoload :Mysql, 'sphinx/integration/mysql'
-  autoload :Transmitter, 'sphinx/integration/transmitter'
+module Sphinx
+  module Integration
+    autoload :SphinxHelper, 'sphinx/integration/sphinx_helper'
+    autoload :Mysql, 'sphinx/integration/mysql'
+    autoload :Transmitter, 'sphinx/integration/transmitter'
+  end
 end
 
 require 'sphinx/integration/version'
