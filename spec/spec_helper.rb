@@ -1,11 +1,11 @@
 require 'rubygems'
 require 'bundler'
 #require 'rspec'
-#require 'sphinx_integration'
+#require 'sphinx/integration'
 
 Bundler.require :default, :development
 
-require 'sphinx_integration/railtie'
+require 'sphinx/integration/railtie'
 
 Combustion.initialize! :active_record
 

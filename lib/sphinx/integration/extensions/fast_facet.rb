@@ -1,0 +1,43 @@
+# coding: utf-8
+module Sphinx::Integration::Extensions::FastFacet
+  extend ActiveSupport::Concern
+
+  module ClassMethods
+
+    def fast_facet_ts_args(facet, ts_args = {})
+      facet = facet.to_sym if facet.is_a?(String)
+      ts_args.merge(:group => facet,
+                    :limit => ts_args[:limit] || max_matches,
+                    :page => 1,
+                    :rank_mode => :none,
+                    :match_mode => ThinkingSphinx::DEFAULT_MATCH)
+    end
+
+    def fast_facet_compute_result(sph_data, ts_args = {})
+      return nil if sph_data.nil? || sph_data.results.nil? || sph_data.results[:matches].nil?
+
+      result = {}
+      result_2 = {}
+      is_used_distinct = ts_args[:group_distinct].present?
+      counter_field = is_used_distinct ? "@distinct" : "@count"
+
+      sph_data.results[:matches].each do |match|
+        result[match[:attributes]["@groupby"]] = match[:attributes][counter_field]
+        result_2[match[:attributes]["@groupby"]] = match[:attributes]["@count"] if is_used_distinct
+      end
+
+      if is_used_distinct
+        return result, result_2
+      else
+        result
+      end
+    end
+
+    def fast_facet(query, facet, ts_args = {})
+      new_ts_args = fast_facet_ts_args(facet, ts_args)
+      ts_result = self.search_for_ids(query, new_ts_args)
+      fast_facet_compute_result(ts_result, new_ts_args)
+    end
+
+  end
+end

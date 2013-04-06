@@ -1,1 +1,1 @@
-require 'sphinx_integration'
+require 'sphinx/integration'
