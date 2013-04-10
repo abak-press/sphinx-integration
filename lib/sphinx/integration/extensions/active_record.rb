@@ -4,19 +4,20 @@ module Sphinx::Integration::Extensions::ActiveRecord
 
   included do
     include Sphinx::Integration::Extensions::FastFacet
-
-    delegate :create, :destroy, :update, :to => :transmitter, :prefix => true
-
-    after_commit :transmitter_replace, :on => :save
-    after_commit :transmitter_delete, :on => :destroy
   end
 
-  module InstanceMethods
+  module TransmitterCallbacks
+    extend ActiveSupport::Concern
+
+    included do
+      delegate :create, :destroy, :update, :to => :transmitter, :prefix => true
+      after_commit :transmitter_replace, :on => :save
+      after_commit :transmitter_delete, :on => :destroy
+    end
 
     def transmitter
       @transmitter ||= Sphinx::Integration::Transmitter.new(self)
     end
-
   end
 
   module ClassMethods
@@ -52,6 +53,7 @@ module Sphinx::Integration::Extensions::ActiveRecord
     end
 
     def add_sphinx_callbacks_and_extend(*args)
+      include Sphinx::Integration::Extensions::ActiveRecord::TransmitterCallbacks
     end
 
   end
