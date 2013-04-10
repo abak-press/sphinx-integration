@@ -57,15 +57,38 @@ module Sphinx::Integration
         # TODO: replace all Blocker.full_reindex
         Redis::Mutex.with_lock(:full_reindex, :expire => 3.hours) do
           if remote_sphinx?
-            run_command("#{Rails.root}/script/sphinx --reindex-offline") if !online
+            run_command("#{Rails.root}/script/sphinx --reindex-offline") unless online
             run_command("#{Rails.root}/script/sphinx --reindex-online")  if  online
           else
-            run_command "indexer --config #{config_file} --all" if !online
+            run_command "indexer --config #{config_file} --all" unless online
             run_command "indexer --config #{config_file} --rotate --all" if online
           end
         end
+
+        attach_rt if online
       end
       alias_method :reindex, :index
+
+      # Заполнить rt индексы из дисковых индексов
+      def attach_rt
+        ThinkingSphinx.context.indexed_models.select(&:rt_indexed_by_sphinx?).each do |model|
+          model.sphinx_indexes.each do |index|
+            # атачим rt индексы
+            query = "TRUNCATE RTINDEX #{index.rt_name}; ATTACH INDEX #{index.core_name} TO RTINDEX #{index.rt_name};"
+            ThinkingSphinx.take_connection{ |c| c.execute(query) }
+
+            # после этого нужно накатить дельту на основной rt индекс
+            # просто за атачить её нельзя, смёрджить тоже нельзя, поэтому будем апдейтить по одной
+            until model.search_count(:index => index.delta_rt_name).zero? do
+              model.search(:index => index.delta_rt_name, :per_page => 500).each do |record|
+                record.transmitter_replace
+                query = Riddle::Query::Delete.new(index.delta_rt_name, record.sphinx_document_id)
+                ThinkingSphinx.take_connection{ |c| c.execute(query.to_sql) }
+              end
+            end
+          end
+        end
+      end
 
       def configure
         config = ThinkingSphinx::Configuration.instance
@@ -84,6 +107,7 @@ module Sphinx::Integration
           stop if sphinx_running?
           index(false)
           start
+          attach_rt
         end
       end
 
