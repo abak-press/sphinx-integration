@@ -24,7 +24,7 @@ module Sphinx::Integration
     end
 
     rake_tasks do
-      load 'sphinx/integration/tasks'
+      load 'sphinx/integration/tasks.rake'
     end
   end
 end
