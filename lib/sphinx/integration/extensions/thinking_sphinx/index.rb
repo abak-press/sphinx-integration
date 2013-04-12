@@ -37,7 +37,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     index.rt_field = fields.map(&:unique_name)
     attributes.each do |attr|
       attr_type = case attr.type
-      when :integer then :rt_attr_uint
+      when :integer, :boolean then :rt_attr_uint
       when :bigint then :rt_attr_bigint
       when :float then :rt_attr_float
       when :datetime then :rt_attr_timestamp
