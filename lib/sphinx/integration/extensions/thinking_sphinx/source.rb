@@ -1,6 +1,6 @@
 # coding: utf-8
-module Sphinx::Integration::Extensions::Source
-  autoload :SQL, 'sphinx/integration/extensions/source/sql'
+module Sphinx::Integration::Extensions::ThinkingSphinx::Source
+  autoload :SQL, 'sphinx/integration/extensions/thinking_sphinx/source/sql'
   extend ActiveSupport::Concern
 
   included do

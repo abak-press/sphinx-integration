@@ -1,9 +1,9 @@
 # coding: utf-8
-module Sphinx::Integration::Extensions::ActiveRecord
+module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
   extend ActiveSupport::Concern
 
   included do
-    include Sphinx::Integration::Extensions::FastFacet
+    include Sphinx::Integration::FastFacet
   end
 
   module TransmitterCallbacks
@@ -53,7 +53,7 @@ module Sphinx::Integration::Extensions::ActiveRecord
     end
 
     def add_sphinx_callbacks_and_extend(*args)
-      include Sphinx::Integration::Extensions::ActiveRecord::TransmitterCallbacks
+      include Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord::TransmitterCallbacks
     end
 
   end

@@ -1,5 +1,5 @@
 # coding: utf-8
-module Sphinx::Integration::Extensions::FastFacet
+module Sphinx::Integration::FastFacet
   extend ActiveSupport::Concern
 
   module ClassMethods

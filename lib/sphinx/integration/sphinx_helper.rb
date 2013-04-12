@@ -71,7 +71,8 @@ module Sphinx::Integration
 
       # Заполнить rt индексы из дисковых индексов
       def attach_rt
-        ThinkingSphinx.context.indexed_models.select(&:rt_indexed_by_sphinx?).each do |model|
+        ThinkingSphinx.context.indexed_models.select(&:rt_indexed_by_sphinx?).each do |model_name|
+          model = model_name.constantize
           model.sphinx_indexes.each do |index|
             # атачим rt индексы
             query = "TRUNCATE RTINDEX #{index.rt_name}; ATTACH INDEX #{index.core_name} TO RTINDEX #{index.rt_name};"

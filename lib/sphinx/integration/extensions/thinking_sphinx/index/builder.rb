@@ -1,5 +1,5 @@
 # coding: utf-8
-module Sphinx::Integration::Extensions::Index::Builder
+module Sphinx::Integration::Extensions::ThinkingSphinx::Index::Builder
 
   def group_by!(*args)
     source.groupings = args

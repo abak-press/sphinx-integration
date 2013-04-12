@@ -1,8 +1,8 @@
 # coding: utf-8
-module Sphinx::Integration::Extensions::Index
+module Sphinx::Integration::Extensions::ThinkingSphinx::Index
   extend ActiveSupport::Concern
 
-  autoload :Builder, 'sphinx/integration/extensions/index/builder'
+  autoload :Builder, 'sphinx/integration/extensions/thinking_sphinx/index/builder'
 
   included do
     attr_accessor :merged_with_core, :is_core_index
@@ -42,8 +42,17 @@ module Sphinx::Integration::Extensions::Index
       when :float then :rt_attr_float
       when :datetime then :rt_attr_timestamp
       when :string then :rt_attr_string
+      when :multi then :rt_attr_multi
       end
-      index.send(attr_type) << attr.unique_name
+
+      begin
+        index.send(attr_type) << attr.unique_name
+      rescue
+        puts rt_name
+        puts attr_type.inspect
+        puts attr.type.inspect
+        raise
+      end
     end
     index
   end

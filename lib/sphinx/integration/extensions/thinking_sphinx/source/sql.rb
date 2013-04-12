@@ -1,5 +1,5 @@
 # coding: utf-8
-module Sphinx::Integration::Extensions::Source::SQL
+module Sphinx::Integration::Extensions::ThinkingSphinx::Source::SQL
   extend ActiveSupport::Concern
 
   included do

@@ -1,5 +1,5 @@
 # coding: utf-8
-module Sphinx::Integration::Extensions::PostgreSQLAdapter
+module Sphinx::Integration::Extensions::ThinkingSphinx::PostgreSQLAdapter
   extend ActiveSupport::Concern
 
   included do

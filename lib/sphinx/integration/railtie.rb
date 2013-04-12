@@ -6,20 +6,21 @@ module Sphinx::Integration
   class Railtie < Rails::Railtie
 
     initializer 'sphinx_integration.extensions', :after => 'thinking_sphinx.set_app_root' do
+      Riddle::Configuration::RealtimeIndex.send :include, Sphinx::Integration::Extensions::Riddle::Configuration::RealtimeIndex
       ThinkingSphinx.send :include, Extensions::ThinkingSphinx
-      ThinkingSphinx::Attribute.send :include, Sphinx::Integration::Extensions::Attribute
-      ThinkingSphinx::Source.send :include, Sphinx::Integration::Extensions::Source
-      ThinkingSphinx::Source.send :include, Sphinx::Integration::Extensions::Source::SQL
-      ThinkingSphinx::BundledSearch.send :include, Sphinx::Integration::Extensions::BundledSearch
-      ThinkingSphinx::Index::Builder.send :include, Sphinx::Integration::Extensions::Index::Builder
-      ThinkingSphinx::Property.send :include, Sphinx::Integration::Extensions::Property
-      ThinkingSphinx::Search.send :include, Sphinx::Integration::Extensions::Search
-      ThinkingSphinx::Index.send :include, Sphinx::Integration::Extensions::Index
-      ThinkingSphinx::Configuration.send :include, Sphinx::Integration::Extensions::Configuration
-      ThinkingSphinx::PostgreSQLAdapter.send :include, Sphinx::Integration::Extensions::PostgreSQLAdapter
+      ThinkingSphinx::Attribute.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::Attribute
+      ThinkingSphinx::Source.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::Source
+      ThinkingSphinx::Source.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::Source::SQL
+      ThinkingSphinx::BundledSearch.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::BundledSearch
+      ThinkingSphinx::Index::Builder.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::Index::Builder
+      ThinkingSphinx::Property.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::Property
+      ThinkingSphinx::Search.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::Search
+      ThinkingSphinx::Index.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::Index
+      ThinkingSphinx::Configuration.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
+      ThinkingSphinx::PostgreSQLAdapter.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::PostgreSQLAdapter
 
       ActiveSupport.on_load :active_record do
-        include Sphinx::Integration::Extensions::ActiveRecord
+        include Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
       end
     end
 

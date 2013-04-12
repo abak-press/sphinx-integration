@@ -1,5 +1,5 @@
 # coding: utf-8
-module Sphinx::Integration::Extensions::BundledSearch
+module Sphinx::Integration::Extensions::ThinkingSphinx::BundledSearch
   extend ActiveSupport::Concern
 
   included do
