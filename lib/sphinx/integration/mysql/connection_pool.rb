@@ -35,9 +35,12 @@ module Sphinx::Integration::Mysql::ConnectionPool
         begin
           yield connection
         rescue Mysql2::Error => error
-          original = ThinkingSphinx::SphinxError.new_from_mysql error
-          raise original if original.is_a?(ThinkingSphinx::QueryError)
-          raise Innertube::Pool::BadResource
+          original = error
+          if error.message =~ /query error/
+            raise error
+          else
+            raise Innertube::Pool::BadResource
+          end
         end
       end
     rescue Innertube::Pool::BadResource

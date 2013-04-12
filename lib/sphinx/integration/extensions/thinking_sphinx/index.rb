@@ -8,6 +8,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     attr_accessor :merged_with_core, :is_core_index
     alias_method_chain :to_riddle, :merged
     alias_method_chain :to_riddle_for_distributed, :merged
+    alias_method_chain :all_names, :rt
   end
 
   def to_riddle_with_merged(offset)
@@ -45,14 +46,14 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
       when :multi then :rt_attr_multi
       end
 
-      begin
+      #begin
         index.send(attr_type) << attr.unique_name
-      rescue
-        puts rt_name
-        puts attr_type.inspect
-        puts attr.type.inspect
-        raise
-      end
+      #rescue
+      #  puts rt_name
+      #  puts attr_type.inspect
+      #  puts attr.type.inspect
+      #  raise
+      #end
     end
     index
   end
@@ -89,6 +90,16 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
 
   def merged_indexes
     model.sphinx_indexes.select { |i| i.merged_with_core? }
+  end
+
+  def all_names_with_rt
+    if rt?
+      names = [core_name, rt_name, delta_rt_name]
+    else
+      names = [core_name]
+    end
+
+    names
   end
 
   def single_query_sql

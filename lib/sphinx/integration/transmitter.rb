@@ -13,12 +13,15 @@ module Sphinx::Integration
     def replace
       rt_indexes do |index|
         data = transmitted_data(index)
-        query = Riddle::Query::Insert.new(index.rt_name, data.keys, data.values)
-        ThinkingSphinx.take_connection{ |c| c.execute(query.replace!.to_sql) }
+        query = Riddle::Query::Insert.new(index.rt_name, data.keys, data.values).replace!.to_sql
+        ThinkingSphinx.take_connection{ |c| c.execute(query) }
+
+        query = "UPDATE #{index.core_name} SET sphinx_deleted = 1 WHERE id = #{record.sphinx_document_id}"
+        ThinkingSphinx.take_connection{ |c| c.execute(query) }
 
         if Redis::Mutex.new(:full_reindex).locked?
-          query = Riddle::Query::Insert.new(index.delta_rt_name, data.keys, data.values)
-          ThinkingSphinx.take_connection{ |c| c.execute(query.replace!.to_sql) }
+          query = Riddle::Query::Insert.new(index.delta_rt_name, data.keys, data.values).replace!.to_sql
+          ThinkingSphinx.take_connection{ |c| c.execute(query) }
         end
       end
     end
@@ -26,12 +29,15 @@ module Sphinx::Integration
     # Удаляет запись из сфинкса
     def delete
       rt_indexes do |index|
-        query = Riddle::Query::Delete.new(index.rt_name, record.sphinx_document_id)
-        ThinkingSphinx.take_connection{ |c| c.execute(query.to_sql) }
+        query = Riddle::Query::Delete.new(index.rt_name, record.sphinx_document_id).to_sql
+        ThinkingSphinx.take_connection{ |c| c.execute(query) }
+
+        query = "UPDATE #{index.core_name} SET sphinx_deleted = 1 WHERE id = #{record.sphinx_document_id}"
+        ThinkingSphinx.take_connection{ |c| c.execute(query) }
 
         if Redis::Mutex.new(:full_reindex).locked?
-          query = Riddle::Query::Delete.new(index.delta_rt_name, record.sphinx_document_id)
-          ThinkingSphinx.take_connection{ |c| c.execute(query.to_sql) }
+          query = Riddle::Query::Delete.new(index.delta_rt_name, record.sphinx_document_id).to_sql
+          ThinkingSphinx.take_connection{ |c| c.execute(query) }
         end
       end
     end

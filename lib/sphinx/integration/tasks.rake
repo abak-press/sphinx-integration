@@ -32,6 +32,6 @@ namespace :thinking_sphinx do
   end
 
   wrap_task :rebuild do |orig_block|
-    Sphinx::Integration::Helper.reindex
+    Sphinx::Integration::Helper.rebuild
   end
 end

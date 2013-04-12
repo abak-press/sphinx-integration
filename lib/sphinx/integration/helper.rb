@@ -1,6 +1,6 @@
 # coding: utf-8
 module Sphinx::Integration
-  class SphinxHelper
+  class Helper
     module ClassMethods
       def remote_sphinx?
         sphinx_addr = ThinkingSphinx::Configuration.instance.address
@@ -54,7 +54,6 @@ module Sphinx::Integration
       end
 
       def index(online = true)
-        # TODO: replace all Blocker.full_reindex
         Redis::Mutex.with_lock(:full_reindex, :expire => 3.hours) do
           if remote_sphinx?
             run_command("#{Rails.root}/script/sphinx --reindex-offline") unless online
@@ -65,18 +64,22 @@ module Sphinx::Integration
           end
         end
 
-        attach_rt if online
+        prepare_rt if online
       end
       alias_method :reindex, :index
 
-      # Заполнить rt индексы из дисковых индексов
-      def attach_rt
-        ThinkingSphinx.context.indexed_models.select(&:rt_indexed_by_sphinx?).each do |model_name|
+      # Очистить и Заполнить rt индексы
+      def prepare_rt(only_index = nil)
+        ThinkingSphinx.context.indexed_models.each do |model_name|
           model = model_name.constantize
+          next unless model.rt_indexed_by_sphinx?
+
           model.sphinx_indexes.each do |index|
-            # атачим rt индексы
-            query = "TRUNCATE RTINDEX #{index.rt_name}; ATTACH INDEX #{index.core_name} TO RTINDEX #{index.rt_name};"
-            ThinkingSphinx.take_connection{ |c| c.execute(query) }
+            next if only_index && only_index != index.name
+            # очистим rt индексы
+            ThinkingSphinx.take_connection do |c|
+              c.execute("TRUNCATE RTINDEX #{index.rt_name}")
+            end
 
             # после этого нужно накатить дельту на основной rt индекс
             # просто за атачить её нельзя, смёрджить тоже нельзя, поэтому будем апдейтить по одной
@@ -98,18 +101,16 @@ module Sphinx::Integration
       end
 
       def rebuild
-        Redis::Mutex.with_lock(:full_reindex, :expire => 3.hours) do
-          configure
+        configure
 
-          if remote_sphinx?
-            run_command("#{Rails.root}/script/sphinx --copy-config #{config_file}")
-          end
-
-          stop if sphinx_running?
-          index(false)
-          start
-          attach_rt
+        if remote_sphinx?
+          run_command("#{Rails.root}/script/sphinx --copy-config #{config_file}")
         end
+
+        stop if sphinx_running?
+        index(false)
+        start
+        prepare_rt
       end
 
       def full_reindex?

@@ -10,8 +10,9 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
     extend ActiveSupport::Concern
 
     included do
-      delegate :create, :destroy, :update, :to => :transmitter, :prefix => true
-      after_commit :transmitter_replace, :on => :save
+      delegate :replace, :delete, :to => :transmitter, :prefix => true
+      after_commit :transmitter_replace, :on => :create
+      after_commit :transmitter_replace, :on => :update
       after_commit :transmitter_delete, :on => :destroy
     end
 

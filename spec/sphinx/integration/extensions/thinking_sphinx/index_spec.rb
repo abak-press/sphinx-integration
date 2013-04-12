@@ -40,4 +40,19 @@ describe ThinkingSphinx::Index do
     its(:rt_attr_uint){ should eql [:sphinx_internal_id, :sphinx_deleted, :class_crc, :region_id] }
   end
 
+  describe '#all_names' do
+    context 'when rt' do
+      it 'returns rt index names' do
+        index.all_names.should == [index.core_name, index.rt_name, index.delta_rt_name]
+      end
+    end
+
+    context 'when disk' do
+      it 'returns core index names' do
+        index.stub(:rt?).and_return(false)
+        index.all_names.should == [index.core_name]
+      end
+    end
+  end
+
 end
