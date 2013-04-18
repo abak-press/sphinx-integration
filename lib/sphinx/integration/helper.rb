@@ -2,25 +2,13 @@
 module Sphinx::Integration
   class Helper
     module ClassMethods
-      def remote_sphinx?
-        sphinx_addr = ThinkingSphinx::Configuration.instance.address
-        local_addrs = internal_ips
 
-        !local_addrs.include?(sphinx_addr)
-      end
-
-      def internal_ips
-        @internal_ips ||= Socket.ip_address_list.map do |addr|
-          IPAddr.new(addr.ip_address.sub(/\%.*$/, ''))
-        end
-      end
-
-      def config_file
-        ThinkingSphinx::Configuration.instance.config_file
+      def config
+        ThinkingSphinx::Configuration.instance
       end
 
       def sphinx_running?
-        if remote_sphinx?
+        if config.remote?
           `#{Rails.root}/script/sphinx --status`.present?
         else
           ThinkingSphinx.sphinx_running?
@@ -33,18 +21,18 @@ module Sphinx::Integration
       end
 
       def stop
-        if remote_sphinx?
+        if config.remote?
           run_command("#{Rails.root}/script/sphinx --stop")
         else
-          run_command "searchd --config #{config_file} --stop"
+          run_command "searchd --config #{config.config_file} --stop"
         end
       end
 
       def start
-        if remote_sphinx?
+        if config.remote?
           run_command("#{Rails.root}/script/sphinx --start")
         else
-          run_command "searchd --config #{config_file}"
+          run_command "searchd --config #{config.config_file}"
         end
       end
 
@@ -55,12 +43,12 @@ module Sphinx::Integration
 
       def index(online = true)
         Redis::Mutex.with_lock(:full_reindex, :expire => 3.hours) do
-          if remote_sphinx?
+          if config.remote?
             run_command("#{Rails.root}/script/sphinx --reindex-offline") unless online
             run_command("#{Rails.root}/script/sphinx --reindex-online")  if  online
           else
-            run_command "indexer --config #{config_file} --all" unless online
-            run_command "indexer --config #{config_file} --rotate --all" if online
+            run_command "indexer --config #{config.config_file} --all" unless online
+            run_command "indexer --config #{config.config_file} --rotate --all" if online
           end
         end
 
@@ -95,7 +83,6 @@ module Sphinx::Integration
       end
 
       def configure
-        config = ThinkingSphinx::Configuration.instance
         puts "Generating Configuration to #{config.config_file}"
         config.build
       end
@@ -103,8 +90,8 @@ module Sphinx::Integration
       def rebuild
         configure
 
-        if remote_sphinx?
-          run_command("#{Rails.root}/script/sphinx --copy-config #{config_file}")
+        if config.remote?
+          run_command("#{Rails.root}/script/sphinx --copy-config #{config.config_file}")
         end
 
         stop if sphinx_running?

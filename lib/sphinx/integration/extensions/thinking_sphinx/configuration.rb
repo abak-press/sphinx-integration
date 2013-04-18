@@ -3,7 +3,16 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
   extend ActiveSupport::Concern
 
   included do
+    attr_accessor :remote
+
     alias_method_chain :enforce_common_attribute_types, :rt
+  end
+
+  # Находится ли sphinx на другой машине
+  #
+  # Returns Boolean
+  def remote?
+    !!remote
   end
 
   # Не проверям на валидность RT индексы

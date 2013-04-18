@@ -12,10 +12,6 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Attribute
     initialize_without_query_option(source, columns, options)
   end
 
-  def available?
-    true
-  end
-
   def source_value_with_custom_query(offset, delta)
     if is_string?
       return "#{query_source.to_s.dasherize}; #{columns.first.__name}"

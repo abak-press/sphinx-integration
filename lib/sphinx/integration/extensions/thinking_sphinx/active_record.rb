@@ -17,7 +17,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
     end
 
     def transmitter
-      @transmitter ||= Sphinx::Integration::Transmitter.new(self)
+      Sphinx::Integration::Transmitter.new(self)
     end
   end
 
@@ -33,9 +33,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
       raise ArgumentError unless name
       define_index(name, &block)
 
-      self.sphinx_index_blocks << lambda {
-        self.sphinx_indexes.last.merged_with_core = true
-      }
+      self.sphinx_index_blocks << -> { self.sphinx_indexes.last.merged_with_core = true }
     end
 
     def reset_indexes

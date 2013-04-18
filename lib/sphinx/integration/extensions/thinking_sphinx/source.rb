@@ -25,9 +25,9 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Source
 
     config ||= @database_configuration
 
-    source.sql_host = config[:host]           || "localhost"
-    source.sql_user = config[:username]       || config[:user] || ENV['USER']
-    source.sql_pass = (config[:password].to_s || "").gsub('#', '\#')
+    source.sql_host = config.fetch(:host, 'localhost')
+    source.sql_user = config[:username] || config[:user] || ENV['USER']
+    source.sql_pass = config[:password].to_s.gsub('#', '\#')
     source.sql_db   = config[:database]
     source.sql_port = config[:port]
     source.sql_sock = config[:socket]

@@ -27,7 +27,7 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'rake'
   gem.add_development_dependency 'bundler'
   gem.add_development_dependency 'rspec'
-  gem.add_development_dependency 'rails', '~> 3.0.19'
+  gem.add_development_dependency 'rails', '>= 3.0.3'
   gem.add_development_dependency 'rspec-rails'
   gem.add_development_dependency 'combustion'
   gem.add_development_dependency 'mock_redis'

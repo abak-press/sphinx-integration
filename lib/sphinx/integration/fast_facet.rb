@@ -5,7 +5,6 @@ module Sphinx::Integration::FastFacet
   module ClassMethods
 
     def fast_facet_ts_args(facet, ts_args = {})
-      facet = facet.to_sym if facet.is_a?(String)
       ts_args.merge(:group => facet,
                     :limit => ts_args[:limit] || max_matches,
                     :page => 1,

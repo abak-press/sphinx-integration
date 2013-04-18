@@ -46,14 +46,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
       when :multi then :rt_attr_multi
       end
 
-      #begin
-        index.send(attr_type) << attr.unique_name
-      #rescue
-      #  puts rt_name
-      #  puts attr_type.inspect
-      #  puts attr.type.inspect
-      #  raise
-      #end
+      index.send(attr_type) << attr.unique_name
     end
     index
   end

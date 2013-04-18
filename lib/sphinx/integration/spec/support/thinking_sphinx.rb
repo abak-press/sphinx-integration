@@ -2,24 +2,32 @@
 
 require 'thinking_sphinx/test'
 require 'database_cleaner'
-require 'benchmark'
 
 class Sphinx::Integration::Spec::Support::ThinkingSphinx
-  def reindex
-    time = Benchmark.realtime do
-      if remote?
-        Core::SphinxHelper.index
-      else
-        ThinkingSphinx::Test.index
-      end
+
+  class << self
+    attr_reader :instance
+
+    def instance
+      @@instance ||= ThinkingSphinx::Support.new
     end
-    Rails.logger.info "Sphinx reindexed (#{time})"
+  end
+
+  def reindex(opts = {})
+    options = {
+      :sleep => 0.25
+    }.merge(opts)
+
+    if remote?
+      Sphinx::Integration::Helper.index
+    else
+      ThinkingSphinx::Test.index
+    end
+    sleep(options[:sleep])
   end
 
   def remote?
-    sphinx_addr = ThinkingSphinx::Configuration.instance.address
-    local_addrs = Core::IpTools.internal_ips
-    !local_addrs.include?(sphinx_addr)
+   ThinkingSphinx::Configuration.instance.remote?
   end
 end
 
