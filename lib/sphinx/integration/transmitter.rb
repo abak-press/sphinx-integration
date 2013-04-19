@@ -53,22 +53,27 @@ module Sphinx::Integration
 
     # Данные, необходимые для записи в индекс сфинкса
     #
+    # index - ThinkingSphinx::Index
+    #
     # Returns Hash
     def transmitted_data(index)
       sql = index.single_query_sql.gsub('%{ID}', record.id.to_s)
       row = record.class.connection.execute(sql).first
-      row.merge(mva_attributes)
+      row.merge(mva_attributes(index))
     end
 
     # MVA data
     #
+    # index - ThinkingSphinx::Index
+    #
     # Returns Hash
-    def mva_attributes
+    def mva_attributes(index)
       attrs = {}
-      record.class.methods_for_mva_attributes.each{ |m| attrs.merge! record.send(m) }
-      attrs.each do |k, v|
-        attrs[k] = "(#{v.join(',')})"
-      end
+
+      index.mva_sources.each do |name, mva_proc|
+        attrs[name] = "(#{mva_proc.call(record).join(',')})"
+      end if index.mva_sources
+
       attrs
     end
   end

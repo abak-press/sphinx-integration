@@ -18,7 +18,12 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Source::SQL
     # позволяет использовать Common Table Expressions or CTEs
     # Example
     #   set_property :source_cte => {
-    #     :_contents => 'select blog_posts.id as blog_post_id, array_to_string(array_agg(blog_post_contents.content), \' \') as content from blog_posts inner join blog_post_contents on blog_post_contents.blog_post_id = blog_posts.id where {{where}} group by blog_posts.id'
+    #     :_contents => <<-SQL
+    #       select blog_posts.id as blog_post_id, array_to_string(array_agg(blog_post_contents.content), \' \') as content
+    #       from blog_posts
+    #       inner join blog_post_contents on blog_post_contents.blog_post_id = blog_posts.id
+    #       where {{where}}
+    #       group by blog_posts.id'
     #   }
     def to_sql_with_cte(options = {})
       sql = to_sql_without_cte(options)
@@ -26,8 +31,8 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Source::SQL
       if @index.local_options.key?(:source_cte)
         cte_sql = []
         @index.local_options[:source_cte].each do |name, value|
-          v = value.gsub('{{where}}', sql_where_clause(options)).gsub("\n", ' ')
-          cte_sql << "#{name} AS (#{v})"
+          as_sql = value.gsub('{{where}}', sql_where_clause(options)).gsub("\n", ' ')
+          cte_sql << "#{name} AS (#{as_sql})"
         end
 
         sql = 'WITH ' + cte_sql.join(', ') + ' ' + sql unless cte_sql.empty?
@@ -56,7 +61,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Source::SQL
       if @index.local_options.key?(:source_joins)
         join_sql = []
         @index.local_options[:source_joins].each do |join_table, join_options|
-          join_table = "(#{join_options.fetch(:query, '')})" if join_table.to_s =~ /_sql$/
+          join_table = "(#{join_options.fetch(:query, '')})" if join_options[:query]
 
           join_sql << "#{join_options[:type].to_s.upcase} JOIN #{join_table} AS #{join_options.fetch(:as, join_table)} ON #{join_options[:on]}"
         end

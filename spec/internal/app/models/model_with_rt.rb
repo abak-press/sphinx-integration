@@ -9,10 +9,10 @@ class ModelWithRt < ActiveRecord::Base
     has :rubrics, :type => :multi, :source => :ranged_query, :query => "SELECT {{model_with_rt_id}} AS id, rubric_id AS rubrics FROM model_with_rt_rubrics WHERE id>=$start AND id<=$end; SELECT MIN(id), MAX(id) FROM model_with_rt_rubrics"
     set_property :rt => true
     set_property :source_no_grouping => true
-  end
 
-  def mva_sphinx_attributes_for_rubrics
-    {:rubrics => model_with_rt_rubrics.map(&:rubric_id)}
+    mva_attribute :rubrics do |record|
+      record.model_with_rt_rubrics.map(&:rubric_id)
+    end
   end
 
 end

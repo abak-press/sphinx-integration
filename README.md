@@ -1,6 +1,6 @@
 # Sphinx::Integration
 
-Надор надстроек над ThinkingSphinx и Riddle
+Набор надстроек над ThinkingSphinx и Riddle
 
 Гем служит для использования real time индексов, а также для более хитрого написания sql запросов при описании индекса.
 
@@ -21,7 +21,7 @@
 ## Поддержка RT индексов
 ```ruby
 define_index('model') do
-   set_property :rt => true
+  set_property :rt => true
 end
 ```
 
@@ -40,91 +40,88 @@ Workflow:
 + после завершения полной индексации, очищается основной rt индекс
 + и в него перетекают данные из delta rt индекса
 
-Если у модели существую MVA атрибуты, которые наполняются отдельными запросами (ranged-query), то необходимо определить методы,
-которые будут возвращать их значения при сохранении модели. Существую определённые правила именования таких методов.
-Метод должен начинаться с mva_sphinx_attributes_for_NAME, например:
-```ruby
-def mva_sphinx_attributes_for_rubrics
-  {:rubrics => rubrics.map(&:rubric_id)}
-end
-```
-
 ## Дополнительные возможности конфигурировани индекса
 
 Предполагается, что весь код в примерах будет выполнятся в блоке `define_index('model') do ... end`
+
+### Значения для MVA атрибутов при записи
+Если у модели существую MVA атрибуты, которые наполняются отдельными запросами (ranged-query), то необходимо определить блоки,
+которые будут возвращать их значения при сохранении модели.
+```ruby
+mva_attribute :rubrics do |product|
+  product.rubrics.map(&:rubric_id)
+end
+```
 
 ### Наполнение определённого индекса из другой базы, например со слэйва
 
 Реквизиты базы из ключа {production}_slave
 ```ruby
-set_property :use_slave_db => true
+slave(true)
 ```
 
 Реквизиты базы из ключа {production}_my-sphinx-slave
 ```ruby
-set_property :use_slave_db => 'my-sphinx-slave'
+slave('my-sphinx-slave')
 ```
 
 ### Common Table Expressions or CTEs
 ```ruby
-set_property :source_cte => {
-  :_rubrics => <<-SQL,
+with(:_rubrics) do
+  <<-SQL,
     select companies.id as company_id, array_agg(company_rubrics.rubric_id) as rubrics_array
     from companies
     inner join company_rubrics on company_rubrics.company_id = companies.id
     where {{where}}
     group by companies.id
   SQL
-}
+end
 ```
 
 Условие {{where}} будет заменено на нужное из основного запроса
 
 ### Дополнительные joins, например с заданым CTE
 ```ruby
-set_property :source_joins => {
-  :_rubrics => {
-    :as => :_rubrics,
-    :type => :left,
-    :on => '_rubrics.company_id = companies.id'
-}
+left_join(:_rubrics).on('_rubrics.company_id = companies.id')
+
+left_join(:long_table_name => :alias).on('alias.company_id = companies.id')
+
+inner_join(:long_table_name).as(:alias).on(...)
 ```
 
 ### Отключение группировки GROUP BY, которая делается по-умолчанию
 ```ruby
-set_property :source_no_grouping => true
+no_grouping
 ```
 
 ### Указание LIMIT
 ```ruby
-set_property :sql_query_limit => 1000
+limit(1000)
 ```
 
 ### Отключение индексации пачками
 ```ruby
-set_property :disable_range => true
+disable_range
 ```
 
 ### Указание своих минимального и максимального предела индексации
 ```ruby
-set_property :sql_query_range => "SELECT 1::int, COALESCE(MAX(id), 1::int) FROM rubrics"
+query_range("SELECT 1::int, COALESCE(MAX(id), 1::int) FROM rubrics")
 ```
 
-### Указание набора условий для выборки из базы
+### Отключение подстановок в WHERE $start >= ? and $end <= ?
 ```ruby
-set_property :use_own_sql_query_range => true
-where %[faq_posts.id in (select faq_post_id from faq_post_deltas where ("faq_post_deltas"."id" >= $start AND "faq_post_deltas"."id" <= $end))]
+use_own_sql_query_range
 ```
 
-### Указание полей при группировке
+### Отменяет группировку по-умолчанию
 ```ruby
-set_property :force_group_by => true
-group_by 'search_hints.forms.id', 'search_hints.forms.value',
+force_group_by
 ```
 
 ### Указание произвольного названия таблицы, например вьюшки
 ```ruby
-set_property :source_table => 'prepared_table_view'
+from('prepared_table_view')
 ```
 
 ### Наполнение MVA атрибутов из произволного запроса

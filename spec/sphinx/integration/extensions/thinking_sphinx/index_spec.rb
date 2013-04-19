@@ -4,7 +4,7 @@ require 'spec_helper'
 describe ThinkingSphinx::Index do
 
   let(:index) do
-    index = ThinkingSphinx::Index::Builder.generate(ModelWithDisk, nil) do
+    ThinkingSphinx::Index::Builder.generate(ModelWithDisk, nil) do
       indexes 'content', :as => :content
       has 'region_id', :type => :integer, :as => :region_id
       set_property :rt => true

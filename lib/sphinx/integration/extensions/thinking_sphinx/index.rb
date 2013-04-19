@@ -5,7 +5,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
   autoload :Builder, 'sphinx/integration/extensions/thinking_sphinx/index/builder'
 
   included do
-    attr_accessor :merged_with_core, :is_core_index
+    attr_accessor :merged_with_core, :is_core_index, :mva_sources
     alias_method_chain :to_riddle, :merged
     alias_method_chain :to_riddle_for_distributed, :merged
     alias_method_chain :all_names, :rt

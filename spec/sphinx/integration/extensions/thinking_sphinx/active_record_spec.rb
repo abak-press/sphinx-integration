@@ -32,8 +32,4 @@ describe ActiveRecord::Base do
     it { ModelWithRt.rt_indexed_by_sphinx?.should be_true }
   end
 
-  describe '.methods_for_mva_attributes' do
-    it { ModelWithRt.methods_for_mva_attributes.should eq [:mva_sphinx_attributes_for_rubrics] }
-  end
-
 end
