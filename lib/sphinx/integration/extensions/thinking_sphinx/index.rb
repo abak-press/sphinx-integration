@@ -105,6 +105,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
   #
   # Returns Hash
   def attributes_types_map
+    return @attributes_types_map if @attributes_types_map
     @mutex.synchronize do
       return @attributes_types_map if @attributes_types_map
       @attributes_types_map = attributes.inject({}){ |h, attr| h[attr.unique_name.to_s] = attr.type; h }
