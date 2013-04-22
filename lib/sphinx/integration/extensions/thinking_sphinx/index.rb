@@ -6,9 +6,15 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
 
   included do
     attr_accessor :merged_with_core, :is_core_index, :mva_sources
+    alias_method_chain :initialize, :mutex
     alias_method_chain :to_riddle, :merged
     alias_method_chain :to_riddle_for_distributed, :merged
     alias_method_chain :all_names, :rt
+  end
+
+  def initialize_with_mutex(model, &block)
+    @mutex = Mutex.new
+    initialize_without_mutex(model, &block)
   end
 
   def to_riddle_with_merged(offset)
@@ -93,6 +99,17 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     end
 
     names
+  end
+
+  # Карта атрибутов и их типов, нужна для типкастинга
+  #
+  # Returns Hash
+  def attributes_types_map
+    return @attributes_types_map if @attributes_types_map
+    @mutex.synchronize do
+      return @attributes_types_map if @attributes_types_map
+      @attributes_types_map = attributes.inject({}){ |h, attr| h[attr.unique_name.to_s] = attr.type; h }
+    end
   end
 
   def single_query_sql

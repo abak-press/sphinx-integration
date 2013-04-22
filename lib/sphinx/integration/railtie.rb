@@ -7,6 +7,7 @@ module Sphinx::Integration
 
     initializer 'sphinx_integration.extensions', :after => 'thinking_sphinx.set_app_root' do
       Riddle::Configuration::RealtimeIndex.send :include, Sphinx::Integration::Extensions::Riddle::Configuration::RealtimeIndex
+      Riddle::Query::Insert.send :include, Sphinx::Integration::Extensions::Riddle::Query::Insert
       ThinkingSphinx.send :include, Extensions::ThinkingSphinx
       ThinkingSphinx::Attribute.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::Attribute
       ThinkingSphinx::Source.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::Source
