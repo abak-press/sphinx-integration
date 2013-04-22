@@ -21,7 +21,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index::Builder
 
       index.local_options[:source_joins] ||= {}
       index.local_options[:source_joins][key] = {}
-      as(table_alias)
+      as(table_alias || table_name)
 
       self
     end

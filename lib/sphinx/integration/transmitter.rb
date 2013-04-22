@@ -59,7 +59,18 @@ module Sphinx::Integration
     def transmitted_data(index)
       sql = index.single_query_sql.gsub('%{ID}', record.id.to_s)
       row = record.class.connection.execute(sql).first
-      row.merge(mva_attributes(index))
+      row.merge!(mva_attributes(index))
+
+      row.each do |key, value|
+        row[key] = case index.attributes_types_map[key]
+          when :integer then value.to_i
+          when :float then value.to_f
+          when :multi then value.is_a?(String) ? value.split(',') : value
+          else value
+          end
+      end
+
+      row
     end
 
     # MVA data
@@ -71,7 +82,7 @@ module Sphinx::Integration
       attrs = {}
 
       index.mva_sources.each do |name, mva_proc|
-        attrs[name] = "(#{mva_proc.call(record).join(',')})"
+        attrs[name] = mva_proc.call(record)
       end if index.mva_sources
 
       attrs
