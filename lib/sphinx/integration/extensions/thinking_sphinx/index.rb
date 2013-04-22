@@ -95,6 +95,14 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     names
   end
 
+  # Карта атрибутов и их типов, нужна для типкастинга
+  #
+  # Returns Hash
+  def attributes_types_map
+    return @attributes_type_map if defined?(@attributes_type_map)
+    @attributes_type_map = attributes.inject({}){ |h, attr| h[attr.unique_name.to_s] = attr.type; h }
+  end
+
   def single_query_sql
     @single_query_sql ||= sources.
       first.
