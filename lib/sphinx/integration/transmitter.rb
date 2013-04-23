@@ -15,17 +15,14 @@ module Sphinx::Integration
         data = transmitted_data(index)
 
         query = Riddle::Query::Insert.new(index.rt_name, data.keys, data.values).replace!.to_sql
-        log "Transmitter#replace #{query}"
-        ThinkingSphinx.take_connection{ |c| c.execute(query) }
+        execute(query)
 
         query = "UPDATE #{index.core_name} SET sphinx_deleted = 1 WHERE id = #{record.sphinx_document_id}"
-        log "Transmitter#replace #{query}"
-        ThinkingSphinx.take_connection{ |c| c.execute(query) }
+        execute(query)
 
         if Redis::Mutex.new(:full_reindex).locked?
           query = Riddle::Query::Insert.new(index.delta_rt_name, data.keys, data.values).replace!.to_sql
-          log "Transmitter#replace #{query}"
-          ThinkingSphinx.take_connection{ |c| c.execute(query) }
+          execute(query)
         end
       end
     end
@@ -36,17 +33,14 @@ module Sphinx::Integration
     def delete
       rt_indexes do |index|
         query = Riddle::Query::Delete.new(index.rt_name, record.sphinx_document_id).to_sql
-        log "Transmitter#delete #{query}"
-        ThinkingSphinx.take_connection{ |c| c.execute(query) }
+        execute(query)
 
         query = "UPDATE #{index.core_name} SET sphinx_deleted = 1 WHERE id = #{record.sphinx_document_id}"
-        log "Transmitter#delete #{query}"
-        ThinkingSphinx.take_connection{ |c| c.execute(query) }
+        execute(query)
 
         if Redis::Mutex.new(:full_reindex).locked?
           query = Riddle::Query::Delete.new(index.delta_rt_name, record.sphinx_document_id).to_sql
-          log "Transmitter#delete #{query}"
-          ThinkingSphinx.take_connection{ |c| c.execute(query) }
+          execute(query)
         end
       end
     end
@@ -58,6 +52,14 @@ module Sphinx::Integration
       record.class.sphinx_indexes.select(&:rt?).each do |index|
         yield index
       end
+    end
+
+    # Посылает запрос в Sphinx
+    #
+    # query - String
+    def execute(query)
+      log(query)
+      ThinkingSphinx.take_connection{ |c| c.execute(query) }
     end
 
     # Данные, необходимые для записи в индекс сфинкса
