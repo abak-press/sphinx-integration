@@ -10,9 +10,9 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
     extend ActiveSupport::Concern
 
     included do
-      delegate :replace, :delete, :to => :transmitter, :prefix => true
-      after_commit :transmitter_replace, :on => :create
-      after_commit :transmitter_replace, :on => :update
+      delegate :create, :update, :delete, :to => :transmitter, :prefix => true
+      after_commit :transmitter_create, :on => :create
+      after_commit :transmitter_update, :on => :update
       after_commit :transmitter_delete, :on => :destroy
     end
 
@@ -45,10 +45,6 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
 
     def rt_indexed_by_sphinx?
       sphinx_indexes && sphinx_indexes.any? { |index| index.rt? }
-    end
-
-    def methods_for_mva_attributes
-      @methods_for_mva_attributes ||= instance_methods.select{ |m| m.to_s =~ /^mva_sphinx_attributes_for_/ }
     end
 
     def add_sphinx_callbacks_and_extend(*args)
