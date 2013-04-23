@@ -13,31 +13,34 @@ module Sphinx::Integration
     def replace
       rt_indexes do |index|
         data = transmitted_data(index)
+
         query = Riddle::Query::Insert.new(index.rt_name, data.keys, data.values).replace!.to_sql
-        ThinkingSphinx.take_connection{ |c| c.execute(query) }
+        execute(query)
 
         query = "UPDATE #{index.core_name} SET sphinx_deleted = 1 WHERE id = #{record.sphinx_document_id}"
-        ThinkingSphinx.take_connection{ |c| c.execute(query) }
+        execute(query)
 
         if Redis::Mutex.new(:full_reindex).locked?
           query = Riddle::Query::Insert.new(index.delta_rt_name, data.keys, data.values).replace!.to_sql
-          ThinkingSphinx.take_connection{ |c| c.execute(query) }
+          execute(query)
         end
       end
     end
+    alias_method :create, :replace
+    alias_method :update, :replace
 
     # Удаляет запись из сфинкса
     def delete
       rt_indexes do |index|
         query = Riddle::Query::Delete.new(index.rt_name, record.sphinx_document_id).to_sql
-        ThinkingSphinx.take_connection{ |c| c.execute(query) }
+        execute(query)
 
         query = "UPDATE #{index.core_name} SET sphinx_deleted = 1 WHERE id = #{record.sphinx_document_id}"
-        ThinkingSphinx.take_connection{ |c| c.execute(query) }
+        execute(query)
 
         if Redis::Mutex.new(:full_reindex).locked?
           query = Riddle::Query::Delete.new(index.delta_rt_name, record.sphinx_document_id).to_sql
-          ThinkingSphinx.take_connection{ |c| c.execute(query) }
+          execute(query)
         end
       end
     end
@@ -49,6 +52,14 @@ module Sphinx::Integration
       record.class.sphinx_indexes.select(&:rt?).each do |index|
         yield index
       end
+    end
+
+    # Посылает запрос в Sphinx
+    #
+    # query - String
+    def execute(query)
+      log(query)
+      ThinkingSphinx.take_connection{ |c| c.execute(query) }
     end
 
     # Данные, необходимые для записи в индекс сфинкса
@@ -86,6 +97,13 @@ module Sphinx::Integration
       end if index.mva_sources
 
       attrs
+    end
+
+    # Залогировать
+    #
+    # message - String
+    def log(message)
+      ::ActiveSupport::Notifications.instrument('message.thinking_sphinx', :message => message)
     end
   end
 end
