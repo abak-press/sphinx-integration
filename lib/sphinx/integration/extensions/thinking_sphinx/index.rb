@@ -42,6 +42,8 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     index = Riddle::Configuration::RealtimeIndex.new delta ? delta_rt_name : rt_name
     index.path = File.join config.searchd_file_path, index.name
     index.rt_field = fields.map(&:unique_name)
+    index.rt_mem_limit = local_options[:rt_mem_limit] if local_options[:rt_mem_limit]
+
     attributes.each do |attr|
       attr_type = case attr.type
       when :integer, :boolean then :rt_attr_uint
