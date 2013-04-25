@@ -19,6 +19,18 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
     def transmitter
       Sphinx::Integration::Transmitter.new(self)
     end
+
+    module ClassMethods
+
+      # Обновить атрибуты в сфинксе по условию
+      #
+      # fields - Hash
+      # where  - String
+      def update_sphinx_fields(fields, where)
+        Sphinx::Integration::Transmitter.update_all_fields(self, fields, where)
+      end
+
+    end
   end
 
   module ClassMethods

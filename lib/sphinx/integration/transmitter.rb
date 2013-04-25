@@ -11,18 +11,18 @@ module Sphinx::Integration
 
     # Обновляет запись в сфинксе
     def replace
-      rt_indexes do |index|
+      self.class.rt_indexes(record.class) do |index|
         data = transmitted_data(index)
 
         query = Riddle::Query::Insert.new(index.rt_name, data.keys, data.values).replace!.to_sql
-        execute(query)
+        self.class.execute(query)
 
         query = "UPDATE #{index.core_name} SET sphinx_deleted = 1 WHERE id = #{record.sphinx_document_id}"
-        execute(query)
+        self.class.execute(query)
 
         if Redis::Mutex.new(:full_reindex).locked?
           query = Riddle::Query::Insert.new(index.delta_rt_name, data.keys, data.values).replace!.to_sql
-          execute(query)
+          self.class.execute(query)
         end
       end
     end
@@ -31,15 +31,42 @@ module Sphinx::Integration
 
     # Удаляет запись из сфинкса
     def delete
-      rt_indexes do |index|
+      self.class.rt_indexes(record.class) do |index|
         query = Riddle::Query::Delete.new(index.rt_name, record.sphinx_document_id).to_sql
-        execute(query)
+        self.class.execute(query)
 
         query = "UPDATE #{index.core_name} SET sphinx_deleted = 1 WHERE id = #{record.sphinx_document_id}"
-        execute(query)
+        self.class.execute(query)
 
         if Redis::Mutex.new(:full_reindex).locked?
           query = Riddle::Query::Delete.new(index.delta_rt_name, record.sphinx_document_id).to_sql
+          self.class.execute(query)
+        end
+      end
+    end
+
+    # Обновление отдельных атрибутов записи
+    #
+    # fields - Hash (:field => :value)
+    def update_fields(fields)
+      self.class.update_all_fields(record.class, fields, "id = #{record.sphinx_document_id}")
+    end
+
+    # Обновление отдельных атрибутов индекса по условию
+    #
+    # klass - Class
+    # fields - Hash (:field => :value)
+    # where - String (company_id = 123)
+    def self.update_all_fields(klass, fields, where)
+      rt_indexes(klass) do |index|
+        query = ::Sphinx::Integration::Extensions::Riddle::Query::Update.new(index.rt_name, fields, where).to_sql
+        execute(query)
+
+        query = "UPDATE #{index.core_name} SET sphinx_deleted = 1 WHERE #{where}"
+        execute(query)
+
+        if Redis::Mutex.new(:full_reindex).locked?
+          query = ::Sphinx::Integration::Extensions::Riddle::Query::Update.new(index.delta_rt_name, fields, where).to_sql
           execute(query)
         end
       end
@@ -48,8 +75,10 @@ module Sphinx::Integration
     private
 
     # Итератор по всем rt индексам
-    def rt_indexes
-      record.class.sphinx_indexes.select(&:rt?).each do |index|
+    #
+    # klass - Class
+    def self.rt_indexes(klass)
+      klass.sphinx_indexes.select(&:rt?).each do |index|
         yield index
       end
     end
@@ -57,7 +86,7 @@ module Sphinx::Integration
     # Посылает запрос в Sphinx
     #
     # query - String
-    def execute(query)
+    def self.execute(query)
       log(query)
       ThinkingSphinx.take_connection{ |c| c.execute(query) }
     end
@@ -102,7 +131,7 @@ module Sphinx::Integration
     # Залогировать
     #
     # message - String
-    def log(message)
+    def self.log(message)
       ::ActiveSupport::Notifications.instrument('message.thinking_sphinx', :message => message)
     end
   end

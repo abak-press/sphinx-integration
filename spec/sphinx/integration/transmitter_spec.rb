@@ -55,4 +55,14 @@ describe Sphinx::Integration::Transmitter do
       end
     end
   end
+
+  describe 'class methods' do
+    describe 'update_all_fields' do
+      it 'update fields in rt index by condition' do
+        connection.should_receive(:execute).with('UPDATE model_with_rt_rt SET rubric_id = 123 WHERE id = 1').ordered
+        connection.should_receive(:execute).with('UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE id = 1').ordered
+        described_class.update_all_fields(ModelWithRt, {:rubric_id => 123}, 'id = 1')
+      end
+    end
+  end
 end
