@@ -12,17 +12,17 @@ module Sphinx::Integration
     # Обновляет запись в сфинксе
     def replace
       self.class.rt_indexes(record.class) do |index|
-        data = transmitted_data(index)
-
-        query = Riddle::Query::Insert.new(index.rt_name, data.keys, data.values).replace!.to_sql
-        self.class.execute(query)
-
-        query = "UPDATE #{index.core_name} SET sphinx_deleted = 1 WHERE id = #{record.sphinx_document_id}"
-        self.class.execute(query)
-
-        if Redis::Mutex.new(:full_reindex).locked?
-          query = Riddle::Query::Insert.new(index.delta_rt_name, data.keys, data.values).replace!.to_sql
+        if (data = transmitted_data(index))
+          query = Riddle::Query::Insert.new(index.rt_name, data.keys, data.values).replace!.to_sql
           self.class.execute(query)
+
+          query = "UPDATE #{index.core_name} SET sphinx_deleted = 1 WHERE id = #{record.sphinx_document_id}"
+          self.class.execute(query)
+
+          if Redis::Mutex.new(:full_reindex).locked?
+            query = Riddle::Query::Insert.new(index.delta_rt_name, data.keys, data.values).replace!.to_sql
+            self.class.execute(query)
+          end
         end
       end
     end
@@ -99,6 +99,7 @@ module Sphinx::Integration
     def transmitted_data(index)
       sql = index.single_query_sql.gsub('%{ID}', record.id.to_s)
       row = record.class.connection.execute(sql).first
+      return unless row
       row.merge!(mva_attributes(index))
 
       row.each do |key, value|
