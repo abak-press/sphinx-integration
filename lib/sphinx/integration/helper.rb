@@ -73,7 +73,7 @@ module Sphinx::Integration
             # просто за атачить её нельзя, смёрджить тоже нельзя, поэтому будем апдейтить по одной
             until model.search_count(:index => index.delta_rt_name).zero? do
               model.search(:index => index.delta_rt_name, :per_page => 500).each do |record|
-                record.transmitter_replace
+                record.transmitter_update
                 query = Riddle::Query::Delete.new(index.delta_rt_name, record.sphinx_document_id)
                 ThinkingSphinx.take_connection{ |c| c.execute(query.to_sql) }
               end
