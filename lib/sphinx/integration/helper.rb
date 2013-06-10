@@ -58,26 +58,54 @@ module Sphinx::Integration
 
       # Очистить и Заполнить rt индексы
       def prepare_rt(only_index = nil)
+        rt_indexes do |index|
+          next if only_index && only_index != index.name
+
+          # очистим rt индексы
+          ThinkingSphinx.take_connection do |c|
+            c.execute("TRUNCATE RTINDEX #{index.rt_name}")
+          end
+
+          # после этого нужно накатить дельту на основной rt индекс
+          # просто за атачить её нельзя, смёрджить тоже нельзя, поэтому будем апдейтить по одной
+          until model.search_count(:index => index.delta_rt_name).zero? do
+            model.search(:index => index.delta_rt_name, :per_page => 500).each do |record|
+              record.transmitter_update
+              query = Riddle::Query::Delete.new(index.delta_rt_name, record.sphinx_document_id)
+              ThinkingSphinx.take_connection{ |c| c.execute(query.to_sql) }
+            end
+          end
+        end
+      end
+
+      # Уничтожить все индексы
+      def remove_indexes
+        if config.remote?
+          run_command("#{Rails.root}/script/sphinx --remove-indexes")
+        else
+          FileUtils.rm(Dir.glob(config.searchd_file_path + '/*.*'))
+        end
+      end
+
+      # Уничтожить бинарный лог
+      def remove_binlog
+        if (binlog_path = config.configuration.searchd.binlog_path).present?
+          if config.remote?
+            run_command("#{Rails.root}/script/sphinx --remove-binlog")
+          else
+            FileUtils.rm(binlog_path + '/*.*')
+          end
+        end
+      end
+
+      # Итератор по всем rt индексам
+      def rt_indexes
         ThinkingSphinx.context.indexed_models.each do |model_name|
           model = model_name.constantize
           next unless model.rt_indexed_by_sphinx?
 
           model.sphinx_indexes.each do |index|
-            next if only_index && only_index != index.name
-            # очистим rt индексы
-            ThinkingSphinx.take_connection do |c|
-              c.execute("TRUNCATE RTINDEX #{index.rt_name}")
-            end
-
-            # после этого нужно накатить дельту на основной rt индекс
-            # просто за атачить её нельзя, смёрджить тоже нельзя, поэтому будем апдейтить по одной
-            until model.search_count(:index => index.delta_rt_name).zero? do
-              model.search(:index => index.delta_rt_name, :per_page => 500).each do |record|
-                record.transmitter_update
-                query = Riddle::Query::Delete.new(index.delta_rt_name, record.sphinx_document_id)
-                ThinkingSphinx.take_connection{ |c| c.execute(query.to_sql) }
-              end
-            end
+            yield index
           end
         end
       end
@@ -95,9 +123,10 @@ module Sphinx::Integration
         end
 
         stop if sphinx_running?
+        remove_indexes
+        remove_binlog
         index(false)
         start
-        prepare_rt
       end
 
       def full_reindex?
