@@ -1,33 +1,36 @@
-# -*- encoding : utf-8 -*-
+# coding: utf-8
 
 require 'thinking_sphinx/test'
 require 'database_cleaner'
 
-class Sphinx::Integration::Spec::Support::ThinkingSphinx
+module Sphinx
+  module Integration
+    module Spec
+      module Support
+        class ThinkingSphinx
+          class << self
+            attr_reader :instance
 
-  class << self
-    attr_reader :instance
+            def instance
+              @@instance ||= ThinkingSphinx::Support.new
+            end
+          end
 
-    def instance
-      @@instance ||= ThinkingSphinx::Support.new
+          def reindex(opts = {})
+            options = {
+              :sleep => 0.25
+            }.merge(opts)
+
+            Sphinx::Integration::Helper.index
+            sleep(options[:sleep])
+          end
+
+          def remote?
+           ::ThinkingSphinx::Configuration.instance.remote?
+          end
+        end
+      end
     end
-  end
-
-  def reindex(opts = {})
-    options = {
-      :sleep => 0.25
-    }.merge(opts)
-
-    if remote?
-      Sphinx::Integration::Helper.index
-    else
-      ThinkingSphinx::Test.index
-    end
-    sleep(options[:sleep])
-  end
-
-  def remote?
-   ThinkingSphinx::Configuration.instance.remote?
   end
 end
 
@@ -39,13 +42,6 @@ def with_sphinx(tables = nil)
     before(:all) do
       context.use_transactional_fixtures = false
       DatabaseCleaner.strategy = :deletion, tables ? {:only => tables} : {}
-      unless sphinx.remote?
-        time = Benchmark.realtime do
-          ThinkingSphinx::Test.create_indexes_folder
-          ThinkingSphinx::Test.start
-        end
-        Rails.logger.info "Sphinx started (#{time})"
-      end
     end
 
     before(:each) do
@@ -61,10 +57,6 @@ def with_sphinx(tables = nil)
     yield sphinx
   ensure
     after(:all) do
-      unless sphinx.remote?
-        time = Benchmark.realtime { ThinkingSphinx::Test.stop }
-        Rails.logger.info "Sphinx stopped (#{time})"
-      end
       DatabaseCleaner.strategy = :transaction
       context.use_transactional_fixtures = true
     end
