@@ -58,7 +58,7 @@ module Sphinx::Integration
 
       # Очистить и Заполнить rt индексы
       def prepare_rt(only_index = nil)
-        rt_indexes do |index|
+        rt_indexes do |index, model|
           next if only_index && only_index != index.name
 
           # очистим rt индексы
@@ -74,6 +74,10 @@ module Sphinx::Integration
               query = Riddle::Query::Delete.new(index.delta_rt_name, record.sphinx_document_id)
               ThinkingSphinx.take_connection{ |c| c.execute(query.to_sql) }
             end
+          end
+
+          ThinkingSphinx.take_connection do |c|
+            c.execute("TRUNCATE RTINDEX #{index.delta_rt_name}")
           end
         end
       end
@@ -105,7 +109,7 @@ module Sphinx::Integration
           next unless model.rt_indexed_by_sphinx?
 
           model.sphinx_indexes.each do |index|
-            yield index
+            yield index, model
           end
         end
       end
