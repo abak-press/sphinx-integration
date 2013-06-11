@@ -53,6 +53,13 @@ mva_attribute :rubrics do |product|
 end
 ```
 
+### Изменение sql запроса, получающего атрибуты из базы при обновлении записи
+```ruby
+transmitted_sql do |sql|
+  sql.sub(" AND products.state != 'deleted'", '')
+end
+```
+
 ### Наполнение определённого индекса из другой базы, например со слэйва
 
 Реквизиты базы из ключа {production}_slave

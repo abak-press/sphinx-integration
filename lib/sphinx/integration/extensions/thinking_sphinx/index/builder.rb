@@ -20,6 +20,12 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index::Builder
     set_property :sql_query_limit => value
   end
 
+  # Блок, который будет вызываться при сохранении модели перед получением атрибутов из базы
+  # С помощью него, можно подправить конечный sql
+  def transmitted_sql(&block)
+    @index.local_options[:transmitted_sql] = block
+  end
+
   # Блок, который будет вызывается при сохранении модели
   #
   # name - Symbol MVA attr name

@@ -98,6 +98,7 @@ module Sphinx::Integration
     # Returns Hash
     def transmitted_data(index)
       sql = index.single_query_sql.gsub('%{ID}', record.id.to_s)
+      sql = index.local_options[:transmitted_sql].call(sql) if index.local_options.key?(:transmitted_sql)
       row = record.class.connection.execute(sql).first
       return unless row
       row.merge!(mva_attributes(index))
