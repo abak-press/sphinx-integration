@@ -7,6 +7,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Source::SQL
     alias_method_chain :to_sql, :joins
     alias_method_chain :to_sql, :nogrouping_options
     alias_method_chain :to_sql, :limit
+    alias_method_chain :to_sql, :custom_sql
 
     alias_method_chain :to_sql_query_range, :prepare
     alias_method_chain :to_sql_query_info, :prepared_table_name
@@ -81,6 +82,14 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Source::SQL
     def to_sql_with_limit(*args)
       sql = to_sql_without_limit(*args)
       sql << " LIMIT #{ @index.local_options[:sql_query_limit]}" if @index.local_options.key?(:sql_query_limit)
+      sql
+    end
+
+    def to_sql_with_custom_sql(*args)
+      sql = to_sql_without_custom_sql(*args)
+      if @index.local_options[:with_sql] && @index.local_options[:with_sql][:select]
+        sql = @index.local_options[:with_sql][:select].call(sql)
+      end
       sql
     end
 
