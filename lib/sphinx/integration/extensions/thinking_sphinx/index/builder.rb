@@ -22,8 +22,9 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index::Builder
 
   # Блок, который будет вызываться при сохранении модели перед получением атрибутов из базы
   # С помощью него, можно подправить конечный sql
-  def transmitted_sql(&block)
-    @index.local_options[:transmitted_sql] = block
+  def with_sql(options = {}, &block)
+    @index.local_options[:with_sql] ||= {}
+    @index.local_options[:with_sql][options.fetch(:on, :select)] = block
   end
 
   # Блок, который будет вызывается при сохранении модели

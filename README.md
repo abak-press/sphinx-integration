@@ -53,9 +53,16 @@ mva_attribute :rubrics do |product|
 end
 ```
 
-### Изменение sql запроса, получающего атрибуты из базы при обновлении записи
+### Изменение sql запроса, получающего атрибуты из базы
+При массовой индексации
 ```ruby
-transmitted_sql do |sql|
+with_sql :on => :select do |sql|
+  sql.sub(" AND products.state != 'deleted'", '')
+end
+
+При обновлении записи
+```ruby
+with_sql :on => :update do |sql|
   sql.sub(" AND products.state != 'deleted'", '')
 end
 ```
