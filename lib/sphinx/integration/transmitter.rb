@@ -53,20 +53,21 @@ module Sphinx::Integration
     end
 
     # Обновление отдельных атрибутов индекса по условию
+    # Внимание, решения в этом методе временные, далее будет переписано подругому
     #
     # klass - Class
     # fields - Hash (:field => :value)
     # where - String (company_id = 123)
     def self.update_all_fields(klass, fields, where)
       rt_indexes(klass) do |index|
-        query = ::Sphinx::Integration::Extensions::Riddle::Query::Update.new(index.rt_name, fields, where).to_sql
-        execute(query)
-
-        query = "UPDATE #{index.core_name} SET sphinx_deleted = 1 WHERE #{where}"
-        execute(query)
-
         if Redis::Mutex.new(:full_reindex).locked?
-          query = ::Sphinx::Integration::Extensions::Riddle::Query::Update.new(index.delta_rt_name, fields, where).to_sql
+          query = "SELECT sphinx_internal_id FROM #{index.name} WHERE #{where}"
+          ids = select(query).map{ |row| row['sphinx_internal_id'] }
+          ids.in_groups_of(500, false) do |group_ids|
+            klass.where(:id => group_ids).each(&:transmitter_update)
+          end if ids.any?
+        else
+          query = ::Sphinx::Integration::Extensions::Riddle::Query::Update.new(index.name, fields, where).to_sql
           execute(query)
         end
       end
@@ -89,6 +90,17 @@ module Sphinx::Integration
     def self.execute(query)
       log(query)
       ThinkingSphinx.take_connection{ |c| c.execute(query) }
+    end
+
+    # Запрос на получение данных из Sphinx
+    #
+    # query - String
+    # Returns Array
+    def self.select(query)
+      log(query)
+      result = nil
+      ThinkingSphinx.take_connection{ |c| result = c.execute(query).to_a }
+      result
     end
 
     # Данные, необходимые для записи в индекс сфинкса
