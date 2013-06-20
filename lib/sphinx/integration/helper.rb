@@ -97,7 +97,7 @@ module Sphinx::Integration
           if config.remote?
             run_command("#{Rails.root}/script/sphinx --remove-binlog")
           else
-            FileUtils.rm(binlog_path + '/*.*')
+            FileUtils.rm(Dir[binlog_path + '/*.*'])
           end
         end
       end
