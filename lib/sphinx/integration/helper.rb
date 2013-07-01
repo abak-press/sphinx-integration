@@ -41,6 +41,9 @@ module Sphinx::Integration
         start
       end
 
+      # Переиндексация сфинкса
+      #
+      # online - Boolean (default: true) означает, что в момент индексации все апдейты будут писаться в дельту
       def index(online = true)
         Redis::Mutex.with_lock(:full_reindex, :expire => 3.hours) do
           if config.remote?
@@ -57,28 +60,51 @@ module Sphinx::Integration
       alias_method :reindex, :index
 
       # Очистить и Заполнить rt индексы
+      #
+      # only_index - String (default: nil) работать только с одним индексом
       def prepare_rt(only_index = nil)
         rt_indexes do |index, model|
           next if only_index && only_index != index.name
 
-          # очистим rt индексы
-          ThinkingSphinx.take_connection do |c|
-            c.execute("TRUNCATE RTINDEX #{index.rt_name}")
-          end
+          truncate_rt_index(index.rt_name)
 
-          # после этого нужно накатить дельту на основной rt индекс
-          # просто за атачить её нельзя, смёрджить тоже нельзя, поэтому будем апдейтить по одной
-          until model.search_count(:index => index.delta_rt_name).zero? do
-            model.search(:index => index.delta_rt_name, :per_page => 500).each do |record|
-              record.transmitter_update
-              query = Riddle::Query::Delete.new(index.delta_rt_name, record.sphinx_document_id)
-              ThinkingSphinx.take_connection{ |c| c.execute(query.to_sql) }
-            end
-          end
+          dump_delta_index(model, index)
+          truncate_rt_index(index.delta_rt_name)
+        end
+      end
 
-          ThinkingSphinx.take_connection do |c|
-            c.execute("TRUNCATE RTINDEX #{index.delta_rt_name}")
-          end
+      # Перенос данных из дельта индекса в основной
+      #
+      # model - ActiveRecord::Base
+      # index - ThinkingSphinx::Index
+      def dump_delta_index(model, index)
+        delta_index_results(model, index) do |sphinx_result|
+          model.where(model.primary_key => sphinx_result.to_a).each(&:transmitter_update)
+
+          # Удаление через внутренний айдишник индекса, ибо пока сфинкс не умеет удалять по условию с другими атрибутами
+          doc_ids = sphinx_result.results[:matches].map{ |x| x[:doc] }
+          query = Riddle::Query::Delete.new(index.delta_rt_name, doc_ids)
+          ThinkingSphinx.take_connection{ |c| c.execute(query.to_sql) }
+        end
+      end
+
+      # Очистка rt индекса
+      #
+      # index_name - String
+      def truncate_rt_index(index_name)
+        ThinkingSphinx.take_connection { |c| c.execute("TRUNCATE RTINDEX #{index_name}") }
+      end
+
+      # Итератор по всем данным дельта индекса, отдаётся пачками по limit штук
+      #
+      # model - ActiveRecord::Base
+      # index - ThinkingSphinx::Index
+      # limit - Integer (default: 500)
+      #
+      # Yields ThinkingSphinx::Search
+      def delta_index_results(model, index, limit = 500)
+        until model.search_count(:index => index.delta_rt_name).zero? do
+          yield model.search_for_ids(:index => index.delta_rt_name, :per_page => limit)
         end
       end
 
@@ -103,6 +129,8 @@ module Sphinx::Integration
       end
 
       # Итератор по всем rt индексам
+      #
+      # Yields ThinkingSphinx::Index, ActiveRecord::Base
       def rt_indexes
         ThinkingSphinx.context.indexed_models.each do |model_name|
           model = model_name.constantize
