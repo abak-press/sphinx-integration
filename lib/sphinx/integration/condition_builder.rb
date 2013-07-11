@@ -39,7 +39,7 @@ module Sphinx
 
         private
         def normalize_values
-          @values.map! { |v| escape_value(v) }
+          @values.map! { |v| ::ActiveRecord::Base.quote_value(v) }
         end
 
         # Единственное значение аттрибута?
@@ -47,20 +47,6 @@ module Sphinx
         #  Returns boolean
         def single_value?
           @values.length == 1
-        end
-
-        # Закавычивает значения определенных классов
-        #
-        # value - Значение аргумента
-        #
-        # Returns value
-        def escape_value(value)
-          case value
-          when String, Symbol
-            "'#{value}'"
-          else
-            value
-          end
         end
       end
     end
