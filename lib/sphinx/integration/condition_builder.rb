@@ -31,9 +31,9 @@ module Sphinx
         # Returns string
         def to_s
           if single_value?
-            "#@attribute = #{@values.first}"
+            "#{@attribute} = #{@values.first}"
           else
-            "#@attribute in (#{@values.join(', ')})"
+            "#{@attribute} in (#{@values.join(', ')})"
           end
         end
 
