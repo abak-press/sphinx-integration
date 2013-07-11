@@ -57,23 +57,37 @@ module Sphinx::Integration
     #
     # klass - Class
     # fields - Hash (:field => :value)
-    # where - String (company_id = 123)
+    # where - String or Hash
     def self.update_all_fields(klass, fields, where)
       rt_indexes(klass) do |index|
+        condition = stringify_condition(where)
         if Redis::Mutex.new(:full_reindex).locked?
-          query = "SELECT sphinx_internal_id FROM #{index.name} WHERE #{where}"
+          query = "SELECT sphinx_internal_id FROM #{index.name} WHERE #{condition}"
           ids = select(query).map{ |row| row['sphinx_internal_id'] }
           ids.in_groups_of(500, false) do |group_ids|
             klass.where(:id => group_ids).each(&:transmitter_update)
           end if ids.any?
         else
-          query = ::Sphinx::Integration::Extensions::Riddle::Query::Update.new(index.name, fields, where).to_sql
+          query = ::Sphinx::Integration::Extensions::Riddle::Query::Update.new(index.name, fields, condition).to_sql
           execute(query)
         end
       end
     end
 
     private
+    # Обработка условия
+    #
+    # Returns String
+    def self.stringify_condition(where)
+      case where
+      when String
+        where
+      when Hash
+        ::Sphinx::Integration::ConditionBuilder.build(where)
+      else
+        raise TypeError
+      end
+    end
 
     # Итератор по всем rt индексам
     #
