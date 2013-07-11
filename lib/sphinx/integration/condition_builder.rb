@@ -1,6 +1,7 @@
 # coding: utf-8
 module Sphinx
   module Integration
+    # Велосипед, мужики хотят ActiveRecord::Base.sanitize_sql
     class ConditionBuilder
       # Генерирует условие запроса в форме строки
       #
