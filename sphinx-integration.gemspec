@@ -22,6 +22,7 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency 'mysql2', '~> 0.2.19b5'
   gem.add_runtime_dependency 'pg'
   gem.add_runtime_dependency 'innertube'
+  gem.add_runtime_dependency 'riddle', '>= 1.5.7'
   gem.add_runtime_dependency 'thinking-sphinx', '= 2.0.14'
 
   gem.add_development_dependency 'rake'
