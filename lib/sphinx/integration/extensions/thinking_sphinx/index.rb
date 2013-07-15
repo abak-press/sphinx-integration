@@ -94,14 +94,14 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     model.sphinx_indexes.select { |i| i.merged_with_core? }
   end
 
+  # Перекрытый метод
+  # Возращает индексы, по которым делается select
+  # Оригинальынй TS зачем то перечисляет все индексы, входящие в состав distributed, зачем так делать не совсем понятно
+  # Мы же будем возврящять только distributed индекс, чтобы воспользоваться фичей dist_threads
+  #
+  # Returns Array of String
   def all_names_with_rt
-    if rt?
-      names = [core_name, rt_name, delta_rt_name]
-    else
-      names = [core_name]
-    end
-
-    names
+    [name]
   end
 
   # Карта атрибутов и их типов, нужна для типкастинга
