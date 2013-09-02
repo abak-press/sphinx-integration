@@ -45,7 +45,7 @@ module Sphinx::Integration::Mysql::ConnectionPool
       end
     rescue Innertube::Pool::BadResource
       retries += 1
-      retry if retries < 3
+      retry if retries < 2
       raise original
     end
   end

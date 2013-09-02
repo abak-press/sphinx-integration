@@ -3,119 +3,88 @@ require 'redis-mutex'
 
 module Sphinx::Integration
   class Transmitter
-    attr_reader :record
+    attr_reader :klass
 
-    def initialize(record)
-      @record = record
+    def initialize(klass)
+      @klass = klass
     end
 
     # Обновляет запись в сфинксе
-    def replace
-      self.class.rt_indexes(record.class) do |index|
-        if (data = transmitted_data(index))
-          query = Riddle::Query::Insert.new(index.rt_name, data.keys, data.values).replace!.to_sql
-          self.class.execute(query)
-
-          query = "UPDATE #{index.core_name} SET sphinx_deleted = 1 WHERE id = #{record.sphinx_document_id}"
-          self.class.execute(query)
-
-          if Redis::Mutex.new(:full_reindex).locked?
-            query = Riddle::Query::Insert.new(index.delta_rt_name, data.keys, data.values).replace!.to_sql
-            self.class.execute(query)
-          end
+    #
+    # record - ActiveRecord::Base
+    #
+    # Returns nothing
+    def replace(record)
+      rt_indexes do |index|
+        if (data = transmitted_data(index, record))
+          exec_replace(index.rt_name_w)
+          exec_soft_delete(index.core_name_w, record)
+          exec_replace(index.delta_rt_name_w, data) if write_delta?
         end
       end
     end
-    alias_method :create, :replace
-    alias_method :update, :replace
 
     # Удаляет запись из сфинкса
-    def delete
-      self.class.rt_indexes(record.class) do |index|
-        query = Riddle::Query::Delete.new(index.rt_name, record.sphinx_document_id).to_sql
-        self.class.execute(query)
-
-        query = "UPDATE #{index.core_name} SET sphinx_deleted = 1 WHERE id = #{record.sphinx_document_id}"
-        self.class.execute(query)
-
-        if Redis::Mutex.new(:full_reindex).locked?
-          query = Riddle::Query::Delete.new(index.delta_rt_name, record.sphinx_document_id).to_sql
-          self.class.execute(query)
-        end
+    #
+    # record - ActiveRecord::Base
+    #
+    # Returns nothing
+    def delete(record)
+      rt_indexes do |index|
+        exec_delete(index.rt_name_w, record.sphinx_document_id)
+        exec_soft_delete(index.core_name_w, record)
+        exec_delete(index.delta_rt_name_w, record.sphinx_document_id) if write_delta?
       end
     end
 
     # Обновление отдельных атрибутов записи
     #
+    # record - ActiveRecord::Base
     # fields - Hash (:field => :value)
-    def update_fields(fields)
-      self.class.update_all_fields(record.class, fields, "id = #{record.sphinx_document_id}")
+    #
+    # Returns nothing
+    def update(record, fields)
+      update_fields(fields, {:id => record.sphinx_document_id})
     end
 
     # Обновление отдельных атрибутов индекса по условию
-    # Внимание, решения в этом методе временные, далее будет переписано подругому
     #
-    # klass - Class
     # fields - Hash (:field => :value)
-    # where - String (company_id = 123)
-    def self.update_all_fields(klass, fields, where)
-      rt_indexes(klass) do |index|
-        if Redis::Mutex.new(:full_reindex).locked?
+    # where - String or Hash
+    #
+    # Returns nothing
+    def update_fields(fields, where)
+      rt_indexes do |index|
+        if write_delta?
           query = "SELECT sphinx_internal_id FROM #{index.name} WHERE #{where}"
-          ids = select(query).map{ |row| row['sphinx_internal_id'] }
+          ids = execute(query).to_a.map{ |row| row['sphinx_internal_id'] }
           ids.in_groups_of(500, false) do |group_ids|
-            klass.where(:id => group_ids).each(&:transmitter_update)
+            klass.where(:id => group_ids).each { |record| replace(record) }
           end if ids.any?
         else
-          query = ::Sphinx::Integration::Extensions::Riddle::Query::Update.new(index.name, fields, where).to_sql
-          execute(query)
+          exec_update(index.name_w, fields, where)
         end
       end
+
+      nil # иначе возврашается огромный объект, что выглдяти ужасно в консоле
     end
 
-    private
-
-    # Итератор по всем rt индексам
-    #
-    # klass - Class
-    def self.rt_indexes(klass)
-      klass.sphinx_indexes.select(&:rt?).each do |index|
-        yield index
-      end
-    end
-
-    # Посылает запрос в Sphinx
-    #
-    # query - String
-    def self.execute(query)
-      log(query)
-      ThinkingSphinx.take_connection{ |c| c.execute(query) }
-    end
-
-    # Запрос на получение данных из Sphinx
-    #
-    # query - String
-    # Returns Array
-    def self.select(query)
-      log(query)
-      result = nil
-      ThinkingSphinx.take_connection{ |c| result = c.execute(query).to_a }
-      result
-    end
+    protected
 
     # Данные, необходимые для записи в индекс сфинкса
     #
-    # index - ThinkingSphinx::Index
+    # index  - ThinkingSphinx::Index
+    # record - ActiveRecord::Base
     #
     # Returns Hash
-    def transmitted_data(index)
+    def transmitted_data(index, record)
       sql = index.single_query_sql.gsub('%{ID}', record.id.to_s)
       if index.local_options[:with_sql] && index.local_options[:with_sql][:update]
         sql = index.local_options[:with_sql][:update].call(sql)
       end
       row = record.class.connection.execute(sql).first
       return unless row
-      row.merge!(mva_attributes(index))
+      row.merge!(mva_attributes(index, record))
 
       row.each do |key, value|
         row[key] = case index.attributes_types_map[key]
@@ -127,6 +96,34 @@ module Sphinx::Integration
       end
 
       row
+    end
+
+    # MVA data
+    #
+    # index - ThinkingSphinx::Index
+    #
+    # Returns Hash
+    def mva_attributes(index, record)
+      attrs = {}
+
+      index.mva_sources.each do |name, mva_proc|
+        attrs[name] = mva_proc.call(record)
+      end if index.mva_sources
+
+      attrs
+    end
+
+    private
+
+    # Итератор по всем rt индексам
+    #
+    # Yields ThinkingSphinx::Index
+    #
+    # Returns nothing
+    def rt_indexes
+      klass.sphinx_indexes.select(&:rt?).each do |index|
+        yield index
+      end
     end
 
     # Привести тип к мульти атрибуту
@@ -144,26 +141,54 @@ module Sphinx::Integration
       end
     end
 
-    # MVA data
-    #
-    # index - ThinkingSphinx::Index
-    #
-    # Returns Hash
-    def mva_attributes(index)
-      attrs = {}
-
-      index.mva_sources.each do |name, mva_proc|
-        attrs[name] = mva_proc.call(record)
-      end if index.mva_sources
-
-      attrs
-    end
-
     # Залогировать
     #
     # message - String
-    def self.log(message)
+    def log(message)
       ::ActiveSupport::Notifications.instrument('message.thinking_sphinx', :message => message)
+    end
+
+    def config
+      ThinkingSphinx::Configuration.instance
+    end
+
+    def replication?
+      config.replication?
+    end
+
+    def write_delta?
+      Redis::Mutex.new(:full_reindex).locked?
+    end
+
+    # Посылает sql запрос в Sphinx
+    #
+    # query - String
+    #
+    # Returns Mysql2::Result
+    def execute(query)
+      log(query)
+      ThinkingSphinx.take_connection{ |c| c.execute(query) }
+    end
+
+    def exec_replace(index_name, data)
+      query = Riddle::Query::Insert.new(index_name, data.keys, data.values).replace!.to_sql
+      execute(query)
+    end
+
+    def exec_update(index_name, data, where)
+      query = ::Sphinx::Integration::Extensions::Riddle::Query::Update.new(index_name, data, where).to_sql
+      execute(query)
+    end
+
+    def exec_delete(index_name, document_id)
+      query = Riddle::Query::Delete.new(index_name, document_id).to_sql
+      execute(query)
+    end
+
+    def exec_soft_delete(inde_name, record)
+      unless record.exists_in_sphinx?(index_name)
+        exec_update(inde_name, {:sphinx_deleted => 1}, {:id => record.sphinx_document_id})
+      end
     end
   end
 end

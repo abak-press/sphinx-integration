@@ -7,7 +7,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
   included do
     attr_accessor :merged_with_core, :is_core_index, :mva_sources
     alias_method_chain :initialize, :mutex
-    alias_method_chain :to_riddle, :merged
+    alias_method_chain :to_riddle, :replication
     alias_method_chain :to_riddle_for_distributed, :merged
     alias_method_chain :all_names, :rt
   end
@@ -17,9 +17,35 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     initialize_without_mutex(model, &block)
   end
 
-  def to_riddle_with_merged(offset)
+  # Набор индексов для конфигурационного файла сфинкса
+  #
+  # offset      - Integer
+  # config_type - Symbol
+  #
+  # Returns Array
+  def to_riddle_with_replication(offset, config_type)
     return [] if merged_with_core?
 
+    if config_type == :master
+      to_master_riddle
+    else
+      to_slave_riddle(offset)
+    end
+  end
+
+  # Сформировать набор индесов для мастера
+  #
+  # Returns nothing
+  def to_master_riddle
+    build_read_indexes + build_write_indexes
+  end
+
+  # Сформировать набор индексов для слейва
+  #
+  # offset - Integer
+  #
+  # Returns nothing
+  def to_slave_riddle(offset)
     indexes = [to_riddle_for_core(offset)]
     indexes << to_riddle_for_delta(offset) if delta?
 
@@ -38,13 +64,86 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     indexes
   end
 
+  # Построить distributed индексы на чтение
+  #
+  # Returns Array
+  def build_read_indexes
+    indexes = []
+    all_index_names.each do |index_name|
+      indexes << (index = build_master_distributed(index_name))
+      cluster = []
+      config.agents.each do |name, agent|
+        cluster << build_master_remote(index_name, agent)
+      end
+      index.mirror_indices << cluster
+    end
+
+    indexes
+  end
+
+  # Построить distributed индексы на запись
+  #
+  # Returns Array
+  def build_write_indexes
+    indexes = []
+    all_index_names.each do |index_name|
+      indexes << (index = build_master_distributed("#{index_name}_w"))
+      config.agents.each do |name, agent|
+        index.remote_indices << build_master_remote(index_name, agent)
+      end
+    end
+
+    indexes
+  end
+
+  # Создать объект distributed индекс для мастера
+  #
+  # index_name - String
+  #
+  # Returns Riddle::Configuration::DistributedIndex
+  def build_master_distributed(index_name)
+    index = Riddle::Configuration::DistributedIndex.new(index_name)
+    index.agent_connect_timeout = config.agent_connect_timeout
+    index.ha_strategy = 'nodeads'
+    index
+  end
+
+  # Создать объект remote индекс для мастера
+  #
+  # index_name - String
+  #
+  # Returns Riddle::Configuration::RemoteIndex
+  def build_master_remote(index_name, agent)
+    Riddle::Configuration::RemoteIndex.new(agent['address'], agent['port'], index_name)
+  end
+
+  # Имена всех индексов
+  #
+  # Returns Array
+  def all_index_names
+    names = [name, core_name]
+    names += [rt_name, delta_rt_name] if rt?
+    names
+  end
+
   def to_riddle_for_rt(delta = false)
     index = Riddle::Configuration::RealtimeIndex.new delta ? delta_rt_name : rt_name
-    index.path = File.join config.searchd_file_path, index.name
+    index.path = File.join(config.searchd_file_path, index.name)
     index.rt_field = fields.map(&:unique_name)
     index.rt_mem_limit = local_options[:rt_mem_limit] if local_options[:rt_mem_limit]
     index.charset_type = 'utf-8'
 
+    collect_rt_index_attributes(index)
+
+    index
+  end
+
+  # Собрать атрибуты по типам для rt индекса
+  #
+  # index - Riddle::Configuration::RealtimeIndex
+  #
+  # Returns nothing
+  def collect_rt_index_attributes(index)
     attributes.each do |attr|
       attr_type = case attr.type
       when :integer, :boolean then :rt_attr_uint
@@ -57,7 +156,6 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
 
       index.send(attr_type) << attr.unique_name
     end
-    index
   end
 
   def to_riddle_for_distributed_with_merged
@@ -74,12 +172,37 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     index
   end
 
+  # Truncate rt index
+  #
+  # index_name - String
+  #
+  # Returns nothing
+  def truncate(index_name)
+    ThinkingSphinx.take_connection { |c| c.execute("TRUNCATE RTINDEX #{index_name}") }
+  end
+
+  def name_w
+    @name_w ||= config.replication? ? "#{name}_w" : name
+  end
+
+  def core_name_w
+    @core_name_w ||= config.replication? ? "#{core_name}_w" : core_name
+  end
+
   def rt_name
-    "#{name}_rt"
+    @rt_name ||= "#{name}_rt"
+  end
+
+  def rt_name_w
+    @rt_name_w ||= config.replication? ? "#{rt_name}_w" : rt_name
   end
 
   def delta_rt_name
-    "#{name}_delta_rt"
+    @delta_rt_name ||= "#{name}_delta_rt"
+  end
+
+  def delta_rt_name_w
+    @delta_rt_name_w ||= config.replication? ? "#{delta_rt_name}_w" : delta_rt_name
   end
 
   def rt?
