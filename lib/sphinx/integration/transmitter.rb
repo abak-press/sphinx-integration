@@ -135,12 +135,27 @@ module Sphinx::Integration
         row[key] = case index.attributes_types_map[key]
           when :integer then value.to_i
           when :float then value.to_f
-          when :multi then value.is_a?(String) ? value.split(',') : value
+          when :multi then type_cast_to_multi(value)
           else value
           end
       end
 
       row
+    end
+
+    # Привести тип к мульти атрибуту
+    #
+    # value - NilClass or String or Array
+    #
+    # Returns Array
+    def type_cast_to_multi(value)
+      if value.nil?
+        []
+      elsif value.is_a?(String)
+        value.split(',')
+      else
+        value
+      end
     end
 
     # MVA data
