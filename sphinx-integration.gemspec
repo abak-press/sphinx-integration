@@ -19,7 +19,7 @@ Gem::Specification.new do |gem|
 
   gem.add_runtime_dependency 'redis-classy', '~> 1.2.0'
   gem.add_runtime_dependency 'redis-mutex', '~> 2.1.0'
-  gem.add_runtime_dependency 'mysql2', '~> 0.2.19b5'
+  gem.add_runtime_dependency 'mysql2', '>= 0.2.19b5'
   gem.add_runtime_dependency 'pg'
   gem.add_runtime_dependency 'innertube'
   gem.add_runtime_dependency 'rye'
