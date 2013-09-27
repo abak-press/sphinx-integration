@@ -17,4 +17,5 @@ test/tmp
 test/version_tmp
 tmp
 spec/internal/config/database.yml
+spec/internal/config/sphinx.yml
 combustion

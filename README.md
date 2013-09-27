@@ -1,22 +1,137 @@
 # Sphinx::Integration
 
-Набор надстроек над ThinkingSphinx и Riddle
+Набор надстроек и манкипатчинга над ThinkingSphinx и Riddle
+Код гема не претендует на красоту, т.к. манки от слова обезьяна =)
 
-Гем служит для использования real time индексов, а также для более хитрого написания sql запросов при описании индекса.
+Возможности:
++ real time индексы
++ продвинутые sql запросы при описании индекса
++ репликация
 
 # Возможности:
 
-## Запуск сфинкса и индексатора
+## Rake tasks
+Если в параметрах не передавать node, то по умолчанию комманда будет выполнена на всех нодах
 
-Всё стандартно, как и в thinking sphinx, т.к. все его rake таски перекрыты
+rake sphinx:start[node]
+rake sphinx:stop[node]
+rake sphinx:restart[node]
+rake sphinx:index[node,offline]
+rake sphinx:rebuild[node]
+rake sphinx:conf
+rake sphinx:copy_conf[node]
+rake sphinx:rm_indexes[node]
+rake sphinx:rm_binlog[node]
 
-+ rake ts:conf
-+ rake ts:start
-+ rake ts:stop
-+ rake ts:in
-+ rake ts:rebuild
+*Внимание* при офлайн индексации rt индексы не очищаются. Рекоммендуется в этом случае использовать rebuild
 
-*Внимание* при офлайн индексации rt индексы не очищаются. Рекоммендуется в этом случае использовать ts:rebuild
+## config/sphinx.yml
+
+### development
+
+```yml
+development:
+  remote: false
+
+  address: localhost
+  port: 10300
+  mysql41: 9300
+  listen_all_interfaces: true
+
+  max_matches: 5000
+  version: 2.0.3
+  mem_limit: 512M
+  write_buffer: 4M
+  attr_flush_period: 900
+  mva_updates_pool: 16M
+  rt_mem_limit: 2048M
+  read_buffer: 1M
+  workers: threads
+  binlog_max_log_size: 1024M
+  rt_flush_period: 86400
+```
+
+### production
+
+```yml
+production:
+  remote: true
+
+  address: index
+  port: 10300
+  mysql41: 9300
+  listen_all_interfaces: true
+
+  max_matches: 5000
+  version: 2.0.3
+  mem_limit: 512M
+  write_buffer: 4M
+  attr_flush_period: 900
+  mva_updates_pool: 16M
+  rt_mem_limit: 2048M
+  read_buffer: 1M
+  workers: threads
+  binlog_max_log_size: 1024M
+  rt_flush_period: 86400
+
+  user: sphinx
+  remote_path: /home/index
+  query_log_file: /dev/null
+  searchd_log_file: logs/searchd.log
+  pid_file: pid/searchd.pid
+  searchd_file_path: data
+  binlog_path: binlog
+```
+
+### production with replication
+
+```yml
+production:
+  remote: true
+  replication: true
+
+  address: index
+  port: 10300
+  mysql41: 9300
+  listen_all_interfaces: false
+
+  max_matches: 5000
+  version: 2.0.3
+  mem_limit: 512M
+  write_buffer: 4M
+  attr_flush_period: 900
+  mva_updates_pool: 16M
+  rt_mem_limit: 2048M
+  read_buffer: 1M
+  workers: threads
+  binlog_max_log_size: 1024M
+  rt_flush_period: 86400
+  agent_connect_timeout: 50
+  ha_strategy: nodeads
+
+  user: sphinx
+  remote_path: /home/index/master
+  query_log_file: /dev/null
+  searchd_log_file: logs/searchd.log
+  pid_file: pid/searchd.pid
+  searchd_file_path: data
+  binlog_path: binlog
+
+  agents:
+    slave1:
+      address: index
+      port: 10301
+      mysql41: 9301
+      listen_all_interfaces: true
+      remote_path: /home/index/slave
+    slave2:
+      address: index2
+      port: 10302
+      mysql41: 9302
+      listen_all_interfaces: true
+      remote_path: /home/index/slave
+```
+
 
 ## Поддержка RT индексов
 ```ruby
