@@ -13,15 +13,21 @@ module Sphinx::Integration::Extensions
         end
 
         def to_sql
-          "UPDATE #{@index} SET #{fields_to_s} WHERE #{@where}"
+          "UPDATE #{@index} SET #{fields_to_s} WHERE #{where_to_s}"
         end
 
         private
 
         def fields_to_s
-          (@fields.map do |field, value|
-            "#{field} = #{translated_value(value)}"
-          end).join(', ')
+          @fields.map { |field, value| "#{field} = #{translated_value(value)}" }.join(', ')
+        end
+
+        def where_to_s
+          if @where.is_a?(Hash)
+            @where.map { |field, value| "#{field} = #{translated_value(value)}" }.join(' AND ')
+          else
+            @where.to_s
+          end
         end
 
       end

@@ -1,7 +1,7 @@
+# coding: utf-8
+
 require 'rubygems'
 require 'bundler'
-#require 'rspec'
-#require 'sphinx/integration'
 
 Bundler.require :default, :development
 
@@ -13,7 +13,7 @@ require 'mock_redis'
 require 'redis-classy'
 
 RSpec.configure do |config|
-  config.backtrace_clean_patterns = [/lib\/rspec\/(core|expectations|matchers|mocks)/]
+  config.backtrace_exclusion_patterns = [/lib\/rspec\/(core|expectations|matchers|mocks)/]
   config.color_enabled = true
   config.formatter = 'documentation'
   config.order = 'random'

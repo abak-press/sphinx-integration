@@ -5,6 +5,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Source
 
   included do
     alias_method_chain :set_source_database_settings, :slave
+    include Sphinx::Integration::Extensions::ThinkingSphinx::Source::SQL
   end
 
   def set_source_database_settings_with_slave(source)
