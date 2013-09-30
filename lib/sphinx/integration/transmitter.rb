@@ -17,9 +17,9 @@ module Sphinx::Integration
     def replace(record)
       rt_indexes do |index|
         if (data = transmitted_data(index, record))
-          exec_replace(index.rt_name_w, data)
+          exec_replace(index.rt_name, data)
           exec_soft_delete(index.core_name_w, record.sphinx_document_id) if record.exists_in_sphinx?(index.core_name)
-          exec_replace(index.delta_rt_name_w, data) if write_delta?
+          exec_replace(index.delta_rt_name, data) if write_delta?
         end
       end
     end
@@ -165,14 +165,25 @@ module Sphinx::Integration
     # query - String
     #
     # Returns Mysql2::Result
-    def execute(query)
-      log(query)
-      ThinkingSphinx.take_connection{ |c| c.execute(query) }
+    def execute(query, options = {})
+      result = nil
+      ::ThinkingSphinx::Search.log(query) do
+        if options[:on_slaves]
+          ::Sphinx::Integration::Mysql::ConnectionPool.take_slaves do |connection|
+            connection.execute(query)
+          end
+        else
+          ::Sphinx::Integration::Mysql::ConnectionPool.take do |connection|
+            result = connection.execute(query)
+          end
+        end
+      end
+      result
     end
 
     def exec_replace(index_name, data)
       query = Riddle::Query::Insert.new(index_name, data.keys, data.values).replace!.to_sql
-      execute(query)
+      execute(query, :on_slaves => true)
     end
 
     def exec_update(index_name, data, where)
