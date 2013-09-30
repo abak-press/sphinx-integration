@@ -17,8 +17,8 @@ module Sphinx::Integration
     def replace(record)
       rt_indexes do |index|
         if (data = transmitted_data(index, record))
-          exec_replace(index.rt_name_w)
-          exec_soft_delete(index.core_name_w, record)
+          exec_replace(index.rt_name_w, data)
+          exec_soft_delete(index.core_name_w, record.sphinx_document_id) if record.exists_in_sphinx?(index.core_name)
           exec_replace(index.delta_rt_name_w, data) if write_delta?
         end
       end
@@ -32,7 +32,7 @@ module Sphinx::Integration
     def delete(record)
       rt_indexes do |index|
         exec_delete(index.rt_name_w, record.sphinx_document_id)
-        exec_soft_delete(index.core_name_w, record)
+        exec_soft_delete(index.core_name_w, record.sphinx_document_id) if record.exists_in_sphinx?(index.core_name)
         exec_delete(index.delta_rt_name_w, record.sphinx_document_id) if write_delta?
       end
     end
@@ -185,10 +185,8 @@ module Sphinx::Integration
       execute(query)
     end
 
-    def exec_soft_delete(inde_name, record)
-      unless record.exists_in_sphinx?(index_name)
-        exec_update(inde_name, {:sphinx_deleted => 1}, {:id => record.sphinx_document_id})
-      end
+    def exec_soft_delete(index_name, document_id)
+      exec_update(index_name, {:sphinx_deleted => 1}, {:id => document_id})
     end
   end
 end
