@@ -61,6 +61,17 @@ describe ThinkingSphinx::Configuration do
     end
   end
 
+  describe '`agent_query_timeout` option' do
+    context 'when default' do
+      it { expect(config.agent_query_timeout).to eq 5000 }
+    end
+
+    context 'when specified' do
+      let(:spec_options){ {'test' => {'agent_query_timeout' => 100}} }
+      it { expect(config.agent_query_timeout).to eq 100 }
+    end
+  end
+
   describe '`ha_strategy` option' do
     context 'when default' do
       it { expect(config.ha_strategy).to eq 'nodeads' }
