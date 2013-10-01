@@ -262,32 +262,10 @@ module Sphinx::Integration
     def catch_up_indexes(options = {})
       options = options.reverse_merge(:truncate => true)
 
-      # есть проблема, такие команды как truncate засылать в мастер нельзя
-      # http://sphinxsearch.com/forum/view.html?id=11498
-      # т.е. вот так сделать пока не получиться index.truncate(index.rt_name_w)
-
       rt_indexes do |index, model|
-        truncate_index(index.rt_name) if options[:truncate]
+        index.truncate(index.rt_name) if options[:truncate]
         dump_delta_index(model, index)
-        truncate_index(index.delta_rt_name)
-      end
-    end
-
-    # Очистить индекс
-    #
-    # index_name - String
-    #
-    # Returns nothing
-    def truncate_index(index_name)
-      cmd = "'TRUNCATE RTINDEX %s' | mysql -h %s -P %s"
-
-      if config.replication?
-        config.agents.each do |_, agent|
-          Rye.shell(:echo, cmd % [index_name, agent[:address], agent[:mysql41].is_a?(TrueClass) ? '9306' : agent[:mysql41].to_s])
-        end
-      else
-        port = config.configuration.searchd.mysql41
-        Rye.shell(:echo, cmd % [index_name, config.configuration.searchd.address, port.is_a?(TrueClass) ? '9306' : port.to_s])
+        index.truncate(index.delta_rt_name)
       end
     end
 

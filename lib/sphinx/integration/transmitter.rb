@@ -17,9 +17,9 @@ module Sphinx::Integration
     def replace(record)
       rt_indexes do |index|
         if (data = transmitted_data(index, record))
-          exec_replace(index.rt_name, data)
-          exec_soft_delete(index.core_name_w, record.sphinx_document_id) if record.exists_in_sphinx?(index.core_name)
-          exec_replace(index.delta_rt_name, data) if write_delta?
+          sphinx_replace(index.rt_name, data)
+          sphinx_soft_delete(index.core_name_w, record.sphinx_document_id) if record.exists_in_sphinx?(index.core_name)
+          sphinx_replace(index.delta_rt_name, data) if write_delta?
         end
       end
     end
@@ -31,42 +31,39 @@ module Sphinx::Integration
     # Returns nothing
     def delete(record)
       rt_indexes do |index|
-        exec_delete(index.rt_name_w, record.sphinx_document_id)
-        exec_soft_delete(index.core_name_w, record.sphinx_document_id) if record.exists_in_sphinx?(index.core_name)
-        exec_delete(index.delta_rt_name_w, record.sphinx_document_id) if write_delta?
+        sphinx_delete(index.rt_name_w, record.sphinx_document_id)
+        sphinx_soft_delete(index.core_name_w, record.sphinx_document_id) if record.exists_in_sphinx?(index.core_name)
+        sphinx_delete(index.delta_rt_name_w, record.sphinx_document_id) if write_delta?
       end
     end
 
     # Обновление отдельных атрибутов записи
     #
     # record - ActiveRecord::Base
-    # fields - Hash (:field => :value)
+    # data   - Hash (:field => :value)
     #
     # Returns nothing
-    def update(record, fields)
-      update_fields(fields, {:id => record.sphinx_document_id})
+    def update(record, data)
+      update_fields(data, {:id => record.sphinx_document_id})
     end
 
     # Обновление отдельных атрибутов индекса по условию
     #
     # fields - Hash (:field => :value)
-    # where - String or Hash
+    # where  - Hash
     #
     # Returns nothing
     def update_fields(fields, where)
       rt_indexes do |index|
         if write_delta?
-          query = "SELECT sphinx_internal_id FROM #{index.name} WHERE #{where}"
-          ids = execute(query).to_a.map{ |row| row['sphinx_internal_id'] }
+          ids = sphinx_select('sphinx_internal_id', index.name, where).map{ |row| row['sphinx_internal_id'] }
           ids.in_groups_of(500, false) do |group_ids|
             klass.where(:id => group_ids).each { |record| replace(record) }
           end if ids.any?
         else
-          exec_update(index.name_w, fields, where)
+          sphinx_update(index.name_w, fields, where)
         end
       end
-
-      nil # иначе возврашается огромный объект, что выглдяти ужасно в консоле
     end
 
     protected
@@ -160,44 +157,34 @@ module Sphinx::Integration
       Redis::Mutex.new(:full_reindex).locked?
     end
 
-    # Посылает sql запрос в Sphinx
-    #
-    # query - String
-    #
-    # Returns Mysql2::Result
-    def execute(query, options = {})
-      result = nil
-      ::ThinkingSphinx::Search.log(query) do
-        if options[:on_slaves]
-          ::Sphinx::Integration::Mysql::ConnectionPool.take_slaves do |connection|
-            connection.execute(query)
-          end
-        else
-          ::Sphinx::Integration::Mysql::ConnectionPool.take do |connection|
-            result = connection.execute(query)
-          end
-        end
-      end
-      result
-    end
-
-    def exec_replace(index_name, data)
+    def sphinx_replace(index_name, data)
       query = Riddle::Query::Insert.new(index_name, data.keys, data.values).replace!.to_sql
-      execute(query, :on_slaves => true)
+      ThinkingSphinx.execute(query, :on_slaves => replication?)
     end
 
-    def exec_update(index_name, data, where)
+    def sphinx_update(index_name, data, where)
       query = ::Sphinx::Integration::Extensions::Riddle::Query::Update.new(index_name, data, where).to_sql
-      execute(query)
+      ThinkingSphinx.execute(query)
     end
 
-    def exec_delete(index_name, document_id)
+    def sphinx_delete(index_name, document_id)
       query = Riddle::Query::Delete.new(index_name, document_id).to_sql
-      execute(query)
+      ThinkingSphinx.execute(query)
     end
 
-    def exec_soft_delete(index_name, document_id)
-      exec_update(index_name, {:sphinx_deleted => 1}, {:id => document_id})
+    def sphinx_soft_delete(index_name, document_id)
+      sphinx_update(index_name, {:sphinx_deleted => 1}, {:id => document_id})
+    end
+
+    def sphinx_select(values, index_name, where)
+      query = Riddle::Query::Select.
+        new.
+        reset_values.
+        values(values).
+        from(index_name).
+        where(where).
+        to_sql
+      ThinkingSphinx.execute(query).to_a
     end
   end
 end
