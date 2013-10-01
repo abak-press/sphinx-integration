@@ -43,10 +43,11 @@ development:
   mem_limit: 512M
   write_buffer: 4M
   attr_flush_period: 900
-  mva_updates_pool: 16M
+  mva_updates_pool: 768M
   rt_mem_limit: 2048M
   read_buffer: 1M
   workers: threads
+  dist_threads: 2
   binlog_max_log_size: 1024M
   rt_flush_period: 86400
 ```
@@ -67,10 +68,11 @@ production:
   mem_limit: 512M
   write_buffer: 4M
   attr_flush_period: 900
-  mva_updates_pool: 16M
+  mva_updates_pool: 768M
   rt_mem_limit: 2048M
   read_buffer: 1M
   workers: threads
+  dist_threads: 2
   binlog_max_log_size: 1024M
   rt_flush_period: 86400
 
@@ -100,10 +102,11 @@ production:
   mem_limit: 512M
   write_buffer: 4M
   attr_flush_period: 900
-  mva_updates_pool: 16M
+  mva_updates_pool: 768M
   rt_mem_limit: 2048M
   read_buffer: 1M
   workers: threads
+  dist_threads: 2
   binlog_max_log_size: 1024M
   rt_flush_period: 86400
   agent_connect_timeout: 50
