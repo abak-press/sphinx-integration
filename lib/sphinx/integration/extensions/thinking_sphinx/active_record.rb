@@ -10,7 +10,6 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
     extend ActiveSupport::Concern
 
     included do
-      #class_inheritable_accessor :transmitter_instance
       after_commit :transmitter_create, :on => :create
       after_commit :transmitter_update, :on => :update
       after_commit :transmitter_destroy, :on => :destroy
@@ -36,7 +35,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
       # Обновить атрибуты в сфинксе по условию
       #
       # fields - Hash
-      # where  - String
+      # where  - Hash
       def update_sphinx_fields(fields, where)
         transmitter.update_fields(fields, where)
       end

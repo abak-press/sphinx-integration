@@ -179,7 +179,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
   #
   # Returns nothing
   def truncate(index_name)
-    ThinkingSphinx.take_connection { |c| c.execute("TRUNCATE RTINDEX #{index_name}") }
+    ThinkingSphinx.execute("TRUNCATE RTINDEX #{index_name}", :on_slaves => config.replication?)
   end
 
   def name_w

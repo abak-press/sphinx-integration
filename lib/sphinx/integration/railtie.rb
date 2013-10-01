@@ -15,6 +15,7 @@ module Sphinx::Integration
     initializer 'sphinx_integration.extensions', :after => 'thinking_sphinx.set_app_root' do
       [
         Riddle::Query::Insert,
+        Riddle::Query::Select,
         Riddle::Configuration,
         Riddle::Configuration::DistributedIndex,
         ThinkingSphinx,

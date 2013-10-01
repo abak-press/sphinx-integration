@@ -29,9 +29,30 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
       end
     end
 
-    def take_connection
-      Sphinx::Integration::Mysql::ConnectionPool.take do |connection|
-        yield connection
+    # Посылает sql запрос в Sphinx
+    #
+    # query - String
+    #
+    # Returns Mysql2::Result|NilClass
+    def execute(query, options = {})
+      result = nil
+      ::ThinkingSphinx::Search.log(query) do
+        take_connection(options) do |connection|
+          result = connection.execute(query)
+        end
+      end
+      result
+    end
+
+    def take_connection(options = {})
+      if options.fetch(:on_slaves, false)
+        ::Sphinx::Integration::Mysql::ConnectionPool.take_slaves do |connection|
+          yield connection
+        end
+      else
+        Sphinx::Integration::Mysql::ConnectionPool.take do |connection|
+          yield connection
+        end
       end
     end
 
