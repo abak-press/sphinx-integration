@@ -1,4 +1,4 @@
-# Sphinx::Integration
+# Sphinx::Integration [![Code Climate](https://codeclimate.com/repos/51fb821789af7e473903447a/badges/ce24bf62ba430b5cc871/gpa.png)](https://codeclimate.com/repos/51fb821789af7e473903447a/feed)
 
 Набор надстроек и манкипатчинга над ThinkingSphinx и Riddle
 Код гема не претендует на красоту, т.к. манки от слова обезьяна =)
