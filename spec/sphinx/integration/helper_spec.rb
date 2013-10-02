@@ -116,11 +116,6 @@ describe Sphinx::Integration::Helper do
       after { helper.rebuild }
     end
 
-    describe '#truncate_index' do
-      it { expect(Rye).to receive(:shell).with(:echo, /TRUNCATE RTINDEX index_name/) }
-      after { helper.send(:truncate_index, 'index_name') }
-    end
-
     describe '#dump_delta_index' do
       let(:model) { double('model') }
       let(:records) { [double('record')] }
