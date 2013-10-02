@@ -48,11 +48,16 @@ module Sphinx::Integration::Mysql::ConnectionPool
   end
 
   def self.agents_pool(agent_name)
-    @agents_pool ||= {}
-    @agents_pool[agent_name] ||= Innertube::Pool.new(
-      Proc.new { Sphinx::Integration::Mysql::ConnectionPool.slave_connection(agent_name) },
-      Proc.new { |connection| connection.close }
-    )
+    return @agents_pool[agent_name] if @agents_pool.key?(agent_name)
+
+    @take_slaves_mutex.synchronize do
+      return @agents_pool[agent_name] if @agents_pool.key?(agent_name)
+
+      @agents_pool[agent_name] ||= Innertube::Pool.new(
+        Proc.new { Sphinx::Integration::Mysql::ConnectionPool.slave_connection(agent_name) },
+        Proc.new { |connection| connection.close }
+      )
+    end
   end
 
   def self.take
@@ -79,6 +84,9 @@ module Sphinx::Integration::Mysql::ConnectionPool
   end
 
   def self.take_slaves(silent = true)
+    @take_slaves_mutex ||= Mutex.new
+    @agents_pool ||= {}
+
     threads = []
 
     ThinkingSphinx::Configuration.instance.agents.each do |agent_name, _|
