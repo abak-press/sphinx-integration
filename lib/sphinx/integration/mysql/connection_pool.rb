@@ -87,10 +87,10 @@ module Sphinx::Integration::Mysql::ConnectionPool
     @take_slaves_mutex ||= Mutex.new
     @agents_pool ||= {}
 
-    threads = []
+    #threads = []
 
     ThinkingSphinx::Configuration.instance.agents.each do |agent_name, _|
-      threads << Thread.new do
+      #threads << Thread.new do
 
         retries  = 0
         original = nil
@@ -117,12 +117,16 @@ module Sphinx::Integration::Mysql::ConnectionPool
         rescue Innertube::Pool::BadResource
           retries += 1
           retry if retries < 2
-          raise original
+          if silent
+            Rails.logger.warn original.message
+          else
+            raise original
+          end
         end
 
-      end
+      #end
     end
 
-    threads.each { |t| t.join }
+    #threads.each { |t| t.join }
   end
 end
