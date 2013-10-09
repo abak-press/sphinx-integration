@@ -187,7 +187,10 @@ module Sphinx::Integration
       add_commands
 
       @master = Rye::Box.new(config.address, ssh_options)
-      @master.pre_command_hook = proc { |cmd, *_| cmd.sub!('%REMOTE_PATH%', config.configuration.searchd.remote_path.cleanpath.to_s) }
+      @master.pre_command_hook = proc do |cmd, *_|
+        cmd.sub!('%REMOTE_PATH%', config.configuration.searchd.remote_path.cleanpath.to_s)
+        ::Kernel.puts cmd
+      end
       @master.stdout_hook = proc { |data| ::Kernel.puts data.to_s }
 
       @nodes = Rye::Set.new('nodes', ssh_options.merge(:parallel => true))
@@ -200,6 +203,7 @@ module Sphinx::Integration
           agent[:box].pre_command_hook = proc do |cmd, *_|
             remote_path = agent.fetch(:remote_path, config.configuration.searchd.remote_path)
             cmd.sub!('%REMOTE_PATH%', remote_path.cleanpath.to_s)
+            ::Kernel.puts cmd
           end
           agent[:box].stdout_hook = proc { |data| ::Kernel.puts data.to_s }
           agents.add_box(agent[:box])
@@ -241,13 +245,15 @@ module Sphinx::Integration
     def full_reindex_with_replication(online = true)
       with_index_lock do
         main_box = agents.boxes.shift
-        main_box.indexer
+        main_box.indexer(online ? '--rotate' : '')
         data_path = Pathname.new(config.searchd_file_path(false)).cleanpath.to_s
-        main_box_remote_path = config.agents.detect { |_, x| x[:box] == main_box }.last.fetch(:remote_path, config.configuration.searchd.remote_path)
-        source_path = "#{main_box_remote_path.cleanpath.to_s}/#{data_path}/*#{'.new.*' if online}"
-        agents.execute("rsync -lptv #{main_box.user}@#{main_box.host}:#{source_path} %REMOTE_PATH%/#{data_path}/")
-        agents.boxes.unshift(main_box)
+        main_agent = config.agents.detect { |_, x| x[:box] == main_box }.last
+        main_box_remote_path = main_agent.fetch(:remote_path, config.configuration.searchd.remote_path)
+        source_path = "#{main_box_remote_path.cleanpath.to_s}/#{data_path}/*_core.sp?"
+        main_ssh = "#{main_box.user}@#{main_box.host}"
+        agents.execute(%{(ssh #{main_ssh} 'ls #{source_path}') | (xargs -I% bash -c 'scp #{main_ssh}:% %REMOTE_PATH%/#{data_path}/$(basename % | sed -e ''s/_core./_core.new./g'')')})
         agents.kill("-SIGHUP `cat %REMOTE_PATH%/#{config.configuration.searchd.pid_file(false)}`") if online
+        agents.boxes.unshift(main_box)
       end
 
       catch_up_indexes if online
