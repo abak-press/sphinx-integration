@@ -88,7 +88,7 @@ describe Sphinx::Integration::Helper do
     describe '#index' do
       context 'when offline' do
         it do
-          expect(helper).to receive(:local_indexer).with('')
+          expect(helper).to receive(:local_indexer).with([])
           expect(helper).to_not receive(:catch_up_indexes)
         end
         after { helper.index(false) }
@@ -96,7 +96,7 @@ describe Sphinx::Integration::Helper do
 
       context 'when online' do
         it do
-          expect(helper).to receive(:local_indexer).with('--rotate')
+          expect(helper).to receive(:local_indexer).with(['--rotate'])
           expect(helper).to receive(:catch_up_indexes)
         end
         after { helper.index }
@@ -244,7 +244,7 @@ describe Sphinx::Integration::Helper do
           let(:current_node) { 'slave2' }
           context 'when online' do
             it do
-              expect(helper.nodes).to receive(:indexer).with('--rotate')
+              expect(helper.nodes).to receive(:indexer).with(['--rotate', "--config %REMOTE_PATH%/conf/sphinx.conf"])
               expect(helper).to receive(:catch_up_indexes).with(:truncate => false)
             end
             after { helper.index }
@@ -252,7 +252,7 @@ describe Sphinx::Integration::Helper do
 
           context 'when offline' do
             it do
-              expect(helper.nodes).to receive(:indexer).with('')
+              expect(helper.nodes).to receive(:indexer).with(["--config %REMOTE_PATH%/conf/sphinx.conf"])
               expect(helper).to_not receive(:catch_up_indexes)
             end
             after { helper.index(false) }
@@ -272,15 +272,32 @@ describe Sphinx::Integration::Helper do
         helper.send(:config).agents['slave2'][:box] = slave2
       end
 
-      it do
-        expect(slave1).to receive(:indexer).with(no_args)
-        expect(slave1).to receive(:user)
-        expect(slave1).to receive(:host)
-        expect(helper.agents).to receive(:execute).with(/rsync/)
-        expect(helper.agents).to receive(:kill).with(/SIGHUP/)
-        expect(helper).to receive(:catch_up_indexes)
+      context 'when online' do
+        it do
+          expect(slave1).to receive(:execute).with(/sed/)
+          expect(slave1).to receive(:indexer)
+          expect(slave1).to receive(:rm)
+
+          expect(slave1).to receive(:user)
+          expect(slave1).to receive(:host)
+          expect(helper.agents).to receive(:execute).with(/rsync/)
+          expect(helper.agents).to receive(:kill).with(/SIGHUP/)
+          expect(helper).to receive(:catch_up_indexes)
+        end
+        after { helper.send(:full_reindex_with_replication) }
       end
-      after { helper.send(:full_reindex_with_replication) }
+
+      context 'when offline' do
+        it do
+          expect(slave1).to receive(:indexer)
+
+          expect(slave1).to receive(:user)
+          expect(slave1).to receive(:host)
+          expect(helper.agents).to receive(:execute).with(/rsync/)
+          expect(helper).to_not receive(:catch_up_indexes)
+        end
+        after { helper.send(:full_reindex_with_replication, false) }
+      end
     end
   end
 end
