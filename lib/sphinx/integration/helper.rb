@@ -7,6 +7,7 @@ module Sphinx::Integration
 
     MAX_FULL_REINDEX_LOCK_TIME = 6.hours
     CONFIG_PATH = 'conf/sphinx.conf'.freeze
+    REINDEX_CONFIG_PATH = 'conf/sphinx.reindex.conf'.freeze
 
     attr_reader :node
     attr_reader :master
@@ -144,9 +145,11 @@ module Sphinx::Integration
     def index(online = true)
       raise 'Мастер ноду нельзя индексировать' if node.master?
 
-      indexer_args = online ? '--rotate' : ''
+      indexer_args = []
+      indexer_args << '--rotate' if online
 
       if config.remote?
+        indexer_args << "--config %REMOTE_PATH%/#{CONFIG_PATH}"
         if config.replication?
           if node.all?
             full_reindex_with_replication(online)
@@ -169,13 +172,15 @@ module Sphinx::Integration
     #
     # Returns nothing
     def rebuild
-      stop
-      configure
-      copy_config
-      remove_indexes
-      remove_binlog
-      index(false)
-      start
+      with_updates_lock do
+        stop
+        configure
+        copy_config
+        remove_indexes
+        remove_binlog
+        index(false)
+        start
+      end
     end
 
     protected
@@ -188,8 +193,8 @@ module Sphinx::Integration
 
       @master = Rye::Box.new(config.address, ssh_options)
       @master.pre_command_hook = proc do |cmd, *_|
-        cmd.sub!('%REMOTE_PATH%', config.configuration.searchd.remote_path.cleanpath.to_s)
-        ::Kernel.puts cmd
+        cmd.gsub!('%REMOTE_PATH%', config.configuration.searchd.remote_path.cleanpath.to_s)
+        ::Kernel.puts "$ #{cmd}"
       end
       @master.stdout_hook = proc { |data| ::Kernel.puts data.to_s }
 
@@ -202,8 +207,8 @@ module Sphinx::Integration
           agent[:box] = Rye::Box.new(agent[:address], ssh_options)
           agent[:box].pre_command_hook = proc do |cmd, *_|
             remote_path = agent.fetch(:remote_path, config.configuration.searchd.remote_path)
-            cmd.sub!('%REMOTE_PATH%', remote_path.cleanpath.to_s)
-            ::Kernel.puts cmd
+            cmd.gsub!('%REMOTE_PATH%', remote_path.cleanpath.to_s)
+            ::Kernel.puts "$ #{cmd}"
           end
           agent[:box].stdout_hook = proc { |data| ::Kernel.puts data.to_s }
           agents.add_box(agent[:box])
@@ -232,7 +237,7 @@ module Sphinx::Integration
     # Returns nothing
     def add_commands
       Rye::Cmd.add_command :searchd, 'searchd', "--config %REMOTE_PATH%/#{CONFIG_PATH}"
-      Rye::Cmd.add_command :indexer, 'indexer', "--config %REMOTE_PATH%/#{CONFIG_PATH} --all"
+      Rye::Cmd.add_command :indexer, 'indexer', "--all"
       Rye::Cmd.add_command :remove_indexes, 'rm', "-f %REMOTE_PATH%/#{config.searchd_file_path(false)}/*"
       Rye::Cmd.add_command :remove_binlog, 'rm', "-f %REMOTE_PATH%/#{config.configuration.searchd.binlog_path(false)}/*"
     end
@@ -245,15 +250,28 @@ module Sphinx::Integration
     def full_reindex_with_replication(online = true)
       with_index_lock do
         main_box = agents.boxes.shift
-        main_box.indexer(online ? '--rotate' : '')
-        data_path = Pathname.new(config.searchd_file_path(false)).cleanpath.to_s
         main_agent = config.agents.detect { |_, x| x[:box] == main_box }.last
-        main_box_remote_path = main_agent.fetch(:remote_path, config.configuration.searchd.remote_path)
-        source_path = "#{main_box_remote_path.cleanpath.to_s}/#{data_path}/*_core.sp?"
-        main_ssh = "#{main_box.user}@#{main_box.host}"
-        agents.execute(%{(ssh #{main_ssh} 'ls #{source_path}') | (xargs -I% bash -c 'scp #{main_ssh}:% %REMOTE_PATH%/#{data_path}/$(basename % | sed -e ''s/_core./_core.new./g'')')})
-        agents.kill("-SIGHUP `cat %REMOTE_PATH%/#{config.configuration.searchd.pid_file(false)}`") if online
+
+        if online
+          # При онлайн индексации нужно сгенерировать индексные файлы, с опцией --rotate они сразу подменятся
+          # и потом скопировать их на другие слевый будет невозможно (так пробовал, но другие слейвы падали в сегфолт).
+          # Поэтому делаем новую конфигу для индексатора, в которой пути для индексных файлов будут иметь суффикс .new.
+          # которые мы потом копируем на все слейвы и посылаем SIGHUP всем сфинксам
+          # По этому сигналу сфинкс ищет индексные файлы с таким префиксом и переключается на них, переименовывая их.
+          main_box.execute("cat %REMOTE_PATH%/#{CONFIG_PATH} | sed -e '/data\\//s/_core/_core.new/g' > %REMOTE_PATH%/#{REINDEX_CONFIG_PATH}")
+          main_box.indexer("--config %REMOTE_PATH%/#{REINDEX_CONFIG_PATH}")
+          main_box.rm("%REMOTE_PATH%/#{REINDEX_CONFIG_PATH}")
+        else
+          main_box.indexer("--config %REMOTE_PATH%/#{CONFIG_PATH}")
+        end
+
+        data_path = Pathname.new(config.searchd_file_path(false)).cleanpath.to_s
+        main_agent_remote_path = main_agent.fetch(:remote_path, config.configuration.searchd.remote_path)
+        source_path = main_agent_remote_path.join(data_path, "*#{'.new.*' if online}")
+        main_ssh_credentials = "#{main_box.user}@#{main_box.host}"
+        agents.execute("rsync -lptv #{main_ssh_credentials}:#{source_path} %REMOTE_PATH%/#{data_path}/")
         agents.boxes.unshift(main_box)
+        agents.kill("-SIGHUP `cat %REMOTE_PATH%/#{config.configuration.searchd.pid_file(false)}`") if online
       end
 
       catch_up_indexes if online
@@ -311,6 +329,15 @@ module Sphinx::Integration
     # Returns nothing
     def with_index_lock
       Redis::Mutex.with_lock(:full_reindex, :expire => MAX_FULL_REINDEX_LOCK_TIME) do
+        yield
+      end
+    end
+
+    # Установить блокировку на изменение данных в приложении
+    #
+    # Returns nothing
+    def with_updates_lock
+      Redis::Mutex.with_lock(:updates, :expire => MAX_FULL_REINDEX_LOCK_TIME) do
         yield
       end
     end
