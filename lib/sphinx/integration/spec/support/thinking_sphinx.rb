@@ -21,7 +21,7 @@ module Sphinx
               :sleep => 0.25
             }.merge(opts)
 
-            Sphinx::Integration::Helper.index
+            Sphinx::Integration::Helper.new.index
             sleep(options[:sleep])
           end
 
