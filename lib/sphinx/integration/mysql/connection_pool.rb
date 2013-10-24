@@ -34,7 +34,9 @@ module Sphinx::Integration::Mysql::ConnectionPool
     options = {
       :host => address_prepared(agent[:address]),
       :port  => port_prepared(agent[:mysql41]),
-      :reconnect => true
+      :reconnect => true,
+      :read_timeout => 1, # очень хочется 300мс, но к сожалению можно только в секундах :(
+      :connect_timeout => 1
     }
 
     Sphinx::Integration::Mysql::Connection.new options[:host], options[:port], options
