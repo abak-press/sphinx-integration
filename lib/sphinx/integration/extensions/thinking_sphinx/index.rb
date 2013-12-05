@@ -129,10 +129,12 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
 
   def to_riddle_for_rt(delta = false)
     index = Riddle::Configuration::RealtimeIndex.new delta ? delta_rt_name : rt_name
+
+    set_configuration_options_for_indexes(index)
+
     index.path = File.join(config.searchd_file_path, index.name)
     index.rt_field = fields.map(&:unique_name)
     index.rt_mem_limit = local_options[:rt_mem_limit] if local_options[:rt_mem_limit]
-    index.charset_type = 'utf-8'
 
     collect_rt_index_attributes(index)
 
