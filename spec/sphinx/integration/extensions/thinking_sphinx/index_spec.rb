@@ -61,7 +61,7 @@ describe ThinkingSphinx::Index do
 
   describe '#to_riddle_for_core' do
     let(:core_index) { index.send(:to_riddle_for_core, 1) }
-    
+
     before { index.local_options[:index_sp] = 1 }
 
     it { expect(core_index.index_sp).to eq 1 }
