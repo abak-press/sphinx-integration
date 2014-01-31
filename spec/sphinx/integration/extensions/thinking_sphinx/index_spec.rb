@@ -59,6 +59,14 @@ describe ThinkingSphinx::Index do
     its(:rt_attr_uint){ should eql [:sphinx_internal_id, :sphinx_deleted, :class_crc, :region_id] }
   end
 
+  describe '#to_riddle_for_core' do
+    let(:core_index) { index.send(:to_riddle_for_core, 1) }
+
+    before { index.local_options[:index_sp] = 1 }
+
+    it { expect(core_index.index_sp).to eq 1 }
+  end
+
   describe '#all_names' do
     it 'returns only distributed index name' do
       index.all_names.should == [index.name]

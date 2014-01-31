@@ -9,6 +9,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     alias_method_chain :initialize, :mutex
     alias_method_chain :to_riddle, :replication
     alias_method_chain :to_riddle_for_distributed, :merged
+    alias_method_chain :to_riddle_for_core, :integration
     alias_method_chain :all_names, :rt
   end
 
@@ -135,6 +136,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     index.path = File.join(config.searchd_file_path, index.name)
     index.rt_field = fields.map(&:unique_name)
     index.rt_mem_limit = local_options[:rt_mem_limit] if local_options[:rt_mem_limit]
+    index.index_sp = local_options[:index_sp] if local_options[:index_sp]
 
     collect_rt_index_attributes(index)
 
@@ -171,6 +173,14 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
       index.local_indices << rt_name
       index.local_indices << delta_rt_name
     end
+
+    index
+  end
+
+  def to_riddle_for_core_with_integration(offset)
+    index = to_riddle_for_core_without_integration(offset)
+
+    index.index_sp = local_options[:index_sp] if local_options[:index_sp]
 
     index
   end
