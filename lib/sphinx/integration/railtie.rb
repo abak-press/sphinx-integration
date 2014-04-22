@@ -37,6 +37,26 @@ module Sphinx::Integration
       end
     end
 
+    initializer 'sphinx_integration.rspec' do
+      if defined?(::RSpec)
+        RSpec.configure do |c|
+          c.before(:each) do
+            unless example.metadata.fetch(:with_sphinx, false)
+              Sphinx::Integration::Transmitter.write_disabled = true
+            end
+          end
+
+          c.after(:each) do
+            if example.metadata.fetch(:with_sphinx, false)
+              Sphinx::Integration::Helper.new.truncate_rt_indexes
+            else
+              Sphinx::Integration::Transmitter.write_disabled = false
+            end
+          end
+        end
+      end
+    end
+
     rake_tasks do
       load 'sphinx/integration/tasks.rake'
     end

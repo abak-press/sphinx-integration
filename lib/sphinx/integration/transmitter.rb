@@ -4,6 +4,7 @@ require 'redis-mutex'
 module Sphinx::Integration
   class Transmitter
     attr_reader :klass
+    class_attribute :write_disabled
 
     def initialize(klass)
       @klass = klass
@@ -15,6 +16,8 @@ module Sphinx::Integration
     #
     # Returns nothing
     def replace(record)
+      return if write_disabled?
+
       rt_indexes do |index|
         if (data = transmitted_data(index, record))
           sphinx_replace(index.rt_name, data)
@@ -30,6 +33,8 @@ module Sphinx::Integration
     #
     # Returns nothing
     def delete(record)
+      return if write_disabled?
+
       rt_indexes do |index|
         sphinx_delete(index.rt_name_w, record.sphinx_document_id)
         sphinx_soft_delete(index.core_name_w, record.sphinx_document_id) if record.exists_in_sphinx?(index.core_name)
@@ -44,6 +49,8 @@ module Sphinx::Integration
     #
     # Returns nothing
     def update(record, data)
+      return if write_disabled?
+
       update_fields(data, {:id => record.sphinx_document_id})
     end
 
@@ -54,6 +61,8 @@ module Sphinx::Integration
     #
     # Returns nothing
     def update_fields(fields, where)
+      return if write_disabled?
+
       rt_indexes do |index|
         if write_delta?
           ids = sphinx_select('sphinx_internal_id', index.name, where).map{ |row| row['sphinx_internal_id'] }
