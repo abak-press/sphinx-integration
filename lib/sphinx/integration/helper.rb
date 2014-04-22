@@ -183,6 +183,16 @@ module Sphinx::Integration
       end
     end
 
+    # Очистить rt индексы
+    #
+    # Returns nothing
+    def truncate_rt_indexes
+      rt_indexes do |index, model|
+        index.truncate(index.rt_name)
+        index.truncate(index.delta_rt_name)
+      end
+    end
+
     protected
 
     # Инициализация Rye - which run SSH commands on a bunch of machines at the same time
