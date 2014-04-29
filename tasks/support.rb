@@ -24,7 +24,7 @@ def spawn(cmd)
 end
 
 def project
-  'apress_search_terms'
+  'sphinx-integration'
 end
 
 # get current version from VERSION file
