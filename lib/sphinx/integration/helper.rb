@@ -91,10 +91,14 @@ module Sphinx::Integration
     #
     # Returns nothing
     def remove_indexes
+      puts "Removing indexes:"
+
       if config.remote?
         nodes.remove_indexes
       else
-        FileUtils.rm(Dir.glob("#{config.searchd_file_path}/*.*"))
+        files = Dir.glob("#{config.searchd_file_path}/*.*")
+        puts files.join("\n")
+        FileUtils.rm(files)
       end
     end
 
@@ -103,9 +107,13 @@ module Sphinx::Integration
     # Returns nothing
     def remove_binlog
       if (binlog_path = config.configuration.searchd.binlog_path).present?
+        puts "Removing binlog:"
+
         if config.remote?
           nodes.remove_binlog
         else
+          files = Dir.glob("#{config.searchd_file_path}/*.*")
+          puts files.join("\n")
           FileUtils.rm(Dir.glob("#{binlog_path}/*.*"))
         end
       end
@@ -144,7 +152,7 @@ module Sphinx::Integration
     # online - boolean (default: true) означает, что в момент индексации все апдейты будут писаться в дельту
     def index(online = true)
       raise 'Мастер ноду нельзя индексировать' if node.master?
-
+      puts "Start indexing"
       indexer_args = []
       indexer_args << '--rotate' if online
 
@@ -327,11 +335,11 @@ module Sphinx::Integration
     end
 
     def local_searchd(*params)
-      Rye.shell :searchd, "--config #{config.config_file(:single)}", *params
+      puts Rye.shell(:searchd, "--config #{config.config_file(:single)}", *params).inspect
     end
 
     def local_indexer(*params)
-      Rye.shell :indexer, "--config #{config.config_file(:single)} --all", *params
+      puts Rye.shell(:indexer, "--config #{config.config_file(:single)} --all", *params).inspect
     end
 
     # Установить блокировку на индексацию
