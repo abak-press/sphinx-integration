@@ -16,4 +16,23 @@ describe ThinkingSphinx::Attribute do
     end
   end
 
+  describe 'extended types' do
+    describe 'json' do
+      let(:index) do
+        index = ThinkingSphinx::Index::Builder.generate(ModelWithDisk, nil) do
+          has :content, :type => :json
+        end
+      end
+
+      it do
+        attribute = index.sources.first.attributes.detect{ |x| x.unique_name == :content }
+        expect(attribute.type_to_config).to eq :sql_attr_json
+      end
+
+      it do
+        rt_index = index.to_riddle_for_rt
+        expect(rt_index.rt_attr_json).to eq [:content]
+      end
+    end
+  end
 end
