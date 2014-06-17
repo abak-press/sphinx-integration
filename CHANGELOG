@@ -1,3 +1,10 @@
+  - 2014/06/17: Bump version to 1.5.0 (Semyon Pupkov)
+  - 2014/06/17: Add json attribute type (Semyon Pupkov)
+  - 2014/06/17: Fixed running tests (Semyon Pupkov)
+  - 2014/04/29: fix rake release project name (Merkushin)
+
+v1.4.1
+  - 2014/04/29: Release 1.4.1 (Merkushin)
   - 2014/04/29: Release 1.4.1 (Merkushin)
   - 2014/04/29: add gem release tasks (Merkushin)
   - 2014/04/22: bump version to 1.4.0 (Merkushin)
