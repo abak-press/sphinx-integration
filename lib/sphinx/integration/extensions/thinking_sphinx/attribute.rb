@@ -5,6 +5,15 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Attribute
   included do
     alias_method_chain :initialize, :query_option
     alias_method_chain :source_value, :custom_query
+    alias_method_chain :type_to_config, :extended_types
+  end
+
+  EXTENDED_TYPE_MAPPINGS = {
+    :json => :sql_attr_json
+  }.merge(ThinkingSphinx::Attribute::SphinxTypeMappings)
+
+  def type_to_config_with_extended_types
+    EXTENDED_TYPE_MAPPINGS[type]
   end
 
   def initialize_with_query_option(source, columns, options = {})

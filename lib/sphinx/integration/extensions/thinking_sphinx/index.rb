@@ -157,6 +157,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
       when :datetime then :rt_attr_timestamp
       when :string then :rt_attr_string
       when :multi then :rt_attr_multi
+      when :json then :rt_attr_json
       end
 
       index.send(attr_type) << attr.unique_name
