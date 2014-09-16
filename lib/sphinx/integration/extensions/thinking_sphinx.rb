@@ -1,4 +1,7 @@
 # coding: utf-8
+
+require 'sphinx/integration/extensions/thinking_sphinx/indexing_mode'
+
 module Sphinx::Integration::Extensions::ThinkingSphinx
   autoload :ActiveRecord, 'sphinx/integration/extensions/thinking_sphinx/active_record'
   autoload :Attribute, 'sphinx/integration/extensions/thinking_sphinx/attribute'

@@ -68,6 +68,17 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index::Builder
     Join.new(@index, name).type(:inner)
   end
 
+  # Удаляет join(ы) из индекса
+  #
+  # name - Список названий джойнов - Symbol or String.
+  #
+  # Returns Array of Index::Builder::Join - массив удаленных join'ов или nil'ов.
+  def delete_joins(*names)
+    names.map do |name|
+      @index.local_options[:source_joins].delete(name)
+    end
+  end
+
   # Заменяет дефолтное название таблицы
   #
   # value - String
@@ -115,4 +126,15 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index::Builder
     set_property :use_own_sql_query_range => value
   end
 
+  # Удаляет атрибут(ы) из индекса.
+  #
+  # names - Список названий атрибутов - Symbol or String.
+  #
+  # Returns Array of ThinkingSphinx::Attribute - массив удаленных атрибутов.
+  def delete_attributes(*names)
+    names.map do |name|
+      attr = source.attributes.find { |attr| attr.alias.eql? name }
+      source.attributes.delete(attr)
+    end
+  end
 end

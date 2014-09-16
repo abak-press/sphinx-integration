@@ -262,3 +262,28 @@ has :regions, :type => :multi, :source => :ranged_query, :query => "SELECT {{pro
 ```
 В данно случае `{{product_id}}` заменится на нечто подобное `product_id * 8::INT8 + 5 AS id`, т.е. заменится на вычисление правильного внутреннего сквозного id
 
+### Разделение запросов для массовой индексации и обычной работы с моделями
+```ruby
+module IndexExtension
+  def self.included(model)
+    return unless ThinkingSphinx.indexing?
+
+    model.class_eval do
+      define_indexes
+
+      index = sphinx_indexes.select { |i| i.name == 'product' }.first
+      return unless index
+
+      ThinkingSphinx::Index::Builder.new(index) do
+        # change bulk indexing query this
+
+        delete_joins(:product_images)
+        delete_attributes(:has_image)
+        has 'CASE WHEN product_denormalizations.images_count > 0 THEN 0 ELSE 1 END',
+            :as => :has_image,
+            :type => :integer
+      end
+    end
+  end
+end
+```

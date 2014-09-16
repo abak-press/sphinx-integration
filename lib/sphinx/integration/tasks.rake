@@ -64,8 +64,13 @@ namespace :sphinx do
   end
 
   desc 'Generate configuration files'
-  task :conf => :environment do
+  task :conf => ['sphinx:set_indexing_mode', :environment] do
     Sphinx::Integration::Helper.new.configure
+  end
+
+  task :set_indexing_mode do
+    require 'sphinx/integration/extensions/thinking_sphinx/indexing_mode'
+    ThinkingSphinx.indexing_mode = true
   end
 
   desc 'Copy configuration files'
