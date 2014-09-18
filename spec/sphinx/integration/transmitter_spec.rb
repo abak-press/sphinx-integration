@@ -1,7 +1,7 @@
 # coding: utf-8
 require 'spec_helper'
 
-describe Sphinx::Integration::Transmitter do
+describe Sphinx::Integration::Transmitter, with_sphinx: true do
   let(:transmitter) { described_class.new(ModelWithRt) }
   let(:record) { mock_model ModelWithRt }
 

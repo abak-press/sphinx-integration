@@ -173,6 +173,8 @@ module Sphinx::Integration
         with_index_lock { local_indexer(indexer_args) }
         catch_up_indexes if online
       end
+
+      ThinkingSphinx.set_last_indexing_finish_time
     end
     alias_method :reindex, :index
 

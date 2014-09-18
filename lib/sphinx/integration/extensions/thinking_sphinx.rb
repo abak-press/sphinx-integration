@@ -12,12 +12,14 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
   autoload :Search, 'sphinx/integration/extensions/thinking_sphinx/search'
   autoload :Source, 'sphinx/integration/extensions/thinking_sphinx/source'
   autoload :Configuration, 'sphinx/integration/extensions/thinking_sphinx/configuration'
+  autoload :LastIndexingTime, 'sphinx/integration/extensions/thinking_sphinx/last_indexing_time'
 
   extend ActiveSupport::Concern
 
   included do
     DEFAULT_MATCH = :extended2
     include Sphinx::Integration::FastFacet
+    include LastIndexingTime
   end
 
   module ClassMethods

@@ -287,3 +287,6 @@ module IndexExtension
   end
 end
 ```
+
+## Хранит в redis время завершения последней успешной индексации
+`ThinkingSphinx.last_indexing_finish_time`
