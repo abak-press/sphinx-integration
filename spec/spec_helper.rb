@@ -7,10 +7,13 @@ Bundler.require :default, :development
 
 require 'sphinx/integration/railtie'
 
-Combustion.initialize! :active_record
-
 require 'mock_redis'
 require 'redis-classy'
+
+Redis::Classy.db = MockRedis.new
+
+Combustion.initialize! :active_record
+
 require 'rspec/rails'
 
 RSpec.configure do |config|

@@ -210,6 +210,8 @@ describe Sphinx::Integration::Helper do
 
     describe '#index' do
       context 'when single' do
+        before { expect(ThinkingSphinx).to receive(:set_last_indexing_finish_time) }
+
         context 'when online' do
           it do
             expect(helper.master).to receive(:indexer)
@@ -232,16 +234,24 @@ describe Sphinx::Integration::Helper do
 
         context 'when work with master' do
           let(:current_node) { 'master' }
+
+          before { expect(ThinkingSphinx).to_not receive(:set_last_indexing_finish_time) }
+
           it { expect { helper.index }.to raise_error }
         end
 
         context 'when work with all' do
+          before { expect(ThinkingSphinx).to receive(:set_last_indexing_finish_time) }
+
           it { expect(helper).to receive(:full_reindex_with_replication) }
           after { helper.index }
         end
 
         context 'when work with slave2' do
           let(:current_node) { 'slave2' }
+
+          before { expect(ThinkingSphinx).to receive(:set_last_indexing_finish_time) }
+
           context 'when online' do
             it do
               expect(helper.nodes).to receive(:indexer).with(['--rotate', "--config %REMOTE_PATH%/conf/sphinx.conf"])
