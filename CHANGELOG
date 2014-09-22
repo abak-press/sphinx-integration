@@ -1,3 +1,7 @@
+  - 2014/09/22: feature(indexing): отказался от наследования от classy (Artem Napolskih)
+
+v1.7.0
+  - 2014/09/18: Release 1.7.0 (bibendi)
   - 2014/09/18: feature(indexing): храним время завершения последней успешной индексации (Artem Napolskih)
 
 v1.6.0
@@ -30,10 +34,10 @@ v1.2.3
   - 2013/10/24: fix(mysql): обрежем время ответа для слейвов для отказоустойчивости (Merkushin)
   - 2013/10/15: version bump to 1.2.1 (Merkushin)
   - 2013/10/15: fix(spec): helper now instance (Merkushin)
-  - 2013/10/11: feature(chore) better bundled query logging (Merkushin)
   - 2013/10/11: version bump to 1.2.0 (Merkushin)
-  - 2013/10/10: fix full reindex, return to rsync (Merkushin)
+  - 2013/10/11: feature(chore) better bundled query logging (Merkushin)
   - 2013/10/10: version bump to 1.1.6 (Merkushin)
+  - 2013/10/10: fix full reindex, return to rsync (Merkushin)
   - 2013/10/09: version bump to 1.1.5 (Merkushin)
   - 2013/10/09: fix full reindex (Merkushin)
   - 2013/10/03: version bump to 1.1.4 (Merkushin)
