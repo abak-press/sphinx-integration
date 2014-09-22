@@ -1,12 +1,24 @@
 # coding: utf-8
 
-require 'redis-classy'
+require 'redis'
+require 'redis-namespace'
 
 module Sphinx::Integration::Extensions::ThinkingSphinx::LastIndexingTime
   extend ActiveSupport::Concern
 
   included do
-    class ThinkingSphinx::LastIndexing < ::Redis::Classy
+    class ThinkingSphinx::LastIndexing
+      def self.set(key, value)
+        redis.set(key, value)
+      end
+
+      def self.get(key)
+        redis.get(key)
+      end
+
+      def self.redis
+        @redis ||= Redis::Namespace.new(name, :redis => Redis.current)
+      end
     end
 
     # Public: Устанавливает время окончания последней успешной индексации.
