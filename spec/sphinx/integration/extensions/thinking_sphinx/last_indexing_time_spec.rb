@@ -4,7 +4,7 @@ require 'spec_helper'
 describe ThinkingSphinx do
   let(:time) { Time.now.utc }
 
-  before { ThinkingSphinx::LastIndexing.db.flushdb }
+  before { ThinkingSphinx::LastIndexing.redis.flushdb }
   before { ThinkingSphinx.stub(:db_current_time).and_return(time) }
 
   it do

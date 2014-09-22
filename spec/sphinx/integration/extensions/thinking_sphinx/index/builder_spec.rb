@@ -60,7 +60,8 @@ describe ThinkingSphinx::Index::Builder do
       end
     end
 
-    it { index.attributes.should have(4).item } # 3 internal + 1 user
+    # 4 internal (:sphinx_internal_id, :sphinx_deleted, :class_crc, :sphinx_internal_class) + 1 user
+    it { index.attributes.should have(5).item }
     it { index.attributes.select { |attr| attr.alias == :foo}.should be_present }
   end
 
