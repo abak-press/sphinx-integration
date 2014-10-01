@@ -62,7 +62,21 @@ describe ThinkingSphinx::Index::Builder do
 
     # 4 internal (:sphinx_internal_id, :sphinx_deleted, :class_crc, :sphinx_internal_class) + 1 user
     it { index.attributes.should have(5).item }
-    it { index.attributes.select { |attr| attr.alias == :foo}.should be_present }
+    it { index.attributes.select { |attr| attr.alias == :foo }.should be_present }
+  end
+
+  describe 'delete_fields' do
+    let(:index) do
+      ThinkingSphinx::Index::Builder.generate(ModelWithDisk) do
+        indexes 'content1', :as => :content1
+        indexes 'content2', :as => :content2
+
+        delete_fields(:content, :content1)
+      end
+    end
+
+    it { index.fields.should have(1).item }
+    it { index.fields.select { |attr| attr.alias == :content2 }.should be_present }
   end
 
   describe 'limit' do
@@ -83,7 +97,20 @@ describe ThinkingSphinx::Index::Builder do
     end
 
     it { index.local_options[:source_cte].should have(1).item }
-    it { puts index.local_options[:source_cte][:_rubrics].should == "select id from rubrics {{where}}" }
+    it { index.local_options[:source_cte][:_rubrics].should == "select id from rubrics {{where}}" }
   end
 
+  describe 'delete with' do
+    let(:index) do
+      ThinkingSphinx::Index::Builder.generate(ModelWithDisk) do
+        with(:_rubrics1) { "select id from rubrics1" }
+        with(:_rubrics2) { "select id from rubrics2" }
+
+        delete_withs(:_rubrics1)
+      end
+    end
+
+    it { index.local_options[:source_cte].should have(1).item }
+    it { index.local_options[:source_cte][:_rubrics2].should == "select id from rubrics2" }
+  end
 end

@@ -46,6 +46,17 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index::Builder
     @index.local_options[:source_cte][name] = yield
   end
 
+  # Удаляет CTE
+  #
+  # name - Список названий CTE - Symbol or String.
+  #
+  # Returns Array of Hash - опции удаленных CTE.
+  def delete_withs(*names)
+    names.map do |name|
+      @index.local_options[:source_cte].delete(name)
+    end
+  end
+
   # Формирует LEFT JOIN
   #
   # name - Symbol or Hash
@@ -135,6 +146,18 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index::Builder
     names.map do |name|
       attr = source.attributes.find { |attr| attr.alias.eql? name }
       source.attributes.delete(attr)
+    end
+  end
+
+  # Удаляет полнотекстовые поля из индекса.
+  #
+  # names - Список названий полей - Symbol or String.
+  #
+  # Returns Array of ThinkingSphinx::Field - массив удаленных полей.
+  def delete_fields(*names)
+    names.map do |name|
+      field = source.fields.find { |attr| attr.alias.eql? name }
+      source.fields.delete(field)
     end
   end
 end
