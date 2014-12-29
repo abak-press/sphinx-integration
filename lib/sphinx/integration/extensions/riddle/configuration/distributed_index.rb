@@ -17,29 +17,27 @@ module Sphinx::Integration::Extensions
           end
         end
 
-        module InstanceMethods
-          def initialize_with_integration(name)
-            initialize_without_integration(name)
-            @mirror_indices = []
+        def initialize_with_integration(name)
+          initialize_without_integration(name)
+          @mirror_indices = []
+        end
+
+        def valid_with_integration?
+          local_indices.any? || remote_indices.any? || mirror_indices.any?
+        end
+
+        def ha_strategy
+          @ha_strategy if mirror_indices.any?
+        end
+
+        def agent_with_integration
+          agents = agent_without_integration
+
+          mirror_indices.each do |cluster|
+            agents << cluster.map { |agent| "#{agent.remote}:#{agent.name}" }.join('|')
           end
 
-          def valid_with_integration?
-            local_indices.any? || remote_indices.any? || mirror_indices.any?
-          end
-
-          def ha_strategy
-            @ha_strategy if mirror_indices.any?
-          end
-
-          def agent_with_integration
-            agents = agent_without_integration
-
-            mirror_indices.each do |cluster|
-              agents << cluster.map { |agent| "#{agent.remote}:#{agent.name}" }.join('|')
-            end
-
-            agents
-          end
+          agents
         end
 
         module ClassMethods
