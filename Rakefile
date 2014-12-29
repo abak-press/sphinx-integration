@@ -1,8 +1,7 @@
-# coding: utf-8
-# load everything from tasks/ directory
-Dir[File.join(File.dirname(__FILE__), 'tasks', '*.{rb,rake}')].each { |f| load(f) }
+begin
+  require 'bundler/setup'
+rescue LoadError
+  puts 'You must `gem install bundler` and `bundle install` to run rake tasks'
+end
 
-require 'rspec/core/rake_task'
-
-# setup `spec` task
-RSpec::Core::RakeTask.new(:spec)
+require 'apress/gems/rake_tasks'
