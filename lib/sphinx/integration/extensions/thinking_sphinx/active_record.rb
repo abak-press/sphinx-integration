@@ -89,17 +89,13 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
 
   end
 
-  module InstanceMethods
-
-    # Находится ли запись в сфинксе
-    #
-    # index_name - String (default: nil)
-    #
-    # Returns boolean
-    def exists_in_sphinx?(index_name = nil)
-      return false if new_record?
-      !self.class.search_count(:index => index_name, :cut_off => 1, :with =>{'@id' => sphinx_document_id}).zero?
-    end
-
+  # Находится ли запись в сфинксе
+  #
+  # index_name - String (default: nil)
+  #
+  # Returns boolean
+  def exists_in_sphinx?(index_name = nil)
+    return false if new_record?
+    !self.class.search_count(:index => index_name, :cut_off => 1, :with => {'@id' => sphinx_document_id}).zero?
   end
 end

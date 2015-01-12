@@ -36,10 +36,5 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'combustion'
   gem.add_development_dependency 'mock_redis'
   gem.add_development_dependency 'database_cleaner'
-
-  # automatic changelog builder
-  gem.add_development_dependency 'changelogger'
-
-  # a tool for uploading files to private gem repo
-  gem.add_development_dependency 'multipart-post'
+  gem.add_development_dependency 'apress-gems', '>= 0.2'
 end
