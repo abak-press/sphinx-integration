@@ -89,7 +89,7 @@ describe Sphinx::Integration::Helper do
       context 'when offline' do
         it do
           expect(helper).to receive(:local_indexer).with([])
-          expect(helper).to_not receive(:catch_up_indexes)
+          expect(helper).to_not receive(:truncate_rt_indexes)
         end
         after { helper.index(false) }
       end
@@ -97,7 +97,7 @@ describe Sphinx::Integration::Helper do
       context 'when online' do
         it do
           expect(helper).to receive(:local_indexer).with(['--rotate'])
-          expect(helper).to receive(:catch_up_indexes)
+          expect(helper).to receive(:truncate_rt_indexes)
         end
         after { helper.index }
       end
@@ -115,31 +115,6 @@ describe Sphinx::Integration::Helper do
       end
       after { helper.rebuild }
     end
-
-    describe '#dump_delta_index' do
-      let(:model) { double('model') }
-      let(:records) { [double('record')] }
-      let(:index) { double('index') }
-      let(:connection) { double('connection') }
-
-      before do
-        model.stub(:primary_key => 'id')
-        index.stub(:delta_rt_name => 'delta_rt_name')
-        sphinx_result = double('sphinx_result')
-        sphinx_result.stub(:to_a => [1])
-        sphinx_result.stub(:results => {:matches => [{:doc => 10}]})
-        helper.stub(:delta_index_results).and_yield(sphinx_result)
-        ThinkingSphinx.stub(:take_connection).and_yield(connection)
-      end
-
-      it do
-        expect(model).to receive(:where).with('id' => [1]).and_return(records)
-        expect(records.first).to receive(:transmitter_update)
-        expect(connection).to receive(:execute).with(/DELETE FROM delta_rt_name WHERE id = 10/)
-      end
-      after { helper.send(:dump_delta_index, model, index) }
-    end
-
   end
 
   context 'when remote' do
@@ -215,7 +190,7 @@ describe Sphinx::Integration::Helper do
         context 'when online' do
           it do
             expect(helper.master).to receive(:indexer)
-            expect(helper).to receive(:catch_up_indexes)
+            expect(helper).to receive(:truncate_rt_indexes)
           end
           after { helper.index }
         end
@@ -223,7 +198,7 @@ describe Sphinx::Integration::Helper do
         context 'when offline' do
           it do
             expect(helper.master).to receive(:indexer)
-            expect(helper).to_not receive(:catch_up_indexes)
+            expect(helper).to_not receive(:truncate_rt_indexes)
           end
           after { helper.index(false) }
         end
@@ -255,7 +230,7 @@ describe Sphinx::Integration::Helper do
           context 'when online' do
             it do
               expect(helper.nodes).to receive(:indexer).with(['--rotate', "--config %REMOTE_PATH%/conf/sphinx.conf"])
-              expect(helper).to receive(:catch_up_indexes).with(:truncate => false)
+              expect(helper).to receive(:truncate_rt_indexes)
             end
             after { helper.index }
           end
@@ -263,7 +238,7 @@ describe Sphinx::Integration::Helper do
           context 'when offline' do
             it do
               expect(helper.nodes).to receive(:indexer).with(["--config %REMOTE_PATH%/conf/sphinx.conf"])
-              expect(helper).to_not receive(:catch_up_indexes)
+              expect(helper).to receive(:truncate_rt_indexes).with(helper.recent_rt.prev)
             end
             after { helper.index(false) }
           end
@@ -292,7 +267,7 @@ describe Sphinx::Integration::Helper do
           expect(slave1).to receive(:host)
           expect(helper.agents).to receive(:execute).with(/rsync/)
           expect(helper.agents).to receive(:kill).with(/SIGHUP/)
-          expect(helper).to receive(:catch_up_indexes)
+          expect(helper).to receive(:truncate_rt_indexes)
         end
         after { helper.send(:full_reindex_with_replication) }
       end
@@ -304,7 +279,7 @@ describe Sphinx::Integration::Helper do
           expect(slave1).to receive(:user)
           expect(slave1).to receive(:host)
           expect(helper.agents).to receive(:execute).with(/rsync/)
-          expect(helper).to_not receive(:catch_up_indexes)
+          expect(helper).to_not receive(:truncate_rt_indexes)
         end
         after { helper.send(:full_reindex_with_replication, false) }
       end

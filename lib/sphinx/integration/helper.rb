@@ -4,7 +4,6 @@ require 'redis-mutex'
 
 module Sphinx::Integration
   class Helper
-
     MAX_FULL_REINDEX_LOCK_TIME = 6.hours
     CONFIG_PATH = 'conf/sphinx.conf'.freeze
     REINDEX_CONFIG_PATH = 'conf/sphinx.reindex.conf'.freeze
@@ -14,8 +13,14 @@ module Sphinx::Integration
     attr_reader :agents
     attr_reader :nodes
 
+    delegate :recent_rt, to: 'self.class'
+
     def self.full_reindex?
       Redis::Mutex.new(:full_reindex).locked?
+    end
+
+    def self.recent_rt
+      @recent_rt ||= Sphinx::Integration::RecentRt.new
     end
 
     def initialize(node = nil)
@@ -163,15 +168,21 @@ module Sphinx::Integration
             full_reindex_with_replication(online)
           else
             with_index_lock { nodes.indexer(indexer_args) }
-            catch_up_indexes(:truncate => false) if online
+            truncate_rt_indexes(recent_rt.prev)
           end
         else
-          with_index_lock { master.indexer(indexer_args) }
-          catch_up_indexes if online
+          with_index_lock do
+            master.indexer(indexer_args)
+            recent_rt.switch
+          end
+          truncate_rt_indexes(recent_rt.prev) if online
         end
       else
-        with_index_lock { local_indexer(indexer_args) }
-        catch_up_indexes if online
+        with_index_lock do
+          local_indexer(indexer_args)
+          recent_rt.switch
+        end
+        truncate_rt_indexes(recent_rt.prev) if online
       end
 
       ThinkingSphinx.set_last_indexing_finish_time
@@ -196,10 +207,14 @@ module Sphinx::Integration
     # Очистить rt индексы
     #
     # Returns nothing
-    def truncate_rt_indexes
-      rt_indexes do |index, model|
-        index.truncate(index.rt_name)
-        index.truncate(index.delta_rt_name)
+    def truncate_rt_indexes(partition = nil)
+      rt_indexes do |index|
+        if partition
+          index.truncate(index.rt_name(partition))
+        else
+          index.truncate(index.rt_name(0))
+          index.truncate(index.rt_name(1))
+        end
       end
     end
 
@@ -292,42 +307,11 @@ module Sphinx::Integration
         agents.execute("rsync -lptv #{main_ssh_credentials}:#{source_path} %REMOTE_PATH%/#{data_path}/")
         agents.boxes.unshift(main_box)
         agents.kill("-SIGHUP `cat %REMOTE_PATH%/#{config.configuration.searchd.pid_file(false)}`") if online
+
+        recent_rt.switch
       end
 
-      catch_up_indexes if online
-    end
-
-    # Нагнать rt индексы данными, которые лежат в delta rt
-    #
-    # options - Hash
-    #           :truncate - boolean очищать ли rt индекс (default: true)
-    #
-    # Returns nothing
-    def catch_up_indexes(options = {})
-      options = options.reverse_merge(:truncate => true)
-
-      rt_indexes do |index, model|
-        index.truncate(index.rt_name) if options[:truncate]
-        dump_delta_index(model, index)
-        index.truncate(index.delta_rt_name)
-      end
-    end
-
-    # Перенос данных из дельта индекса в основной
-    #
-    # model - ActiveRecord::Base
-    # index - ThinkingSphinx::Index
-    #
-    # Returns nothing
-    def dump_delta_index(model, index)
-      delta_index_results(model, index) do |sphinx_result|
-        model.where(model.primary_key => sphinx_result.to_a).each(&:transmitter_update)
-
-        # Удаление через внутренний айдишник индекса, ибо пока сфинкс не умеет удалять по условию с другими атрибутами
-        doc_ids = sphinx_result.results[:matches].map{ |x| x[:doc] }
-        query = Riddle::Query::Delete.new(index.delta_rt_name, doc_ids)
-        ThinkingSphinx.take_connection { |c| c.execute(query.to_sql) }
-      end
+      truncate_rt_indexes(recent_rt.prev) if online
     end
 
     private
@@ -371,7 +355,7 @@ module Sphinx::Integration
         next unless model.rt_indexed_by_sphinx?
 
         model.sphinx_indexes.each do |index|
-          yield index, model
+          yield index
         end
       end
     end

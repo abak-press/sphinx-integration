@@ -56,8 +56,8 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     end
 
     if rt?
-      indexes << to_riddle_for_rt
-      indexes << to_riddle_for_rt(true)
+      indexes << to_riddle_for_rt(0)
+      indexes << to_riddle_for_rt(1)
     end
 
     indexes << to_riddle_for_distributed
@@ -124,12 +124,12 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
   # Returns Array
   def all_index_names
     names = [name, core_name]
-    names += [rt_name, delta_rt_name] if rt?
+    names += [rt_name(0), rt_name(1)] if rt?
     names
   end
 
-  def to_riddle_for_rt(delta = false)
-    index = Riddle::Configuration::RealtimeIndex.new delta ? delta_rt_name : rt_name
+  def to_riddle_for_rt(partition)
+    index = Riddle::Configuration::RealtimeIndex.new(rt_name(partition))
 
     set_configuration_options_for_indexes(index)
 
@@ -171,8 +171,8 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     end
 
     if rt?
-      index.local_indices << rt_name
-      index.local_indices << delta_rt_name
+      index.local_indices << rt_name(0)
+      index.local_indices << rt_name(1)
     end
 
     index
@@ -203,20 +203,13 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     @core_name_w ||= config.replication? ? "#{core_name}_w" : core_name
   end
 
-  def rt_name
-    @rt_name ||= "#{name}_rt"
+  def rt_name(partition)
+    @rt_name ||= {}
+    @rt_name[partition] ||= "#{name}_rt#{partition}"
   end
 
-  def rt_name_w
-    @rt_name_w ||= config.replication? ? "#{rt_name}_w" : rt_name
-  end
-
-  def delta_rt_name
-    @delta_rt_name ||= "#{name}_delta_rt"
-  end
-
-  def delta_rt_name_w
-    @delta_rt_name_w ||= config.replication? ? "#{delta_rt_name}_w" : delta_rt_name
+  def rt_name_w(partition)
+    @rt_name_w ||= config.replication? ? "#{rt_name(partition)}_w" : rt_name(partition)
   end
 
   def rt?
@@ -259,5 +252,4 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
       gsub(/>= \$start.*?\$end/, "= %{ID}").
       gsub(/LIMIT [0-9]+$/, '') + ' LIMIT 1'
   end
-
 end

@@ -30,7 +30,7 @@ describe ThinkingSphinx::Attribute do
       end
 
       it do
-        rt_index = index.to_riddle_for_rt
+        rt_index = index.to_riddle_for_rt(0)
         expect(rt_index.rt_attr_json).to eq [:content]
       end
     end

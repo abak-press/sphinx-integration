@@ -4,6 +4,7 @@ module Sphinx
     autoload :Mysql, 'sphinx/integration/mysql'
     autoload :Transmitter, 'sphinx/integration/transmitter'
     autoload :FastFacet, 'sphinx/integration/fast_facet'
+    autoload :RecentRt, 'sphinx/integration/recent_rt'
   end
 end
 

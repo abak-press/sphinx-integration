@@ -4,7 +4,10 @@ require 'redis-mutex'
 module Sphinx::Integration
   class Transmitter
     attr_reader :klass
+
     class_attribute :write_disabled
+
+    delegate :full_reindex?, to: :'Sphinx::Integration::Helper'
 
     def initialize(klass)
       @klass = klass
@@ -14,32 +17,34 @@ module Sphinx::Integration
     #
     # record - ActiveRecord::Base
     #
-    # Returns nothing
+    # Returns boolean
     def replace(record)
-      return if write_disabled?
+      return false if write_disabled?
 
       rt_indexes do |index|
         if (data = transmitted_data(index, record))
-          sphinx_replace(index.rt_name, data)
+          partitions { |partition| sphinx_replace(index.rt_name(partition), data) }
           sphinx_soft_delete(index.core_name_w, record.sphinx_document_id) if record.exists_in_sphinx?(index.core_name)
-          sphinx_replace(index.delta_rt_name, data) if write_delta?
         end
       end
+
+      true
     end
 
     # Удаляет запись из сфинкса
     #
     # record - ActiveRecord::Base
     #
-    # Returns nothing
+    # Returns boolean
     def delete(record)
-      return if write_disabled?
+      return false if write_disabled?
 
       rt_indexes do |index|
-        sphinx_delete(index.rt_name_w, record.sphinx_document_id)
+        partitions { |partition| sphinx_delete(index.rt_name_w(partition), record.sphinx_document_id) }
         sphinx_soft_delete(index.core_name_w, record.sphinx_document_id) if record.exists_in_sphinx?(index.core_name)
-        sphinx_delete(index.delta_rt_name_w, record.sphinx_document_id) if write_delta?
       end
+
+      true
     end
 
     # Обновление отдельных атрибутов записи
@@ -56,7 +61,7 @@ module Sphinx::Integration
 
     # Обновление отдельных атрибутов индекса по условию
     #
-    # fields - Hash (:field => :value)
+    # fields - Hash (:field => value)
     # where  - Hash
     #
     # Returns nothing
@@ -64,10 +69,10 @@ module Sphinx::Integration
       return if write_disabled?
 
       rt_indexes do |index|
-        if write_delta?
+        if full_reindex?
           ids = sphinx_select('sphinx_internal_id', index.name, where).map{ |row| row['sphinx_internal_id'] }
-          ids.in_groups_of(500, false) do |group_ids|
-            klass.where(:id => group_ids).each { |record| replace(record) }
+          ids.each_slice(500) do |slice_ids|
+            klass.where(id: slice_ids).each { |record| replace(record) }
           end if ids.any?
         else
           sphinx_update(index.name_w, fields, where)
@@ -133,6 +138,18 @@ module Sphinx::Integration
       end
     end
 
+    # Итератор по текущим активным частям rt индексов
+    #
+    # Yields Integer
+    def partitions
+      if full_reindex?
+        yield 0
+        yield 1
+      else
+        yield Sphinx::Integration::Helper.recent_rt.current
+      end
+    end
+
     # Привести тип к мульти атрибуту
     #
     # value - NilClass or String or Array
@@ -161,10 +178,6 @@ module Sphinx::Integration
 
     def replication?
       config.replication?
-    end
-
-    def write_delta?
-      Redis::Mutex.new(:full_reindex).locked?
     end
 
     def sphinx_replace(index_name, data)
