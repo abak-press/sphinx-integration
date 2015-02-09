@@ -1,5 +1,4 @@
 # coding: utf-8
-
 require 'sphinx/integration/extensions/thinking_sphinx/indexing_mode'
 
 module Sphinx::Integration::Extensions::ThinkingSphinx
