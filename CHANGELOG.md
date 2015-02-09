@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-02-09 [888dcd8](../../commit/888dcd8) - __(bibendi)__ feature(rt): remove delta_rt index
+
+#### v1.8.1
+ * 2015-01-12 [e1fb821](../../commit/e1fb821) - __(Michael Sogomonyan)__ Release 1.8.1
  * 2014-12-29 [e16396b](../../commit/e16396b) - __(Michael Sogomonyan)__ chore(gem): rails 4.0 compatibility
  * 2014-12-29 [25f5e11](../../commit/25f5e11) - __(Michael Sogomonyan)__ chore(tasks): use apress-gems
 
