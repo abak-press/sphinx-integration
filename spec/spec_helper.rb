@@ -12,7 +12,6 @@ Combustion.initialize! :active_record
 require 'rspec/rails'
 
 require 'mock_redis'
-require 'redis-classy'
 
 RSpec.configure do |config|
   config.backtrace_exclusion_patterns = [/lib\/rspec\/(core|expectations|matchers|mocks)/]
@@ -21,6 +20,5 @@ RSpec.configure do |config|
 
   config.before(:each) do
     Redis.current = MockRedis.new
-    Redis::Classy.db = Redis.current
   end
 end
