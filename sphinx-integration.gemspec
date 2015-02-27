@@ -17,6 +17,8 @@ Gem::Specification.new do |gem|
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
   gem.require_paths = ["lib"]
 
+  gem.metadata['allowed_push_host'] = 'https://gems.railsc.ru'
+
   gem.add_runtime_dependency 'redis-classy', '~> 1.2.0'
   gem.add_runtime_dependency 'redis-mutex', '~> 2.1.0'
   gem.add_runtime_dependency 'redis', '~> 3.0.7'
@@ -36,5 +38,4 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'combustion'
   gem.add_development_dependency 'mock_redis'
   gem.add_development_dependency 'database_cleaner'
-  gem.add_development_dependency 'apress-gems', '>= 0.2'
 end
