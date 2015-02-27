@@ -39,18 +39,37 @@ module Sphinx::Integration
 
     initializer 'sphinx_integration.rspec' do
       if defined?(::RSpec)
-        RSpec.configure do |c|
-          c.before(:each) do
-            unless example.metadata.fetch(:with_sphinx, false)
-              Sphinx::Integration::Transmitter.write_disabled = true
+        require 'rspec/version'
+        if Gem::Version.new(RSpec::Version::STRING) >= Gem::Version.new('3.0.0')
+          RSpec.configure do |c|
+            c.before(:each) do |example|
+              unless example.metadata.fetch(:with_sphinx, false)
+                Sphinx::Integration::Transmitter.write_disabled = true
+              end
+            end
+
+            c.after(:each) do |example|
+              if example.metadata.fetch(:with_sphinx, false)
+                Sphinx::Integration::Helper.new.truncate_rt_indexes
+              else
+                Sphinx::Integration::Transmitter.write_disabled = false
+              end
             end
           end
+        else
+          RSpec.configure do |c|
+            c.before(:each) do
+              unless example.metadata.fetch(:with_sphinx, false)
+                Sphinx::Integration::Transmitter.write_disabled = true
+              end
+            end
 
-          c.after(:each) do
-            if example.metadata.fetch(:with_sphinx, false)
-              Sphinx::Integration::Helper.new.truncate_rt_indexes
-            else
-              Sphinx::Integration::Transmitter.write_disabled = false
+            c.after(:each) do
+              if example.metadata.fetch(:with_sphinx, false)
+                Sphinx::Integration::Helper.new.truncate_rt_indexes
+              else
+                Sphinx::Integration::Transmitter.write_disabled = false
+              end
             end
           end
         end
