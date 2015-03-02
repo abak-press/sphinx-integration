@@ -1,5 +1,10 @@
 
 #### [Current]
+ * 2015-02-27 [b16940b](../../commit/b16940b) - __(bibendi)__ remove apress-gems dep
+ * 2015-02-27 [caa899c](../../commit/caa899c) - __(bibendi)__ fix rspec integration from version 3.0.0
+
+#### v2.0.0
+ * 2015-02-09 [3eb91ff](../../commit/3eb91ff) - __(bibendi)__ Release 2.0.0
  * 2015-02-09 [888dcd8](../../commit/888dcd8) - __(bibendi)__ feature(rt): remove delta_rt index
 
 #### v1.8.1
