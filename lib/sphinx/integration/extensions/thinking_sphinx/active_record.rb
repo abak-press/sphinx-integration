@@ -6,6 +6,21 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
     include Sphinx::Integration::FastFacet
   end
 
+  module ClassMethods
+    def transmitter
+      @transmitter ||= Sphinx::Integration::Transmitter.new(self)
+    end
+
+    # Обновить атрибуты в сфинксе по условию
+    #
+    # fields - Hash
+    # where  - Hash
+    def update_sphinx_fields(fields, where)
+      define_indexes
+      transmitter.update_fields(fields, where)
+    end
+  end
+
   module TransmitterCallbacks
     extend ActiveSupport::Concern
 
@@ -13,12 +28,6 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
       after_commit :transmitter_create, :on => :create
       after_commit :transmitter_update, :on => :update
       after_commit :transmitter_destroy, :on => :destroy
-
-      class << self
-        def transmitter
-          @transmitter ||= Sphinx::Integration::Transmitter.new(self)
-        end
-      end
     end
 
     def transmitter_create
@@ -28,18 +37,6 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
 
     def transmitter_destroy
       self.class.transmitter.delete(self)
-    end
-
-    module ClassMethods
-
-      # Обновить атрибуты в сфинксе по условию
-      #
-      # fields - Hash
-      # where  - Hash
-      def update_sphinx_fields(fields, where)
-        transmitter.update_fields(fields, where)
-      end
-
     end
   end
 
