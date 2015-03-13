@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-03-12 [f59a5fb](../../commit/f59a5fb) - __(Semyon Pupkov)__ Add update_sphinx_fields for any activerecord model
+
+#### v2.0.1
+ * 2015-03-02 [b2161d3](../../commit/b2161d3) - __(bibendi)__ Release 2.0.1
  * 2015-02-27 [b16940b](../../commit/b16940b) - __(bibendi)__ remove apress-gems dep
  * 2015-02-27 [caa899c](../../commit/caa899c) - __(bibendi)__ fix rspec integration from version 3.0.0
 
