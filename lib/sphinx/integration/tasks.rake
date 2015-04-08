@@ -60,11 +60,13 @@ namespace :sphinx do
 
   desc 'Rebuild Sphinx'
   task :rebuild, [:node] => :environment do |_, args|
+    Rails.application.eager_load!
     Sphinx::Integration::Helper.new(args[:node]).rebuild
   end
 
   desc 'Generate configuration files'
   task :conf => ['sphinx:set_indexing_mode', :environment] do
+    Rails.application.eager_load!
     Sphinx::Integration::Helper.new.configure
   end
 
