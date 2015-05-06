@@ -290,3 +290,22 @@ end
 
 ## Хранит в redis время завершения последней успешной индексации
 `ThinkingSphinx.last_indexing_finish_time`
+
+## Определение индексов которые необходимо пропустить
+
+```yml
+development:
+  exclude: [
+    'apress/product_denormalization/traits/extensions/models/product/sphinx_index',
+    'apress/product_denormalization/images/extensions/models/product/sphinx_index',
+  ]
+```
+
+```ruby
+module IndexExtension
+  def self.included(model)
+    return if ThinkingSphinx.skip_index?(self)
+    #...
+  end
+end
+```

@@ -83,4 +83,17 @@ describe ThinkingSphinx::Configuration do
     end
   end
 
+  describe '#excluded_klasses' do
+    context 'when file have not `exclude` section' do
+      it { expect(config.exclude).to eq [] }
+    end
+
+    context 'when file have `exclude` section' do
+      let(:spec_options) do
+        {'test' => {'exclude' => ['apress/product_denormalization/sphinx_index']}}
+      end
+
+      it { expect(config.exclude).to eq ['apress/product_denormalization/sphinx_index'] }
+    end
+  end
 end
