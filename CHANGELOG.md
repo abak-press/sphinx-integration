@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-04-08 [82c12ca](../../commit/82c12ca) - __(bibendi)__ Eager load application when generate config
+
+#### v2.0.2
+ * 2015-03-13 [2d8eb7e](../../commit/2d8eb7e) - __(Semyon Pupkov)__ Release 2.0.2
  * 2015-03-12 [f59a5fb](../../commit/f59a5fb) - __(Semyon Pupkov)__ Add update_sphinx_fields for any activerecord model
 
 #### v2.0.1
