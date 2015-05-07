@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-05-06 [0c49ff0](../../commit/0c49ff0) - __(Semyon Pupkov)__ Allow to skip indexes
+
+#### v2.0.3
+ * 2015-05-06 [50d43e6](../../commit/50d43e6) - __(bibendi)__ Release 2.0.3
  * 2015-04-08 [82c12ca](../../commit/82c12ca) - __(bibendi)__ Eager load application when generate config
 
 #### v2.0.2
