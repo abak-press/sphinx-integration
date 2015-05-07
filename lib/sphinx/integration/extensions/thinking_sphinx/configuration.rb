@@ -3,7 +3,9 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
   extend ActiveSupport::Concern
 
   included do
-    attr_accessor :remote, :replication, :agent_connect_timeout, :agent_query_timeout, :ha_strategy, :user, :password
+    attr_accessor :remote, :replication, :agent_connect_timeout, :agent_query_timeout,
+                  :ha_strategy, :user, :password, :exclude
+
     attr_reader :agents
 
     alias_method_chain :build, :integration
@@ -36,6 +38,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
     self.agent_query_timeout = 5000
     self.ha_strategy = 'nodeads'
     self.user = 'sphinx'
+    self.exclude = []
     @configuration.searchd.listen_all_interfaces = true
 
     reset_without_integration(custom_app_root)
@@ -154,5 +157,4 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
       }
     }
   end
-
 end
