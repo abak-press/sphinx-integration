@@ -10,6 +10,7 @@ module Sphinx::Integration
     initializer 'sphinx_integration.configuration', :before => 'thinking_sphinx.set_app_root' do
       ThinkingSphinx::Configuration.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
       Riddle::Configuration::Searchd.send :include, Sphinx::Integration::Extensions::Riddle::Configuration::Searchd
+      ThinkingSphinx.database_adapter = :postgresql
     end
 
     initializer 'sphinx_integration.extensions', :after => 'thinking_sphinx.set_app_root' do
