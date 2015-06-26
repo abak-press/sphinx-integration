@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-06-26 [8f8e003](../../commit/8f8e003) - __(Korotaev Danil)__ fix(initializer): always using postgresql database adapter
+
+#### v2.1.0
+ * 2015-05-07 [a2b1105](../../commit/a2b1105) - __(Semyon Pupkov)__ Release 2.1.0
  * 2015-05-06 [0c49ff0](../../commit/0c49ff0) - __(Semyon Pupkov)__ Allow to skip indexes
 
 #### v2.0.3
