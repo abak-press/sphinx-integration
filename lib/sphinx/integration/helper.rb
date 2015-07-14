@@ -24,6 +24,8 @@ module Sphinx::Integration
     end
 
     def initialize(node = nil)
+      ThinkingSphinx.context.define_indexes
+
       node = node.presence || 'all'
 
       if config.replication? && !config.remote?

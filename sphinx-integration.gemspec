@@ -38,4 +38,5 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'combustion'
   gem.add_development_dependency 'mock_redis'
   gem.add_development_dependency 'database_cleaner'
+  gem.add_development_dependency 'pry-debugger'
 end

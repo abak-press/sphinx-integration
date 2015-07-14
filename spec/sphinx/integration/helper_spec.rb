@@ -36,6 +36,16 @@ describe Sphinx::Integration::Helper do
     )
   end
 
+  describe '#initialize' do
+    let(:spec_options) { {} }
+
+    it 'define indexes after initialize' do
+      helper
+
+      expect(ModelWithRt.sphinx_indexes).not_to be_empty
+    end
+  end
+
   context 'when local' do
     let(:spec_options) { {'remote' => false} }
 

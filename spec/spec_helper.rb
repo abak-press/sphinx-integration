@@ -2,6 +2,7 @@
 
 require 'rubygems'
 require 'bundler'
+require 'pry-debugger'
 
 Bundler.require :default, :development
 
