@@ -54,6 +54,8 @@ namespace :sphinx do
 
   desc 'Index Sphinx'
   task :index, [:node, :offline] => :environment do |_, args|
+    Rails.application.eager_load!
+
     is_offline = args[:offline].present? && %w(true yes y da offline).include?(args[:offline])
     Sphinx::Integration::Helper.new(args[:node]).index(!is_offline)
   end
