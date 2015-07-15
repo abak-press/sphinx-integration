@@ -1,5 +1,5 @@
 module Sphinx
   module Integration
-    VERSION = '2.1.2'
+    VERSION = '2.2.0'
   end
 end

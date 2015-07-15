@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-07-15 [5ffd81c](../../commit/5ffd81c) - __(bibendi)__ fix: Transmitter.update_fields when full indexing
+
+#### v2.1.2
+ * 2015-07-15 [4c826c2](../../commit/4c826c2) - __(Semyon Pupkov)__ Release 2.1.2
  * 2015-07-14 [9464676](../../commit/9464676) - __(Semyon Pupkov)__ fix: sphinx should load all indexes in index process
 
 #### v2.1.1
