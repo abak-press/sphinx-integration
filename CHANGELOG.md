@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-07-14 [9464676](../../commit/9464676) - __(Semyon Pupkov)__ fix: sphinx should load all indexes in index process
+
+#### v2.1.1
+ * 2015-06-26 [160cebe](../../commit/160cebe) - __(Korotaev Danil)__ Release 2.1.1
  * 2015-06-26 [8f8e003](../../commit/8f8e003) - __(Korotaev Danil)__ fix(initializer): always using postgresql database adapter
 
 #### v2.1.0
