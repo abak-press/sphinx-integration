@@ -12,6 +12,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
   autoload :Source, 'sphinx/integration/extensions/thinking_sphinx/source'
   autoload :Configuration, 'sphinx/integration/extensions/thinking_sphinx/configuration'
   autoload :LastIndexingTime, 'sphinx/integration/extensions/thinking_sphinx/last_indexing_time'
+  autoload :Statements, 'sphinx/integration/extensions/thinking_sphinx/statements'
 
   extend ActiveSupport::Concern
 
@@ -19,10 +20,10 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
     DEFAULT_MATCH = :extended2
     include Sphinx::Integration::FastFacet
     include LastIndexingTime
+    extend Sphinx::Integration::Extensions::ThinkingSphinx::Statements
   end
 
   module ClassMethods
-
     def max_matches
       @ts_max_matches ||= ThinkingSphinx::Configuration.instance.configuration.searchd.max_matches || 5000
     end
@@ -31,6 +32,14 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
       context.indexed_models.each do |model|
         model.constantize.reset_indexes
       end
+    end
+
+    def replication?
+      ThinkingSphinx::Configuration.instance.replication?
+    end
+
+    def log(message)
+      ::ActiveSupport::Notifications.instrument("message.thinking_sphinx", message: message)
     end
 
     # Посылает sql запрос в Sphinx
@@ -59,6 +68,5 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
         end
       end
     end
-
   end
 end
