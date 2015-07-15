@@ -23,8 +23,11 @@ module Sphinx::Integration
 
       rt_indexes do |index|
         if (data = transmitted_data(index, record))
-          partitions { |partition| sphinx_replace(index.rt_name(partition), data) }
-          sphinx_soft_delete(index.core_name_w, record.sphinx_document_id) if record.exists_in_sphinx?(index.core_name)
+          partitions { |partition| ::ThinkingSphinx.replace(index.rt_name(partition), data) }
+
+          if record.exists_in_sphinx?(index.core_name)
+            ::ThinkingSphinx.soft_delete(index.core_name_w, record.sphinx_document_id)
+          end
         end
       end
 
@@ -40,8 +43,11 @@ module Sphinx::Integration
       return false if write_disabled?
 
       rt_indexes do |index|
-        partitions { |partition| sphinx_delete(index.rt_name_w(partition), record.sphinx_document_id) }
-        sphinx_soft_delete(index.core_name_w, record.sphinx_document_id) if record.exists_in_sphinx?(index.core_name)
+        partitions { |partition| ::ThinkingSphinx.delete(index.rt_name_w(partition), record.sphinx_document_id) }
+
+        if record.exists_in_sphinx?(index.core_name)
+          ::ThinkingSphinx.soft_delete(index.core_name_w, record.sphinx_document_id)
+        end
       end
 
       true
@@ -49,38 +55,46 @@ module Sphinx::Integration
 
     # Обновление отдельных атрибутов записи
     #
-    # record - ActiveRecord::Base
-    # data   - Hash (:field => :value)
+    # record  - ActiveRecord::Base
+    # data    - Hash (:field => :value)
+    # options - Hash
+    #             index_name: String (optional, default: first index)
     #
     # Returns nothing
-    def update(record, data)
+    def update(record, data, options = {})
       return if write_disabled?
 
-      update_fields(data, {:id => record.sphinx_document_id})
+      update_fields(data, {:id => record.sphinx_document_id}, options)
     end
 
     # Обновление отдельных атрибутов индекса по условию
     #
-    # fields - Hash (:field => value)
-    # where  - Hash
+    # fields  - Hash (:field => value)
+    # where   - Hash
+    # options - Hash
+    #             index_name: String (optional, default: first index)
     #
     # Returns nothing
-    def update_fields(fields, where)
+    def update_fields(fields, where, options = {})
       return if write_disabled?
 
-      rt_indexes do |index|
-        if full_reindex?
-          ids = sphinx_select('sphinx_internal_id', index.name, where).map{ |row| row['sphinx_internal_id'] }
-          ids.each_slice(500) do |slice_ids|
-            klass.where(id: slice_ids).each { |record| replace(record) }
-          end if ids.any?
+      if full_reindex?
+        options[:index_name] ||= klass.sphinx_indexes.first.name
+        ::ThinkingSphinx.find_in_batches(options[:index_name], where) do |ids|
+          klass.where(id: ids).each { |record| replace(record) }
+        end
+      else
+        if options[:index_name]
+          ::ThinkingSphinx.update(options[:index_name], fields, where)
         else
-          sphinx_update(index.name_w, fields, where)
+          rt_indexes do |index|
+            ::ThinkingSphinx.update(index.name_w, fields, where)
+          end
         end
       end
     end
 
-    protected
+    private
 
     # Данные, необходимые для записи в индекс сфинкса
     #
@@ -125,8 +139,6 @@ module Sphinx::Integration
       attrs
     end
 
-    private
-
     # Итератор по всем rt индексам
     #
     # Yields ThinkingSphinx::Index
@@ -163,51 +175,6 @@ module Sphinx::Integration
       else
         value
       end
-    end
-
-    # Залогировать
-    #
-    # message - String
-    def log(message)
-      ::ActiveSupport::Notifications.instrument('message.thinking_sphinx', :message => message)
-    end
-
-    def config
-      ThinkingSphinx::Configuration.instance
-    end
-
-    def replication?
-      config.replication?
-    end
-
-    def sphinx_replace(index_name, data)
-      query = Riddle::Query::Insert.new(index_name, data.keys, data.values).replace!.to_sql
-      ThinkingSphinx.execute(query, :on_slaves => replication?)
-    end
-
-    def sphinx_update(index_name, data, where)
-      query = ::Sphinx::Integration::Extensions::Riddle::Query::Update.new(index_name, data, where).to_sql
-      ThinkingSphinx.execute(query)
-    end
-
-    def sphinx_delete(index_name, document_id)
-      query = Riddle::Query::Delete.new(index_name, document_id).to_sql
-      ThinkingSphinx.execute(query)
-    end
-
-    def sphinx_soft_delete(index_name, document_id)
-      sphinx_update(index_name, {:sphinx_deleted => 1}, {:id => document_id})
-    end
-
-    def sphinx_select(values, index_name, where)
-      query = Riddle::Query::Select.
-        new.
-        reset_values.
-        values(values).
-        from(index_name).
-        where(where).
-        to_sql
-      ThinkingSphinx.execute(query).to_a
     end
   end
 end

@@ -19,16 +19,16 @@ describe Sphinx::Integration::Transmitter do
   describe '#replace' do
     it do
       expect(transmitter).to receive(:transmitted_data).and_return(field: 123)
-      expect(transmitter).to receive(:sphinx_replace).with('model_with_rt_rt0', field: 123)
-      expect(transmitter).to receive(:sphinx_soft_delete)
+      expect(ThinkingSphinx).to receive(:replace).with('model_with_rt_rt0', field: 123)
+      expect(ThinkingSphinx).to receive(:soft_delete)
     end
     after { transmitter.replace(record) }
   end
 
   describe '#delete' do
     it do
-      expect(transmitter).to receive(:sphinx_delete).with('model_with_rt_rt0', 1)
-      expect(transmitter).to receive(:sphinx_soft_delete)
+      expect(ThinkingSphinx).to receive(:delete).with('model_with_rt_rt0', 1)
+      expect(ThinkingSphinx).to receive(:soft_delete)
     end
     after { transmitter.delete(record) }
   end
@@ -41,18 +41,19 @@ describe Sphinx::Integration::Transmitter do
   describe '#update_fields' do
     context 'when full reindex' do
       before { transmitter.stub(:full_reindex? => true) }
+
       it do
-        expect(transmitter).to receive(:sphinx_select).and_return([{'sphinx_internal_id' => 123}])
-        expect(ModelWithRt).to receive(:where).with(:id => [123]).and_return([record])
-        expect(transmitter).to receive(:replace).with(record)
+        expect(ThinkingSphinx).to receive(:find_in_batches).with("model_with_rt", id: 1).and_yield([1])
       end
+
       after { transmitter.update_fields({:field => 123}, {:id => 1}) }
     end
 
     context 'when no full reindex' do
       it do
-        expect(transmitter).to receive(:sphinx_update)
+        expect(ThinkingSphinx).to receive(:update)
       end
+
       after { transmitter.update_fields({:field => 123}, {:id => 1}) }
     end
   end
