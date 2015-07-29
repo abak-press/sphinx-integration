@@ -22,33 +22,44 @@ module Sphinx
             update(index_name, {sphinx_deleted: 1}, {id: document_id})
           end
 
-          def select(values, index_name, where)
+          def select(values, index_name, where, limit = nil)
             query = ::Riddle::Query::Select.
               new.
               reset_values.
               values(values).
               from(index_name).
               where(where).
+              limit(limit).
               to_sql
             execute(query).to_a
           end
 
-          def find_in_batches(index_name, where, options = {})
-            bound = select("min(sphinx_internal_id) as min_id, max(sphinx_internal_id) as max_id",
-                                  index_name,
-                                  where).first
-            return unless bound
+          def find_in_batches(index_name, options = {})
+            primary_key = options.fetch(:primary_key, "sphinx_internal_id").to_s.freeze
+            batch_size = options.fetch(:batch_size, 3_000)
+            batch_order = "#{primary_key} ASC"
+            where = options.fetch(:where, {})
+            where[primary_key.to_sym] = -> { "> 0" }
 
-            min = bound["min_id"].to_i
-            max = bound["max_id"].to_i
-            return if max.zero?
-            batch_size = options.fetch(:batch_size, 1_000)
+            query = ::Riddle::Query::Select.new.reset_values.
+              values(primary_key).
+              from(index_name).
+              where(where).
+              order_by(batch_order).
+              limit(batch_size)
 
-            while min <= max
-              where[:sphinx_internal_id] = Range.new(min, min + batch_size - 1)
-              ids = select("sphinx_internal_id", index_name, where).map { |row| row["sphinx_internal_id"].to_i }
-              yield ids if ids.any?
-              min += batch_size
+            records = execute(query.to_sql).to_a
+            while records.any?
+              primary_key_offset = records.last[primary_key].to_i
+
+              records.map! { |record| record[primary_key].to_i }
+              yield records
+
+              break if records.size < batch_size
+
+              where[primary_key.to_sym] = -> { "> #{primary_key_offset}" }
+              query.where(where)
+              records = execute(query.to_sql).to_a
             end
           end
         end

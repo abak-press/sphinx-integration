@@ -209,7 +209,8 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
   end
 
   def rt_name_w(partition)
-    @rt_name_w ||= config.replication? ? "#{rt_name(partition)}_w" : rt_name(partition)
+    @rt_name_w ||= {}
+    @rt_name_w[partition] ||= config.replication? ? "#{rt_name(partition)}_w" : rt_name(partition)
   end
 
   def rt?

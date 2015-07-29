@@ -37,6 +37,7 @@ module Sphinx::Integration
       end
 
       @node = ActiveSupport::StringInquirer.new(node)
+      @logger = ::Logger.new(STDOUT)
 
       init_ssh if config.remote?
     end
@@ -60,6 +61,7 @@ module Sphinx::Integration
     #
     # Returns nothing
     def stop
+      log "Stop sphinx"
       if config.remote?
         nodes.searchd('--stopwait')
       else
@@ -71,6 +73,7 @@ module Sphinx::Integration
     #
     # Returns nothing
     def start
+      log "Start sphinx"
       if config.remote?
         nodes.searchd
       else
@@ -91,6 +94,7 @@ module Sphinx::Integration
     #
     # Returns nothing
     def configure
+      log "Configure sphinx"
       config.build
     end
 
@@ -98,13 +102,13 @@ module Sphinx::Integration
     #
     # Returns nothing
     def remove_indexes
-      puts "Removing indexes:"
+      log "Remove indexes"
 
       if config.remote?
         nodes.remove_indexes
       else
         files = Dir.glob("#{config.searchd_file_path}/*.*")
-        puts files.join("\n")
+        log files.join("\n")
         FileUtils.rm(files)
       end
     end
@@ -114,13 +118,13 @@ module Sphinx::Integration
     # Returns nothing
     def remove_binlog
       if (binlog_path = config.configuration.searchd.binlog_path).present?
-        puts "Removing binlog:"
+        log "Remove binlog"
 
         if config.remote?
           nodes.remove_binlog
         else
           files = Dir.glob("#{config.searchd_file_path}/*.*")
-          puts files.join("\n")
+          log files.join("\n")
           FileUtils.rm(Dir.glob("#{binlog_path}/*.*"))
         end
       end
@@ -159,7 +163,10 @@ module Sphinx::Integration
     # online - boolean (default: true) означает, что в момент индексации все апдейты будут писаться в дельту
     def index(online = true)
       raise 'Мастер ноду нельзя индексировать' if node.master?
-      puts "Start indexing"
+
+      reset_waste_records
+
+      log "Start indexing"
       indexer_args = []
       indexer_args << '--rotate' if online
 
@@ -210,7 +217,10 @@ module Sphinx::Integration
     #
     # Returns nothing
     def truncate_rt_indexes(partition = nil)
+      log "Truncate rt indexes"
+
       rt_indexes do |index|
+        log "- #{index.name}"
         if partition
           index.truncate(index.rt_name(partition))
         else
@@ -218,9 +228,15 @@ module Sphinx::Integration
           index.truncate(index.rt_name(1))
         end
       end
+
+      cleanup_waste_records
     end
 
-    protected
+    private
+
+    def log(message)
+      @logger.info(message)
+    end
 
     # Инициализация Rye - which run SSH commands on a bunch of machines at the same time
     #
@@ -316,7 +332,21 @@ module Sphinx::Integration
       truncate_rt_indexes(recent_rt.prev) if online
     end
 
-    private
+    def reset_waste_records
+      log "Reset waste records"
+      rt_indexes do |index|
+        log "- #{index.name}"
+        Sphinx::Integration::WasteRecords.for(index).reset
+      end
+    end
+
+    def cleanup_waste_records
+      log "Cleanup waste records"
+      rt_indexes do |index|
+        log "- #{index.name}"
+        Sphinx::Integration::WasteRecords.for(index).cleanup
+      end
+    end
 
     def config
       ThinkingSphinx::Configuration.instance
@@ -361,19 +391,5 @@ module Sphinx::Integration
         end
       end
     end
-
-    # Итератор по всем данным дельта индекса, отдаётся пачками по limit штук
-    #
-    # model - ActiveRecord::Base
-    # index - ThinkingSphinx::Index
-    # limit - Integer (default: 500)
-    #
-    # Yields ThinkingSphinx::Search
-    def delta_index_results(model, index, limit = 500)
-      until model.search_count(:index => index.delta_rt_name).zero? do
-        yield model.search_for_ids(:index => index.delta_rt_name, :per_page => limit)
-      end
-    end
-
   end
 end
