@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-07-29 [46eea6a](../../commit/46eea6a) - __(bibendi)__ feat: delete records from core after full index
+
+#### v2.2.0
+ * 2015-07-15 [8f90675](../../commit/8f90675) - __(bibendi)__ Release 2.2.0
  * 2015-07-15 [5ffd81c](../../commit/5ffd81c) - __(bibendi)__ fix: Transmitter.update_fields when full indexing
 
 #### v2.1.2
