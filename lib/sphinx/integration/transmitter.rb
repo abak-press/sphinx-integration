@@ -22,13 +22,7 @@ module Sphinx::Integration
       return false if write_disabled?
 
       rt_indexes do |index|
-        if (data = transmitted_data(index, record))
-          partitions { |partition| ::ThinkingSphinx.replace(index.rt_name(partition), data) }
-
-          if record.exists_in_sphinx?(index.core_name)
-            ::ThinkingSphinx.soft_delete(index.core_name_w, record.sphinx_document_id)
-          end
-        end
+        transmit(index, record)
       end
 
       true
@@ -48,6 +42,8 @@ module Sphinx::Integration
         if record.exists_in_sphinx?(index.core_name)
           ::ThinkingSphinx.soft_delete(index.core_name_w, record.sphinx_document_id)
         end
+
+        Sphinx::Integration::WasteRecords.for(index).add(record.sphinx_document_id) if full_reindex?
       end
 
       true
@@ -57,44 +53,58 @@ module Sphinx::Integration
     #
     # record  - ActiveRecord::Base
     # data    - Hash (:field => :value)
-    # options - Hash
-    #             index_name: String (optional, default: first index)
     #
     # Returns nothing
-    def update(record, data, options = {})
+    def update(record, data)
       return if write_disabled?
 
-      update_fields(data, {:id => record.sphinx_document_id}, options)
+      update_fields(data, id: record.sphinx_document_id)
     end
 
     # Обновление отдельных атрибутов индекса по условию
     #
     # fields  - Hash (:field => value)
     # where   - Hash
-    # options - Hash
-    #             index_name: String (optional, default: first index)
     #
     # Returns nothing
-    def update_fields(fields, where, options = {})
+    def update_fields(fields, where)
       return if write_disabled?
 
-      if full_reindex?
-        options[:index_name] ||= klass.sphinx_indexes.first.name
-        ::ThinkingSphinx.find_in_batches(options[:index_name], where) do |ids|
-          klass.where(id: ids).each { |record| replace(record) }
-        end
-      else
-        if options[:index_name]
-          ::ThinkingSphinx.update(options[:index_name], fields, where)
-        else
-          rt_indexes do |index|
-            ::ThinkingSphinx.update(index.name_w, fields, where)
+      rt_indexes do |index|
+        if full_reindex?
+          # вначале обновим всё что уже есть в rt индексе
+          partitions { |i| ThinkingSphinx.update(index.rt_name_w(i), fields, where) }
+
+          # и зареплейсим всё что осталось в core
+          ThinkingSphinx.find_in_batches(index.core_name, where: where) do |ids|
+            klass.where(id: ids).each { |record| transmit(index, record) }
           end
+        else
+          ThinkingSphinx.update(index.name_w, fields, where)
         end
       end
     end
 
     private
+
+    # Запись объекта в rt index
+    #
+    # index  - ThinkingSphinx::Index
+    # record - ActiveRecord::Base
+    #
+    # Returns nothing
+    def transmit(index, record)
+      data = transmitted_data(index, record)
+      return unless data
+
+      partitions { |i| ThinkingSphinx.replace(index.rt_name(i), data) }
+
+      if record.exists_in_sphinx?(index.core_name)
+        ThinkingSphinx.soft_delete(index.core_name_w, record.sphinx_document_id)
+      end
+
+      Sphinx::Integration::WasteRecords.for(index).add(record.sphinx_document_id) if full_reindex?
+    end
 
     # Данные, необходимые для записи в индекс сфинкса
     #

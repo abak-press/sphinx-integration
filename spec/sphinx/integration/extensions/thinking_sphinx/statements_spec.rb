@@ -49,21 +49,23 @@ describe ThinkingSphinx do
     it do
       expect(ThinkingSphinx).to(
         receive(:execute).
-          with("SELECT min(sphinx_internal_id) as min_id, max(sphinx_internal_id) as max_id " +
-               "FROM product WHERE `company_id` = 1").
-          and_return([{"min_id" => "1", "max_id" => "2"}])
+          with("SELECT sphinx_internal_id " +
+               "FROM product WHERE `company_id` = 1 AND `sphinx_internal_id` > 0 " +
+               "ORDER BY `sphinx_internal_id` ASC LIMIT 1").
+          and_return([{"sphinx_internal_id" => "1"}])
       )
 
       expect(ThinkingSphinx).to(
         receive(:execute).
           with("SELECT sphinx_internal_id " +
-               "FROM product WHERE `company_id` = 1 AND `sphinx_internal_id` BETWEEN 1 AND 1000").
-          and_return([{"sphinx_internal_id" => "1"}, {"sphinx_internal_id" => "2"}])
+               "FROM product WHERE `company_id` = 1 AND `sphinx_internal_id` > 1 " +
+               "ORDER BY `sphinx_internal_id` ASC LIMIT 1").
+          and_return([])
       )
 
       result = []
-      ThinkingSphinx.find_in_batches("product", company_id: 1) { |ids| result += ids }
-      expect(result).to eq [1, 2]
+      ThinkingSphinx.find_in_batches("product", where: {company_id: 1}, batch_size: 1) { |ids| result += ids }
+      expect(result).to eq [1]
     end
   end
 end
