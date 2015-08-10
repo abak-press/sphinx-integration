@@ -70,6 +70,8 @@ module Sphinx::Integration
     def update_fields(fields, where)
       return if write_disabled?
 
+      matching = where.delete(:matching)
+
       rt_indexes do |index|
         if full_reindex?
           # вначале обновим всё что уже есть в rt индексе
@@ -77,7 +79,6 @@ module Sphinx::Integration
 
           # и зареплейсим всё что осталось в core
           # TODO: implement sphinx transactions
-          matching = where.delete(:matching)
           batch_options = {where: where, matching: matching}
           ThinkingSphinx.find_in_batches(index.core_name, batch_options) do |ids|
             klass.where(id: ids).each { |record| transmit(index, record) }

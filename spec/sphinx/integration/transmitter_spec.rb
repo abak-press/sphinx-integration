@@ -43,8 +43,8 @@ describe Sphinx::Integration::Transmitter do
       before { transmitter.stub(:full_reindex? => true) }
 
       it do
-        expect(ThinkingSphinx).to receive(:update).with("model_with_rt_rt0", {field: 123}, id: 1, matching: "@id_idx 1")
-        expect(ThinkingSphinx).to receive(:update).with("model_with_rt_rt1", {field: 123}, id: 1, matching: "@id_idx 1")
+        expect(ThinkingSphinx).to receive(:update).with("model_with_rt_rt0", {field: 123}, id: 1)
+        expect(ThinkingSphinx).to receive(:update).with("model_with_rt_rt1", {field: 123}, id: 1)
         expect(ThinkingSphinx).
           to receive(:find_in_batches).
             with("model_with_rt_core", where: {id: 1}, matching: "@id_idx 1").
