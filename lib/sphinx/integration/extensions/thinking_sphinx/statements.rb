@@ -36,7 +36,7 @@ module Sphinx
 
           def find_in_batches(index_name, options = {})
             primary_key = options.fetch(:primary_key, "sphinx_internal_id").to_s.freeze
-            batch_size = options.fetch(:batch_size, 3_000)
+            batch_size = options.fetch(:batch_size, 1_000)
             batch_order = "#{primary_key} ASC"
             where = options.fetch(:where, {})
             where[primary_key.to_sym] = -> { "> 0" }
@@ -46,7 +46,8 @@ module Sphinx
               from(index_name).
               where(where).
               order_by(batch_order).
-              limit(batch_size)
+              limit(batch_size).
+              matching(options[:matching])
 
             records = execute(query.to_sql).to_a
             while records.any?

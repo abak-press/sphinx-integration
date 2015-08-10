@@ -38,6 +38,8 @@ module Sphinx::Integration
 
       @node = ActiveSupport::StringInquirer.new(node)
       @logger = ::Logger.new(STDOUT)
+      @logger.formatter = ::Logger::Formatter.new
+      log "Sphinx Helper initialized with node: #{node}"
 
       init_ssh if config.remote?
     end
@@ -342,9 +344,12 @@ module Sphinx::Integration
 
     def cleanup_waste_records
       log "Cleanup waste records"
+      log "sleep 120 sec"
+      sleep 120
       rt_indexes do |index|
-        log "- #{index.name}"
-        Sphinx::Integration::WasteRecords.for(index).cleanup
+        waste_records = Sphinx::Integration::WasteRecords.for(index)
+        log "- #{index.name} (#{waste_records.size} records)"
+        waste_records.cleanup
       end
     end
 
