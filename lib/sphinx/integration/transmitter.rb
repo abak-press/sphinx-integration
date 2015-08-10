@@ -76,8 +76,12 @@ module Sphinx::Integration
           partitions { |i| ThinkingSphinx.update(index.rt_name_w(i), fields, where) }
 
           # и зареплейсим всё что осталось в core
-          ThinkingSphinx.find_in_batches(index.core_name, where: where) do |ids|
+          # TODO: implement sphinx transactions
+          matching = where.delete(:matching)
+          batch_options = {where: where, matching: matching}
+          ThinkingSphinx.find_in_batches(index.core_name, batch_options) do |ids|
             klass.where(id: ids).each { |record| transmit(index, record) }
+            sleep 1 # empirical number
           end
         else
           ThinkingSphinx.update(index.name_w, fields, where)

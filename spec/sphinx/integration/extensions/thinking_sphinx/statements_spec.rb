@@ -50,7 +50,9 @@ describe ThinkingSphinx do
       expect(ThinkingSphinx).to(
         receive(:execute).
           with("SELECT sphinx_internal_id " +
-               "FROM product WHERE `company_id` = 1 AND `sphinx_internal_id` > 0 " +
+               "FROM product " +
+               "WHERE MATCH('@company_id_idx 1') " +
+               "AND `company_id` = 1 AND `sphinx_internal_id` > 0 " +
                "ORDER BY `sphinx_internal_id` ASC LIMIT 1").
           and_return([{"sphinx_internal_id" => "1"}])
       )
@@ -58,13 +60,17 @@ describe ThinkingSphinx do
       expect(ThinkingSphinx).to(
         receive(:execute).
           with("SELECT sphinx_internal_id " +
-               "FROM product WHERE `company_id` = 1 AND `sphinx_internal_id` > 1 " +
+               "FROM product " +
+               "WHERE MATCH('@company_id_idx 1') " +
+               "AND `company_id` = 1 AND `sphinx_internal_id` > 1 " +
                "ORDER BY `sphinx_internal_id` ASC LIMIT 1").
           and_return([])
       )
 
       result = []
-      ThinkingSphinx.find_in_batches("product", where: {company_id: 1}, batch_size: 1) { |ids| result += ids }
+      ThinkingSphinx.find_in_batches(
+        "product",
+        where: {company_id: 1}, matching: "@company_id_idx 1", batch_size: 1) { |ids| result += ids }
       expect(result).to eq [1]
     end
   end
