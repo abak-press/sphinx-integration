@@ -344,8 +344,12 @@ module Sphinx::Integration
 
     def cleanup_waste_records
       log "Cleanup waste records"
-      log "sleep 120 sec"
-      sleep 120
+
+      if Rails.env.production?
+        log "sleep 120 sec"
+        sleep 120
+      end
+
       rt_indexes do |index|
         waste_records = Sphinx::Integration::WasteRecords.for(index)
         log "- #{index.name} (#{waste_records.size} records)"
