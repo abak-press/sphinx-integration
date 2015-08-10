@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-08-10 [cd1e7bd](../../commit/cd1e7bd) - __(bibendi)__ fix: find in batches on steroids
+
+#### v2.3.0
+ * 2015-08-05 [aba6466](../../commit/aba6466) - __(bibendi)__ Release 2.3.0
  * 2015-07-29 [46eea6a](../../commit/46eea6a) - __(bibendi)__ feat: delete records from core after full index
 
 #### v2.2.0
