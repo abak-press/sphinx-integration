@@ -1,5 +1,10 @@
 
 #### [Current]
+ * 2015-08-10 [b1e877f](../../commit/b1e877f) - __(bibendi)__ fix: dont sleep unless production
+ * 2015-08-10 [f770236](../../commit/f770236) - __(bibendi)__ fix: use matching option only when reindex
+
+#### v2.3.1
+ * 2015-08-10 [a41700b](../../commit/a41700b) - __(bibendi)__ Release 2.3.1
  * 2015-08-10 [cd1e7bd](../../commit/cd1e7bd) - __(bibendi)__ fix: find in batches on steroids
 
 #### v2.3.0
