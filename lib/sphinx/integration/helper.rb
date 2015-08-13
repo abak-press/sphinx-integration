@@ -222,12 +222,16 @@ module Sphinx::Integration
       log "Truncate rt indexes"
 
       rt_indexes do |index|
-        log "- #{index.name}"
-        if partition
-          index.truncate(index.rt_name(partition))
-        else
-          index.truncate(index.rt_name(0))
-          index.truncate(index.rt_name(1))
+        begin
+          log "- #{index.name}"
+          if partition
+            index.truncate(index.rt_name(partition))
+          else
+            index.truncate(index.rt_name(0))
+            index.truncate(index.rt_name(1))
+          end
+        rescue ::Sphinx::Integration::SphinxError => error
+          log "sphinx error: #{error.message}"
         end
       end
 
@@ -351,9 +355,13 @@ module Sphinx::Integration
       end
 
       rt_indexes do |index|
-        waste_records = Sphinx::Integration::WasteRecords.for(index)
-        log "- #{index.name} (#{waste_records.size} records)"
-        waste_records.cleanup
+        begin
+          waste_records = Sphinx::Integration::WasteRecords.for(index)
+          log "- #{index.name} (#{waste_records.size} records)"
+          waste_records.cleanup
+        rescue ::Sphinx::Integration::SphinxError => error
+          log "sphinx error: #{error.message}"
+        end
       end
     end
 

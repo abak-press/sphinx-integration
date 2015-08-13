@@ -40,6 +40,12 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
 
     def log(message)
       ::ActiveSupport::Notifications.instrument("message.thinking_sphinx", message: message)
+      message = [Time.now.strftime("%Y-%m-%d %H:%M:%S"), $$, message].join("\t")
+      logger.error(message)
+    end
+
+    def logger
+      @logger ||= ActiveSupport::BufferedLogger.new(Rails.root.join("log", "sphinx.log"))
     end
 
     # Посылает sql запрос в Sphinx
@@ -58,14 +64,10 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
     end
 
     def take_connection(options = {})
-      if options.fetch(:on_slaves, false)
-        ::Sphinx::Integration::Mysql::ConnectionPool.take_slaves do |connection|
-          yield connection
-        end
-      else
-        Sphinx::Integration::Mysql::ConnectionPool.take do |connection|
-          yield connection
-        end
+      method = options[:on_slaves] ? :take_slaves : :take
+
+      ::Sphinx::Integration::Mysql::ConnectionPool.send(method) do |connection|
+        yield connection
       end
     end
   end
