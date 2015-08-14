@@ -11,4 +11,5 @@ end
 
 require 'sphinx/integration/version'
 require 'sphinx/integration/extensions'
+require 'sphinx/integration/errors'
 require 'sphinx/integration/railtie'
