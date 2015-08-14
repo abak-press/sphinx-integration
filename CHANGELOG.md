@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-08-13 [a29751f](../../commit/a29751f) - __(Michail Merkushin)__ feature: better errors handling
+
+#### v2.3.2
+ * 2015-08-10 [400a094](../../commit/400a094) - __(bibendi)__ Release 2.3.2
  * 2015-08-10 [b1e877f](../../commit/b1e877f) - __(bibendi)__ fix: dont sleep unless production
  * 2015-08-10 [f770236](../../commit/f770236) - __(bibendi)__ fix: use matching option only when reindex
 
