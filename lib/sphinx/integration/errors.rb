@@ -40,5 +40,8 @@ module Sphinx
     class QueryExecutionError < StandardError
       attr_accessor :statement
     end
+
+    class Retry < StandardError
+    end
   end
 end

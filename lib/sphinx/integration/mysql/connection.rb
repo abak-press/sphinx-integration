@@ -42,8 +42,6 @@ class Sphinx::Integration::Mysql::Connection
     wrapper = ::Sphinx::Integration::QueryExecutionError.new message
     wrapper.statement = human_statements
     raise wrapper
-  ensure
-    close_and_clear
   end
 
   def results_for(*statements)

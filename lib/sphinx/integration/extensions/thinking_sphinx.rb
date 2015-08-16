@@ -38,14 +38,38 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
       ThinkingSphinx::Configuration.instance.replication?
     end
 
-    def log(message)
-      ::ActiveSupport::Notifications.instrument("message.thinking_sphinx", message: message)
-      message = [Time.now.strftime("%Y-%m-%d %H:%M:%S"), $$, message].join("\t")
-      logger.error(message)
+    def error(exception_or_message, severity = ::Logger::ERROR)
+      if exception_or_message.is_a?(::Exception)
+        log(exception_or_message.message, severity)
+        debug(exception_or_message.backtrace.join("\n"))
+      else
+        log(exception_or_message, severity)
+      end
     end
 
+    def fatal(exception_or_message)
+      error(exception_or_message, ::Logger::FATAL)
+    end
+
+    def debug(message)
+      log(message, ::Logger::DEBUG)
+    end
+
+    def warn(message)
+      log(message, ::Logger::WARN)
+    end
+
+    def log(message, severity = ::Logger::INFO)
+      logger.add(severity, message)
+    end
+
+    alias_method :info, :log
+
     def logger
-      @logger ||= ActiveSupport::BufferedLogger.new(Rails.root.join("log", "sphinx.log"))
+      @logger ||= ::Logger.new(Rails.root.join("log", "sphinx.log")).tap do |logger|
+        logger.formatter = ::Logger::Formatter.new
+        logger.level = ::Rails.logger.try(:level) || ::Logger::INFO
+      end
     end
 
     # Посылает sql запрос в Sphinx
