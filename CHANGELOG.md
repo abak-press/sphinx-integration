@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-08-26 [06aca71](../../commit/06aca71) - __(Semyon Pupkov)__ fix: remove extra read query
+
+#### v2.4.0
+ * 2015-08-14 [7645250](../../commit/7645250) - __(Michail Merkushin)__ Release 2.4.0
  * 2015-08-13 [a29751f](../../commit/a29751f) - __(Michail Merkushin)__ feature: better errors handling
 
 #### v2.3.2
