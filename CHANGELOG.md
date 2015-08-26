@@ -1,5 +1,17 @@
 
 #### [Current]
+ * 2015-08-26 [5dead51](../../commit/5dead51) - __(Semyon Pupkov)__ fix: remove extra read query
+
+#### v2.4.1
+ * 2015-08-27 [237ac5e](../../commit/237ac5e) - __(Semyon Pupkov)__ Release 2.4.1
+ * 2015-08-26 [06aca71](../../commit/06aca71) - __(Semyon Pupkov)__ fix: remove extra read query
+
+#### v2.4.0
+ * 2015-08-14 [7645250](../../commit/7645250) - __(Michail Merkushin)__ Release 2.4.0
+ * 2015-08-13 [a29751f](../../commit/a29751f) - __(Michail Merkushin)__ feature: better errors handling
+
+#### v2.3.2
+ * 2015-08-10 [400a094](../../commit/400a094) - __(bibendi)__ Release 2.3.2
  * 2015-08-10 [b1e877f](../../commit/b1e877f) - __(bibendi)__ fix: dont sleep unless production
  * 2015-08-10 [f770236](../../commit/f770236) - __(bibendi)__ fix: use matching option only when reindex
 
