@@ -107,6 +107,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     index.agent_connect_timeout = config.agent_connect_timeout
     index.agent_query_timeout = config.agent_query_timeout
     index.ha_strategy = 'nodeads'
+    index.persistent = true
     index
   end
 
