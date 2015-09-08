@@ -104,9 +104,7 @@ module Sphinx::Integration
 
       partitions { |i| ThinkingSphinx.replace(index.rt_name(i), data) }
 
-      if record.exists_in_sphinx?(index.core_name)
-        ThinkingSphinx.soft_delete(index.core_name_w, record.sphinx_document_id)
-      end
+      ThinkingSphinx.soft_delete(index.core_name_w, record.sphinx_document_id)
 
       Sphinx::Integration::WasteRecords.for(index).add(record.sphinx_document_id) if full_reindex?
     end
