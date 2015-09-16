@@ -32,10 +32,10 @@ module Sphinx
               retries += 1
 
               if retries >= MAXIMUM_RETRIES
-                ::ThinkingSphinx.fatal(original)
+                ::ThinkingSphinx.error(original)
                 raise ::Riddle::ConnectionError, "Connection to #{options.inspect} failed. #{original.message}"
               else
-                ::ThinkingSphinx.error "Retrying. #{original.message}"
+                ::ThinkingSphinx.info "Retrying. #{original.message}"
                 retry
               end
             end
