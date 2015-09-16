@@ -19,6 +19,7 @@ module Sphinx::Integration
         Riddle::Query::Select,
         Riddle::Configuration,
         Riddle::Configuration::DistributedIndex,
+        Riddle::Client,
         ThinkingSphinx,
         ThinkingSphinx::Configuration,
         ThinkingSphinx::Attribute,
