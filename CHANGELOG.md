@@ -1,5 +1,22 @@
 
 #### [Current]
+ * 2015-09-16 [8ed6c38](../../commit/8ed6c38) - __(Michail Merkushin)__ feature: change connection pool log messages from error to info
+ * 2015-09-07 [686b4a8](../../commit/686b4a8) - __(Michail Merkushin)__ feature: add persistent connections on master
+ * 2015-08-16 [7642c75](../../commit/7642c75) - __(Michail Merkushin)__ feature: thread safe persistent connections (both)
+ * 2015-08-26 [06aca71](../../commit/06aca71) - __(Semyon Pupkov)__ fix: remove extra read query
+ * 2015-08-14 [7645250](../../commit/7645250) - __(Michail Merkushin)__ Release 2.4.0
+ * 2015-08-13 [a29751f](../../commit/a29751f) - __(Michail Merkushin)__ feature: better errors handling
+
+#### v2.3.3
+ * 2015-08-27 [c4d01c0](../../commit/c4d01c0) - __(Semyon Pupkov)__ Release 2.3.3
+ * 2015-08-26 [5dead51](../../commit/5dead51) - __(Semyon Pupkov)__ fix: remove extra read query
+
+#### v2.4.1
+ * 2015-08-27 [237ac5e](../../commit/237ac5e) - __(Semyon Pupkov)__ Release 2.4.1
+ * 2015-08-26 [06aca71](../../commit/06aca71) - __(Semyon Pupkov)__ fix: remove extra read query
+
+#### v2.4.0
+ * 2015-08-14 [7645250](../../commit/7645250) - __(Michail Merkushin)__ Release 2.4.0
  * 2015-08-13 [a29751f](../../commit/a29751f) - __(Michail Merkushin)__ feature: better errors handling
 
 #### v2.3.2
