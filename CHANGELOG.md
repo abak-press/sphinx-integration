@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-09-20 [22b34c3](../../commit/22b34c3) - __(Michail Merkushin)__ fix: misstypes in connection pool
+
+#### v3.0.0
+ * 2015-09-16 [277295b](../../commit/277295b) - __(Michail Merkushin)__ Release 3.0.0
  * 2015-09-16 [8ed6c38](../../commit/8ed6c38) - __(Michail Merkushin)__ feature: change connection pool log messages from error to info
  * 2015-09-07 [686b4a8](../../commit/686b4a8) - __(Michail Merkushin)__ feature: add persistent connections on master
  * 2015-08-16 [7642c75](../../commit/7642c75) - __(Michail Merkushin)__ feature: thread safe persistent connections (both)
