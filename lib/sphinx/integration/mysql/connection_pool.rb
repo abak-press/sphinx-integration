@@ -52,7 +52,7 @@ module Sphinx::Integration::Mysql::ConnectionPool
       @agents ||= ThinkingSphinx::Configuration.instance.agents
       errors = []
 
-      agents.each do |agent_name, _|
+      @agents.each do |agent_name, _|
         begin
           take(slaves_pool(agent_name), &block)
         rescue ::Innertube::Pool::BadResource,
@@ -64,7 +64,7 @@ module Sphinx::Integration::Mysql::ConnectionPool
       end
 
       # Райзим ошибку, только если она получаена от обоих реплик
-      return if errors.size < agents.size
+      return if errors.size < @agents.size
       raise errors[0]
     end
 
@@ -115,7 +115,7 @@ module Sphinx::Integration::Mysql::ConnectionPool
     end
 
     def slaves_pool(agent_name)
-      @slavess_lock.synchronize do
+      @slaves_lock.synchronize do
         @slaves_pool[agent_name] ||= Innertube::Pool.new(
           proc { ::Sphinx::Integration::Mysql::ConnectionPool.slave_connection(agent_name) },
           proc { |connection| connection.close }
