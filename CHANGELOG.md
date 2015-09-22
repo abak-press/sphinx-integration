@@ -1,5 +1,10 @@
 
 #### [Current]
+ * 2015-09-22 [ec3baef](../../commit/ec3baef) - __(Michail Merkushin)__ feature: configurable mysql connection timeouts
+ * 2015-09-22 [07d726c](../../commit/07d726c) - __(Michail Merkushin)__ feature: configurable log level for log/sphinx.log
+
+#### v3.0.1
+ * 2015-09-20 [98c14c7](../../commit/98c14c7) - __(Michail Merkushin)__ Release 3.0.1
  * 2015-09-20 [22b34c3](../../commit/22b34c3) - __(Michail Merkushin)__ fix: misstypes in connection pool
 
 #### v3.0.0
