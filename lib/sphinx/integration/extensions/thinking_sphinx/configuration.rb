@@ -4,7 +4,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
 
   included do
     attr_accessor :remote, :replication, :agent_connect_timeout, :agent_query_timeout,
-                  :ha_strategy, :user, :password, :exclude
+                  :ha_strategy, :user, :password, :exclude, :log_level, :mysql_read_timeout, :mysql_connect_timeout
 
     attr_reader :agents
 
@@ -39,6 +39,9 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
     self.ha_strategy = 'nodeads'
     self.user = 'sphinx'
     self.exclude = []
+    self.log_level = "warn"
+    self.mysql_connect_timeout = 2
+    self.mysql_read_timeout = 5
     @configuration.searchd.listen_all_interfaces = true
 
     reset_without_integration(custom_app_root)
