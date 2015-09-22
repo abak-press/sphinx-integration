@@ -84,6 +84,8 @@ production:
   searchd_file_path: data
   binlog_path: binlog
   log_level: warn
+  mysql_connect_timeout: 2
+  mysql_read_timeout: 5
 ```
 
 ### production with replication
@@ -113,6 +115,8 @@ production:
   agent_connect_timeout: 50
   ha_strategy: nodeads
   log_level: warn
+  mysql_connect_timeout: 2
+  mysql_read_timeout: 5
 
   user: sphinx
   remote_path: /home/index/master

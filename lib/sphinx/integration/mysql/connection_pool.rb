@@ -100,8 +100,8 @@ module Sphinx::Integration::Mysql::ConnectionPool
         host: host_prepared(host),
         port: port_prepared(port),
         reconnect: true,
-        read_timeout: 2,
-        connect_timeout: 2
+        read_timeout: ::ThinkingSphinx::Configuration.instance.mysql_read_timeout,
+        connect_timeout: ::ThinkingSphinx::Configuration.instance.mysql_connect_timeout
       }
     end
 
