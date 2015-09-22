@@ -68,7 +68,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
     def logger
       @logger ||= ::Logger.new(Rails.root.join("log", "sphinx.log")).tap do |logger|
         logger.formatter = ::Logger::Formatter.new
-        logger.level = ::Rails.logger.try(:level) || ::Logger::INFO
+        logger.level = ::Logger.const_get(::ThinkingSphinx::Configuration.instance.log_level.upcase)
       end
     end
 

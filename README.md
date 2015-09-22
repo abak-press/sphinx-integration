@@ -83,6 +83,7 @@ production:
   pid_file: pid/searchd.pid
   searchd_file_path: data
   binlog_path: binlog
+  log_level: warn
 ```
 
 ### production with replication
@@ -111,6 +112,7 @@ production:
   rt_flush_period: 86400
   agent_connect_timeout: 50
   ha_strategy: nodeads
+  log_level: warn
 
   user: sphinx
   remote_path: /home/index/master
