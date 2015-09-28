@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-09-28 [9fde84c](../../commit/9fde84c) - __(Simeon Movchan)__ fix: зависимость от net-ssh < 3.0
+
+#### v3.1.0
+ * 2015-09-22 [a84d824](../../commit/a84d824) - __(Michail Merkushin)__ Release 3.1.0
  * 2015-09-22 [ec3baef](../../commit/ec3baef) - __(Michail Merkushin)__ feature: configurable mysql connection timeouts
  * 2015-09-22 [07d726c](../../commit/07d726c) - __(Michail Merkushin)__ feature: configurable log level for log/sphinx.log
 
