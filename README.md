@@ -294,6 +294,14 @@ module IndexExtension
 end
 ```
 
+### Дополнительные индексы
+
+Можно объявить дополнительные индексы которые не будут по умолчанию участвовать в поисковых запросах.
+
+```ruby
+set_property alternate: true
+```
+
 ## Хранит в redis время завершения последней успешной индексации
 `ThinkingSphinx.last_indexing_finish_time`
 
