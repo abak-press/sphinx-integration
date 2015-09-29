@@ -21,6 +21,7 @@ module Sphinx::Integration
         Riddle::Configuration::DistributedIndex,
         Riddle::Client,
         ThinkingSphinx,
+        ThinkingSphinx::Context,
         ThinkingSphinx::Configuration,
         ThinkingSphinx::Attribute,
         ThinkingSphinx::Source,

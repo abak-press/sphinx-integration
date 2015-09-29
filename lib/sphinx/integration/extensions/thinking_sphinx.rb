@@ -13,6 +13,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
   autoload :Configuration, 'sphinx/integration/extensions/thinking_sphinx/configuration'
   autoload :LastIndexingTime, 'sphinx/integration/extensions/thinking_sphinx/last_indexing_time'
   autoload :Statements, 'sphinx/integration/extensions/thinking_sphinx/statements'
+  autoload :Context, 'sphinx/integration/extensions/thinking_sphinx/context'
 
   extend ActiveSupport::Concern
 
