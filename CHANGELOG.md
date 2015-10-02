@@ -1,5 +1,10 @@
 
 #### [Current]
+ * 2015-09-29 [eae6141](../../commit/eae6141) - __(Michail Merkushin)__ feature: by default don't search in alternate indexes
+ * 2015-09-29 [3ec988b](../../commit/3ec988b) - __(Michail Merkushin)__ fix: don't eager load models from all engines
+
+#### v3.1.1
+ * 2015-09-28 [ad63029](../../commit/ad63029) - __(Michail Merkushin)__ Release 3.1.1
  * 2015-09-28 [9fde84c](../../commit/9fde84c) - __(Simeon Movchan)__ fix: зависимость от net-ssh < 3.0
 
 #### v3.1.0
