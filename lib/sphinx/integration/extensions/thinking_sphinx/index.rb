@@ -229,11 +229,13 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
   # Перекрытый метод
   # Возращает индексы, по которым делается select
   # Оригинальынй TS зачем то перечисляет все индексы, входящие в состав distributed, зачем так делать не совсем понятно
-  # Мы же будем возврящять только distributed индекс, чтобы воспользоваться фичей dist_threads
+  # Мы же будем возврящять только distributed индекс, чтобы воспользоваться фичей dist_threads.
+  #
+  # alternate индексы по умолчанию в поисковых запросах не участвуют.
   #
   # Returns Array of String
   def all_names_with_rt
-    [name]
+    @options[:alternate] ? [] : [name]
   end
 
   # Карта атрибутов и их типов, нужна для типкастинга
