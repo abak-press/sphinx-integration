@@ -1,52 +1,65 @@
-# coding: utf-8
-require 'mysql2'
+require "mysql2"
 
-class Sphinx::Integration::Mysql::Connection
-  def initialize(options)
-    options[:flags] ||= Mysql2::Client::MULTI_STATEMENTS
-    @client_options = options
-  end
+module Sphinx
+  module Integration
+    module Mysql
+      class Connection
+        def initialize(host, port)
+          config = ::ThinkingSphinx::Configuration.instance
 
-  def close
-    client.close
-  rescue
-    # silence close
-  end
+          @client_options = {
+            host: host,
+            port: port,
+            flags: Mysql2::Client::MULTI_STATEMENTS,
+            reconnect: true,
+            read_timeout: config.mysql_read_timeout,
+            connect_timeout: config.mysql_connect_timeout
+          }
+        end
 
-  def execute(statement)
-    query(statement).first
-  end
+        def close
+          client.close
+        rescue
+          # silence close
+        end
 
-  def query_all(*statements)
-    query(*statements)
-  end
+        def execute(statement)
+          query(statement).first
+        end
 
-  private
+        def query_all(*statements)
+          query(*statements)
+        end
 
-  def client
-    @client ||= ::Mysql2::Client.new(@client_options)
-  rescue Mysql2::Error => error
-    raise ::Sphinx::Integration::QueryExecutionError.new(error)
-  end
+        private
 
-  def close_and_clear
-    close
-    @client = nil
-  end
+        def client
+          @client ||= ::Mysql2::Client.new(@client_options)
+        rescue Mysql2::Error => error
+          raise ::Sphinx::Integration::QueryExecutionError.new(error)
+        end
 
-  def query(*statements)
-    results_for(*statements)
-  rescue => error
-    human_statements = statements.join('; ')
-    message = "#{error.message} - #{human_statements}"
-    wrapper = ::Sphinx::Integration::QueryExecutionError.new message
-    wrapper.statement = human_statements
-    raise wrapper
-  end
+        def close_and_clear
+          close
+          @client = nil
+        end
 
-  def results_for(*statements)
-    results  = [client.query(statements.join('; '))]
-    results << client.store_result while client.next_result
-    results
+        def query(*statements)
+          results_for(*statements)
+        rescue => error
+          human_statements = statements.join('; ')
+          message = "#{error.message} - #{human_statements}"
+          wrapper = ::Sphinx::Integration::QueryExecutionError.new message
+          wrapper.statement = human_statements
+          raise wrapper
+        end
+
+        def results_for(*statements)
+          results  = [client.query(statements.join('; '))]
+          results << client.store_result while client.next_result
+          results
+        end
+      end
+    end
   end
 end

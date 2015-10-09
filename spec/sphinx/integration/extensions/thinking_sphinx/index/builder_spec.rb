@@ -12,11 +12,10 @@ describe ThinkingSphinx::Index::Builder do
 
     it { index.local_options[:source_joins].should have(1).item }
     it { index.local_options[:source_joins][:rubrics].should be_present }
-
-    subject { index.local_options[:source_joins][:rubrics] }
-    its([:type]) { should eq :left }
-    its([:on]) { should eq 'rubrics.id = model.rubric_id' }
-    its([:as]) { should eq :rubs }
+    it do
+      join = index.local_options[:source_joins][:rubrics]
+      expect(join).to include(type: :left, on: "rubrics.id = model.rubric_id", as: :rubs)
+    end
   end
 
   describe 'inner_join' do
@@ -28,11 +27,11 @@ describe ThinkingSphinx::Index::Builder do
 
     it { index.local_options[:source_joins].should have(1).item }
     it { index.local_options[:source_joins][:rubrics].should be_present }
-
-    subject { index.local_options[:source_joins][:rubrics] }
-    its([:type]) { should eq :inner }
-    its([:on]) { should eq 'rubrics.id = model.rubric_id' }
-    its([:as]) { should eq :rubs }
+    it do
+      index.local_options[:source_joins][:rubrics]
+      join = index.local_options[:source_joins][:rubrics]
+      expect(join).to include(type: :inner, on: "rubrics.id = model.rubric_id", as: :rubs)
+    end
   end
 
   describe 'delete_joins' do

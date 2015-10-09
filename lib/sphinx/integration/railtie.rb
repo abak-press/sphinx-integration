@@ -1,5 +1,4 @@
 # coding: utf-8
-
 require 'rails'
 require 'thinking-sphinx'
 require 'sphinx-integration'
@@ -9,7 +8,6 @@ module Sphinx::Integration
 
     initializer 'sphinx_integration.configuration', :before => 'thinking_sphinx.set_app_root' do
       ThinkingSphinx::Configuration.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
-      Riddle::Configuration::Searchd.send :include, Sphinx::Integration::Extensions::Riddle::Configuration::Searchd
       ThinkingSphinx.database_adapter = :postgresql
     end
 
@@ -18,10 +16,8 @@ module Sphinx::Integration
         Riddle::Query::Insert,
         Riddle::Query::Select,
         Riddle::Configuration,
-        Riddle::Configuration::DistributedIndex,
         Riddle::Client,
         ThinkingSphinx,
-        ThinkingSphinx::Context,
         ThinkingSphinx::Configuration,
         ThinkingSphinx::Attribute,
         ThinkingSphinx::Source,
@@ -77,6 +73,10 @@ module Sphinx::Integration
           end
         end
       end
+    end
+
+    config.after_initialize do
+      ThinkingSphinx.context.define_indexes
     end
 
     rake_tasks do

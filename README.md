@@ -13,15 +13,15 @@
 ## Rake tasks
 Если в параметрах не передавать node, то по умолчанию комманда будет выполнена на всех нодах
 
-rake sphinx:start[node]
-rake sphinx:stop[node]
-rake sphinx:restart[node]
-rake sphinx:index[node,offline]
-rake sphinx:rebuild[node]
+rake sphinx:start[host]
+rake sphinx:stop[host]
+rake sphinx:restart[host]
+rake sphinx:index[host,offline]
+rake sphinx:rebuild[host]
 rake sphinx:conf
-rake sphinx:copy_conf[node]
-rake sphinx:rm_indexes[node]
-rake sphinx:rm_binlog[node]
+rake sphinx:copy_conf[host]
+rake sphinx:rm_indexes[host]
+rake sphinx:rm_binlog[host]
 
 *Внимание* при офлайн индексации rt индексы не очищаются. Рекоммендуется в этом случае использовать rebuild
 
@@ -36,7 +36,6 @@ development:
   address: localhost
   port: 10300
   mysql41: 9300
-  listen_all_interfaces: true
 
   max_matches: 5000
   version: 2.0.3
@@ -61,7 +60,6 @@ production:
   address: index
   port: 10300
   mysql41: 9300
-  listen_all_interfaces: true
 
   max_matches: 5000
   version: 2.0.3
@@ -75,17 +73,16 @@ production:
   dist_threads: 2
   binlog_max_log_size: 1024M
   rt_flush_period: 86400
-
-  user: sphinx
-  remote_path: /home/index
-  query_log_file: /dev/null
-  searchd_log_file: logs/searchd.log
-  pid_file: pid/searchd.pid
-  searchd_file_path: data
-  binlog_path: binlog
-  log_level: warn
+  log_level: fatal
   mysql_connect_timeout: 2
   mysql_read_timeout: 5
+
+  user: sphinx
+  query_log_file: /dev/null
+  searchd_log_file: /absolute/path/to/logs/searchd.log
+  pid_file: /absolute/path/to/pid/searchd.pid
+  searchd_file_path: /absolute/path/to/data
+  binlog_path: /absolute/path/to/binlog
 ```
 
 ### production with replication
@@ -93,12 +90,13 @@ production:
 ```yml
 production:
   remote: true
-  replication: true
 
-  address: index
+  address:
+    - index-slave1
+    - index-slave2
   port: 10300
   mysql41: 9300
-  listen_all_interfaces: false
+  ssh_port: 22123
 
   max_matches: 5000
   version: 2.0.3
@@ -112,33 +110,16 @@ production:
   dist_threads: 2
   binlog_max_log_size: 1024M
   rt_flush_period: 86400
-  agent_connect_timeout: 50
-  ha_strategy: nodeads
-  log_level: warn
+  log_level: fatal
   mysql_connect_timeout: 2
   mysql_read_timeout: 5
 
   user: sphinx
-  remote_path: /home/index/master
   query_log_file: /dev/null
-  searchd_log_file: logs/searchd.log
-  pid_file: pid/searchd.pid
-  searchd_file_path: data
-  binlog_path: binlog
-
-  agents:
-    slave1:
-      address: index
-      port: 10301
-      mysql41: 9301
-      listen_all_interfaces: true
-      remote_path: /home/index/slave
-    slave2:
-      address: index2
-      port: 10302
-      mysql41: 9302
-      listen_all_interfaces: true
-      remote_path: /home/index/slave
+  searchd_log_file: /absolute/path/to/logs/searchd.log
+  pid_file: /absolute/path/to/pid/searchd.pid
+  searchd_file_path: /absolute/path/to/data
+  binlog_path: /absolute/path/to/binlog
 ```
 
 
@@ -160,9 +141,9 @@ Workflow:
 Когда запускается очередная полная индексация:
 + начинает наполнятся core индекс сфинксовым индексатором
 + но в этот момент данные могут обновляться, записываться в rt индекс они будут, но потом всё равно удаляться после завершения полной индексации
-+ для того, чтобы не потерять обновления данные начинают попадать в дополнительный delta_rt индекс
++ для того, чтобы не потерять обновления данные начинают попадать в дополнительный rt индекс
 + после завершения полной индексации, очищается основной rt индекс
-+ и в него перетекают данные из delta rt индекса
++ а дополнительный rt индекс становится основным
 
 ## Дополнительные возможности конфигурировани индекса
 

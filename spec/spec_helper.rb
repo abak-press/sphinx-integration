@@ -1,7 +1,9 @@
 # coding: utf-8
-
-require 'rubygems'
 require 'bundler'
+
+require 'simplecov'
+SimpleCov.start { minimum_coverage 85 }
+
 require 'pry-debugger'
 
 Bundler.require :default, :development
@@ -15,13 +17,16 @@ require 'rspec/rails'
 require 'mock_redis'
 require 'redis-classy'
 
+Redis.current = MockRedis.new
+Redis::Classy.db = Redis.current
+
+require "support/helpers/sphinx_conf"
+
 RSpec.configure do |config|
-  config.backtrace_exclusion_patterns = [/lib\/rspec\/(core|expectations|matchers|mocks)/]
-  config.color_enabled = true
-  config.order = 'random'
+  include SphinxConf
 
   config.before(:each) do
-    Redis.current = MockRedis.new
-    Redis::Classy.db = Redis.current
+    Redis.current.flushdb
+    ThinkingSphinx::Configuration.instance.reset
   end
 end

@@ -11,37 +11,24 @@ describe ThinkingSphinx::Index do
   end
 
   describe '#to_riddle_with_merged' do
-    context 'when single or slave mode' do
-      let(:result) { index.to_riddle(0, :single) }
+    let(:result) { index.to_riddle(0) }
 
-      it 'generate core index' do
-        result.
-          select{ |x| x.is_a?(Riddle::Configuration::Index) }.
-          should have(1).items
-      end
-
-      it 'generate rt index' do
-        result.
-          select{ |x| x.is_a?(Riddle::Configuration::RealtimeIndex) }.
-          should have(2).items
-      end
-
-      it 'generate distributed index' do
-        result.
-          select{ |x| x.is_a?(Riddle::Configuration::DistributedIndex) }.
-          should have(1).item
-      end
+    it 'generate core index' do
+      result.
+        select { |x| x.is_a?(Riddle::Configuration::Index) }.
+        should have(1).items
     end
 
-    context 'when master mode' do
-      let(:result) { index.to_riddle(0, :master) }
-      let(:agents) { {'slave' => {'address' => 'slave0', 'port' => 10, 'mysql41' => 100}} }
+    it 'generate rt index' do
+      result.
+        select { |x| x.is_a?(Riddle::Configuration::RealtimeIndex) }.
+        should have(2).items
+    end
 
-      before { index.send(:config).stub(:agents).and_return(agents) }
-
-      it 'all distributed' do
-        result.all? { |x| x.is_a?(Riddle::Configuration::DistributedIndex) }
-      end
+    it 'generate distributed index' do
+      result.
+        select { |x| x.is_a?(Riddle::Configuration::DistributedIndex) }.
+        should have(1).item
     end
   end
 

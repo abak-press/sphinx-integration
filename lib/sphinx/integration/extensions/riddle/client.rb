@@ -9,14 +9,32 @@ module Sphinx
           extend ActiveSupport::Concern
 
           included do
+            alias_method_chain :initialize, :pooling
             alias_method_chain :connect, :pooling
             alias_method_chain :request, :pooling
           end
 
+          module ClassMethods
+            def server_pool
+              @server_pool
+            end
+
+            def init_server_pool(servers, host)
+              @server_pool = ::Sphinx::Integration::ServerPool.new(servers, host, mysql: false)
+            end
+          end
+
+          def initialize_with_pooling(*args)
+            initialize_without_pooling(*args)
+
+            self.class.init_server_pool(@servers, @port) unless self.class.server_pool
+          end
+
           def connect_with_pooling
-            options = {server: servers.sample, port: @port}
-            ::Sphinx::Integration::Searchd::ConnectionPool.take(options) do |socket|
-              yield socket
+            self.class.server_pool.take do |server|
+              server.take do |connection|
+                yield connection.socket
+              end
             end
           end
 
