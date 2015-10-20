@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-10-09 [8400c44](../../commit/8400c44) - __(Michail Merkushin)__ feature: rejection of master node. searchd connection pooling
+
+#### v3.2.0
+ * 2015-10-02 [302000f](../../commit/302000f) - __(Michail Merkushin)__ Release 3.2.0
  * 2015-09-29 [eae6141](../../commit/eae6141) - __(Michail Merkushin)__ feature: by default don't search in alternate indexes
  * 2015-09-29 [3ec988b](../../commit/3ec988b) - __(Michail Merkushin)__ fix: don't eager load models from all engines
 
