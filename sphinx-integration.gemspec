@@ -33,11 +33,15 @@ Gem::Specification.new do |gem|
 
   gem.add_development_dependency 'rake'
   gem.add_development_dependency 'bundler'
-  gem.add_development_dependency 'rspec', '~> 2.14.1'
-  gem.add_development_dependency 'rspec-rails', '~> 2.14.0'
+  gem.add_development_dependency 'rspec', '~> 3.3'
+  gem.add_development_dependency 'rspec-rails'
   gem.add_development_dependency 'rails', '~> 3.1.12'
   gem.add_development_dependency 'combustion'
   gem.add_development_dependency 'mock_redis'
   gem.add_development_dependency 'database_cleaner'
   gem.add_development_dependency 'pry-debugger'
+  gem.add_development_dependency 'rspec-collection_matchers'
+  gem.add_development_dependency 'rspec-its'
+  gem.add_development_dependency 'rspec-activemodel-mocks'
+  gem.add_development_dependency 'simplecov'
 end

@@ -4,6 +4,11 @@ require 'spec_helper'
 describe Sphinx::Integration::Transmitter do
   let(:transmitter) { described_class.new(ModelWithRt) }
   let(:record) { mock_model ModelWithRt }
+  let(:mysql_client) do
+    client = double("mysql client")
+    allow(ThinkingSphinx::Configuration.instance).to receive(:mysql_client).and_return(client)
+    client
+  end
 
   before(:all){ ThinkingSphinx.context.define_indexes }
 
@@ -17,25 +22,28 @@ describe Sphinx::Integration::Transmitter do
   end
 
   describe '#replace' do
-    it do
+    it "send valid quries to sphinx" do
       expect(transmitter).to receive(:transmitted_data).and_return(field: 123)
-      expect(ThinkingSphinx).to receive(:replace).with('model_with_rt_rt0', field: 123)
-      expect(ThinkingSphinx).to receive(:soft_delete)
+      expect(mysql_client).to receive(:replace).with('model_with_rt_rt0', field: 123)
+      expect(mysql_client).to receive(:soft_delete)
+
+      transmitter.replace(record)
     end
-    after { transmitter.replace(record) }
   end
 
   describe '#delete' do
-    it do
-      expect(ThinkingSphinx).to receive(:delete).with('model_with_rt_rt0', 1)
-      expect(ThinkingSphinx).to receive(:soft_delete)
+    it "send valid quries to sphinx" do
+      expect(mysql_client).to receive(:delete).with('model_with_rt_rt0', 1)
+      expect(mysql_client).to receive(:soft_delete)
+      transmitter.delete(record)
     end
-    after { transmitter.delete(record) }
   end
 
   describe '#update' do
-    it { expect(transmitter).to receive(:update_fields) }
-    after { transmitter.update(record, :field => 123) }
+    it "send valid quries to sphinx" do
+      expect(transmitter).to receive(:update_fields)
+      transmitter.update(record, field: 123)
+    end
   end
 
   describe '#update_fields' do
@@ -43,23 +51,22 @@ describe Sphinx::Integration::Transmitter do
       before { transmitter.stub(:full_reindex? => true) }
 
       it do
-        expect(ThinkingSphinx).to receive(:update).with("model_with_rt_rt0", {field: 123}, id: 1)
-        expect(ThinkingSphinx).to receive(:update).with("model_with_rt_rt1", {field: 123}, id: 1)
-        expect(ThinkingSphinx).
+        expect(mysql_client).to receive(:update).with("model_with_rt_rt0", {field: 123}, id: 1)
+        expect(mysql_client).to receive(:update).with("model_with_rt_rt1", {field: 123}, id: 1)
+        expect(mysql_client).
           to receive(:find_in_batches).
             with("model_with_rt_core", where: {id: 1}, matching: "@id_idx 1").
             and_yield([1])
-      end
 
-      after { transmitter.update_fields({field: 123}, id: 1, matching: "@id_idx 1") }
+        transmitter.update_fields({field: 123}, id: 1, matching: "@id_idx 1")
+      end
     end
 
     context 'when no full reindex' do
       it do
-        expect(ThinkingSphinx).to receive(:update)
+        expect(mysql_client).to receive(:update)
+        transmitter.update_fields({field: 123}, id: 1)
       end
-
-      after { transmitter.update_fields({:field => 123}, {:id => 1}) }
     end
   end
 end

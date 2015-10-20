@@ -8,6 +8,7 @@ module Sphinx::Integration
     class_attribute :write_disabled
 
     delegate :full_reindex?, to: :'Sphinx::Integration::Helper'
+    delegate :mysql_client, to: :"ThinkingSphinx::Configuration.instance"
 
     def initialize(klass)
       @klass = klass
@@ -37,12 +38,8 @@ module Sphinx::Integration
       return false if write_disabled?
 
       rt_indexes do |index|
-        partitions { |partition| ::ThinkingSphinx.delete(index.rt_name_w(partition), record.sphinx_document_id) }
-
-        if record.exists_in_sphinx?(index.core_name)
-          ::ThinkingSphinx.soft_delete(index.core_name_w, record.sphinx_document_id)
-        end
-
+        partitions { |partition| mysql_client.delete(index.rt_name(partition), record.sphinx_document_id) }
+        mysql_client.soft_delete(index.core_name, record.sphinx_document_id)
         Sphinx::Integration::WasteRecords.for(index).add(record.sphinx_document_id) if full_reindex?
       end
 
@@ -75,17 +72,17 @@ module Sphinx::Integration
       rt_indexes do |index|
         if full_reindex?
           # вначале обновим всё что уже есть в rt индексе
-          partitions { |i| ThinkingSphinx.update(index.rt_name_w(i), fields, where) }
+          partitions { |partition| mysql_client.update(index.rt_name(partition), fields, where) }
 
           # и зареплейсим всё что осталось в core
           # TODO: implement sphinx transactions
           batch_options = {where: where, matching: matching}
-          ThinkingSphinx.find_in_batches(index.core_name, batch_options) do |ids|
+          mysql_client.find_in_batches(index.core_name, batch_options) do |ids|
             klass.where(id: ids).each { |record| transmit(index, record) }
             sleep 1 # empirical number
           end
         else
-          ThinkingSphinx.update(index.name_w, fields, where)
+          mysql_client.update(index.name, fields, where)
         end
       end
     end
@@ -102,9 +99,9 @@ module Sphinx::Integration
       data = transmitted_data(index, record)
       return unless data
 
-      partitions { |i| ThinkingSphinx.replace(index.rt_name(i), data) }
+      partitions { |partition| mysql_client.replace(index.rt_name(partition), data) }
 
-      ThinkingSphinx.soft_delete(index.core_name_w, record.sphinx_document_id)
+      mysql_client.soft_delete(index.core_name, record.sphinx_document_id)
 
       Sphinx::Integration::WasteRecords.for(index).add(record.sphinx_document_id) if full_reindex?
     end

@@ -36,34 +36,33 @@ namespace :thinking_sphinx do
 end
 
 namespace :sphinx do
-
   desc 'Start Sphinx'
-  task :start, [:node] => :environment do |_, args|
-    Sphinx::Integration::Helper.new(args[:node]).start
+  task :start, [:host] => :environment do |_, args|
+    Sphinx::Integration::Helper.new(args).start
   end
 
   desc 'Stop Sphinx'
-  task :stop, [:node] => :environment do |_, args|
-    Sphinx::Integration::Helper.new(args[:node]).stop
+  task :stop, [:host] => :environment do |_, args|
+    Sphinx::Integration::Helper.new(args).stop
   end
 
   desc 'Restart Sphinx'
-  task :restart, [:node] => :environment do |_, args|
-    Sphinx::Integration::Helper.new(args[:node]).restart
+  task :restart, [:host] => :environment do |_, args|
+    Sphinx::Integration::Helper.new(args).restart
   end
 
   desc 'Index Sphinx'
-  task :index, [:node, :offline] => :environment do |_, args|
+  task :index, [:host, :offline] => :environment do |_, args|
     Rails.application.eager_load!
 
-    is_offline = args[:offline].present? && %w(true yes y da offline).include?(args[:offline])
-    Sphinx::Integration::Helper.new(args[:node]).index(!is_offline)
+    is_offline = (offline = args.delete(:offline)).present? && %w(true yes y da offline).include?(offline)
+    Sphinx::Integration::Helper.new(args).index(!is_offline)
   end
 
   desc 'Rebuild Sphinx'
-  task :rebuild, [:node] => :environment do |_, args|
+  task :rebuild => :environment do
     Rails.application.eager_load!
-    Sphinx::Integration::Helper.new(args[:node]).rebuild
+    Sphinx::Integration::Helper.new.rebuild
   end
 
   desc 'Generate configuration files'
@@ -78,18 +77,22 @@ namespace :sphinx do
   end
 
   desc 'Copy configuration files'
-  task :copy_conf, [:node] => :environment do |_, args|
-    Sphinx::Integration::Helper.new(args[:node]).copy_config
+  task :copy_conf, [:host] => :environment do |_, args|
+    Sphinx::Integration::Helper.new(args).copy_config
   end
 
   desc 'Remove indexes files'
-  task :rm_indexes, [:node] => :environment do |_, args|
-    Sphinx::Integration::Helper.new(args[:node]).remove_indexes
+  task :rm_indexes, [:host] => :environment do |_, args|
+    Sphinx::Integration::Helper.new(args).remove_indexes
   end
 
   desc 'Remove binlog files'
-  task :rm_binlog, [:node] => :environment do |_, args|
-    Sphinx::Integration::Helper.new(args[:node]).remove_binlog
+  task :rm_binlog, [:host] => :environment do |_, args|
+    Sphinx::Integration::Helper.new(args).remove_binlog
   end
 
+  desc 'Reload config or rotate indexes'
+  task :reload, [:host] => :environment do |_, args|
+    Sphinx::Integration::Helper.new(args).reload
+  end
 end

@@ -12,8 +12,6 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
   autoload :Source, 'sphinx/integration/extensions/thinking_sphinx/source'
   autoload :Configuration, 'sphinx/integration/extensions/thinking_sphinx/configuration'
   autoload :LastIndexingTime, 'sphinx/integration/extensions/thinking_sphinx/last_indexing_time'
-  autoload :Statements, 'sphinx/integration/extensions/thinking_sphinx/statements'
-  autoload :Context, 'sphinx/integration/extensions/thinking_sphinx/context'
 
   extend ActiveSupport::Concern
 
@@ -21,7 +19,10 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
     DEFAULT_MATCH = :extended2
     include Sphinx::Integration::FastFacet
     include LastIndexingTime
-    extend Sphinx::Integration::Extensions::ThinkingSphinx::Statements
+
+    class << self
+      attr_writer :logger
+    end
   end
 
   module ClassMethods
@@ -33,10 +34,6 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
       context.indexed_models.each do |model|
         model.constantize.reset_indexes
       end
-    end
-
-    def replication?
-      ThinkingSphinx::Configuration.instance.replication?
     end
 
     def error(exception_or_message, severity = ::Logger::ERROR)
@@ -61,7 +58,16 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
     end
 
     def log(message, severity = ::Logger::INFO)
-      logger.add(severity, message)
+      message.to_s.split("\n").each { |m| logger.add(severity, m) if m.present? }
+
+      return unless block_given?
+
+      begin
+        yield
+      rescue Exception => exception
+        fatal(exception)
+        raise
+      end
     end
 
     alias_method :info, :log
@@ -70,29 +76,6 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
       @logger ||= ::Logger.new(Rails.root.join("log", "sphinx.log")).tap do |logger|
         logger.formatter = ::Logger::Formatter.new
         logger.level = ::Logger.const_get(::ThinkingSphinx::Configuration.instance.log_level.upcase)
-      end
-    end
-
-    # Посылает sql запрос в Sphinx
-    #
-    # query - String
-    #
-    # Returns Mysql2::Result|NilClass
-    def execute(query, options = {})
-      result = nil
-      ::ThinkingSphinx::Search.log(query) do
-        take_connection(options) do |connection|
-          result = connection.execute(query)
-        end
-      end
-      result
-    end
-
-    def take_connection(options = {})
-      method = options[:on_slaves] ? :take_slaves : :take
-
-      ::Sphinx::Integration::Mysql::ConnectionPool.send(method) do |connection|
-        yield connection
       end
     end
   end

@@ -3,10 +3,13 @@ module Sphinx
     autoload :Helper, 'sphinx/integration/helper'
     autoload :Mysql, 'sphinx/integration/mysql'
     autoload :Searchd, 'sphinx/integration/searchd'
+    autoload :Decaying, 'sphinx/integration/decaying'
     autoload :Transmitter, 'sphinx/integration/transmitter'
     autoload :FastFacet, 'sphinx/integration/fast_facet'
     autoload :RecentRt, 'sphinx/integration/recent_rt'
     autoload :WasteRecords, 'sphinx/integration/waste_records'
+    autoload :ServerPool, 'sphinx/integration/server_pool'
+    autoload :Server, 'sphinx/integration/server'
   end
 end
 

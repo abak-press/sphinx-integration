@@ -41,9 +41,8 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
   end
 
   module ClassMethods
-
     def max_matches
-      @ts_max_matches ||= ThinkingSphinx::Configuration.instance.configuration.searchd.max_matches || 5000
+      ThinkingSphinx::Configuration.instance.configuration.searchd.max_matches || 5000
     end
 
     def define_secondary_index(*args, &block)
@@ -69,21 +68,6 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
     def add_sphinx_callbacks_and_extend(*args)
       include Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord::TransmitterCallbacks
     end
-
-    # Индексы для конфига
-    #
-    # config_type - Symbol
-    #
-    # Returns Array
-    def to_riddle(config_type)
-      define_indexes
-      sphinx_database_adapter.setup
-
-      local_sphinx_indexes.collect { |index|
-        index.to_riddle(sphinx_offset, config_type)
-      }.flatten
-    end
-
   end
 
   # Находится ли запись в сфинксе
