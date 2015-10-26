@@ -1,5 +1,11 @@
 
 #### [Current]
+ * 2015-10-26 [46cfbc0](../../commit/46cfbc0) - __(Michail Merkushin)__ fix: autodetect sphinx 2.2.x
+ * 2015-10-26 [8afb13b](../../commit/8afb13b) - __(Michail Merkushin)__ fix: favor mv instead of perl rename
+ * 2015-10-26 [eab870f](../../commit/eab870f) - __(Michail Merkushin)__ fix: no care to stop sphinx when rebuilding
+
+#### v4.0.0
+ * 2015-10-20 [dd0a00e](../../commit/dd0a00e) - __(Michail Merkushin)__ Release 4.0.0
  * 2015-10-09 [8400c44](../../commit/8400c44) - __(Michail Merkushin)__ feature: rejection of master node. searchd connection pooling
 
 #### v3.2.0
