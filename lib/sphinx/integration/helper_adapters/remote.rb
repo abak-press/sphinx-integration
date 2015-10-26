@@ -108,7 +108,10 @@ module Sphinx
           @ssh.within(reindex_host) do
             indexer_args << "--nohup" if online
             @ssh.execute("indexer", *indexer_args, exit_status: [0, 2])
-            @ssh.execute("rename -f 's/\\.tmp\\./\\.new\\./' #{config.searchd_file_path}/*_core.tmp.*") if online
+            if online
+              @ssh.execute("for NAME in #{config.searchd_file_path}/*_core.tmp.*; " +
+                           'do mv -f "${NAME}" "${NAME/\.tmp\./.new.}"; done')
+            end
           end
 
           files = "#{config.searchd_file_path}/*_core#{".new" if online}.*"
