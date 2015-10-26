@@ -55,7 +55,7 @@ describe Sphinx::Integration::HelperAdapters::Remote do
   end
 
   describe "#index" do
-    before { stub_sphinx_conf(config_file: "/path/sphinx.conf") }
+    before { stub_sphinx_conf(config_file: "/path/sphinx.conf", searchd_file_path: "/path/data") }
 
     context "when is online" do
       context "when one host" do
@@ -71,10 +71,11 @@ describe Sphinx::Integration::HelperAdapters::Remote do
           expect(ssh).to receive(:within).with("s1.dev").and_yield
           expect(ssh).to receive(:execute).
             with("indexer", "--all", "--config /path/sphinx.conf", "--rotate", "--nohup", exit_status: [0, 2])
+          expect(ssh).to receive(:execute).
+            with('for NAME in /path/data/*_core.tmp.*; do mv -f "${NAME}" "${NAME/\.tmp\./.new.}"; done')
           server = double("server", opts: {port: 22}, user: "sphinx", host: "s1.dev")
           expect(ssh).to receive(:without).with("s1.dev").and_yield(server)
           expect(ssh).to receive(:execute).with("rsync", any_args)
-          expect(ssh).to receive(:execute).with(/^rename/)
           expect(ssh).to receive(:execute).with("kill", /SIGHUP/)
 
           adapter.index(true)

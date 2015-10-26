@@ -76,7 +76,7 @@ module Sphinx::Integration
 
     def rebuild
       with_updates_lock do
-        stop
+        stop rescue nil
         configure
         copy_config
         remove_indexes
