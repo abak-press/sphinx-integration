@@ -61,6 +61,7 @@ module Sphinx::Integration
       log "Index sphinx" do
         with_index_lock do
           @sphinx.index(online)
+          recent_rt.switch if online
         end
       end
 
@@ -70,7 +71,6 @@ module Sphinx::Integration
 
       truncate_rt_indexes(recent_rt.prev)
       cleanup_waste_records
-      recent_rt.switch
     end
     alias_method :reindex, :index
 
