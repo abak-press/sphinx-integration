@@ -30,7 +30,7 @@ describe Sphinx::Integration::Helper do
     context "when online indexing" do
       it do
         expect(adapter).to receive(:index).with(true)
-        expect(mysql_client).to receive(:write).with(/TRUNCATE RTINDEX model_with_rt_rt1/)
+        expect(mysql_client).to receive(:write).with(/TRUNCATE RTINDEX model_with_rt_rt0/)
         helper.index(true)
         expect(helper.recent_rt.prev).to eq 0
       end
