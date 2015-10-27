@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-10-27 [c3d68d5](../../commit/c3d68d5) - __(Michail Merkushin)__ fix: truncate right rt-partitions when indexing online
+
+#### v4.0.1
+ * 2015-10-26 [ff9ef68](../../commit/ff9ef68) - __(Michail Merkushin)__ Release 4.0.1
  * 2015-10-26 [46cfbc0](../../commit/46cfbc0) - __(Michail Merkushin)__ fix: autodetect sphinx 2.2.x
  * 2015-10-26 [8afb13b](../../commit/8afb13b) - __(Michail Merkushin)__ fix: favor mv instead of perl rename
  * 2015-10-26 [eab870f](../../commit/eab870f) - __(Michail Merkushin)__ fix: no care to stop sphinx when rebuilding
