@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-11-16 [d29ae4b](../../commit/d29ae4b) - __(Artem Napolskih)__ chore: relaxation of dependencies
+
+#### v4.0.2
+ * 2015-10-27 [84f0231](../../commit/84f0231) - __(Michail Merkushin)__ Release 4.0.2
  * 2015-10-27 [c3d68d5](../../commit/c3d68d5) - __(Michail Merkushin)__ fix: truncate right rt-partitions when indexing online
 
 #### v4.0.1
