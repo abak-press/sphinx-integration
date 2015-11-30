@@ -49,6 +49,8 @@ development:
   dist_threads: 2
   binlog_max_log_size: 1024M
   rt_flush_period: 86400
+  common_sphinx_configuration: true
+  plugin_dir: /path/to/sphinx/plugins
 ```
 
 ### production
@@ -83,6 +85,9 @@ production:
   pid_file: /absolute/path/to/pid/searchd.pid
   searchd_file_path: /absolute/path/to/data
   binlog_path: /absolute/path/to/binlog
+  common_sphinx_configuration: true
+  plugin_dir: /path/to/sphinx/plugins
+  sphinxql_state: /absolute/path/to/config/sphinx.sql
 ```
 
 ### production with replication
@@ -120,6 +125,9 @@ production:
   pid_file: /absolute/path/to/pid/searchd.pid
   searchd_file_path: /absolute/path/to/data
   binlog_path: /absolute/path/to/binlog
+  common_sphinx_configuration: true
+  plugin_dir: /path/to/sphinx/plugins
+  sphinxql_state: /absolute/path/to/config/sphinx.sql
 ```
 
 

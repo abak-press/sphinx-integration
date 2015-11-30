@@ -8,6 +8,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
 
     alias_method_chain :shuffled_addresses, :integration
     alias_method_chain :reset, :integration
+    alias_method_chain :parse_config, :integration
     alias_method_chain :enforce_common_attribute_types, :rt
 
     def initial_model_directories
@@ -46,12 +47,53 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
 
     reset_without_integration(custom_app_root)
 
-    return if @configuration.searchd.binlog_path
-    @configuration.searchd.binlog_path = "#{app_root}/db/sphinx/#{environment}"
+    unless @configuration.searchd.binlog_path
+      @configuration.searchd.binlog_path = "#{app_root}/db/sphinx/#{environment}"
+    end
+
+    if @configuration.searchd.sphinxql_state.nil? && File.exist?("#{app_root}/config/sphinx.sql")
+      @configuration.searchd.sphinxql_state = "#{app_root}/config/sphinx.sql"
+    end
   end
 
   def generated_config_file
     Rails.root.join("config", "#{Rails.env}.sphinx.conf").to_s
+  end
+
+  # Метод пришлось полностью перекрыть
+  def parse_config_with_integration
+    path = "#{app_root}/config/sphinx.yml"
+    return unless File.exist?(path)
+
+    conf = YAML.load(ERB.new(IO.read(path)).result)[environment]
+
+    conf.each do |key, value|
+      send("#{key}=", value) if respond_to?("#{key}=")
+
+      set_sphinx_setting source_options, key, value, self.class::SourceOptions
+      set_sphinx_setting index_options,  key, value, self.class::IndexOptions
+      set_sphinx_setting index_options,  key, value, self.class::CustomOptions
+      set_sphinx_setting @configuration.searchd, key, value
+      set_sphinx_setting @configuration.indexer, key, value
+
+      # добавлено заполнение секции common
+      set_sphinx_setting @configuration.common, key, value
+    end unless conf.nil?
+
+    self.bin_path += '/' unless bin_path.blank?
+
+    if allow_star
+      index_options[:enable_star] = true
+      index_options[:min_prefix_len] = 1
+    end
+
+    # добавлено выставление опции listen по на нашим правилам
+    listen_ip = "0.0.0.0"
+    mysql_port = @configuration.searchd.mysql41.is_a?(TrueClass) ? "9306" : @configuration.searchd.mysql41
+    @configuration.searchd.listen = [
+      "#{listen_ip}:#{@configuration.searchd.port}",
+      "#{listen_ip}:#{mysql_port}:mysql41"
+    ]
   end
 
   # Не проверям на валидность RT индексы
