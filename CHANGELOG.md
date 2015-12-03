@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-11-30 [22b2e80](../../commit/22b2e80) - __(Michail Merkushin)__ feature: render common section. add sphinx.sql file
+
+#### v4.0.3
+ * 2015-11-16 [259e10d](../../commit/259e10d) - __(Artem Napolskih)__ Release 4.0.3
  * 2015-11-16 [d29ae4b](../../commit/d29ae4b) - __(Artem Napolskih)__ chore: relaxation of dependencies
 
 #### v4.0.2
