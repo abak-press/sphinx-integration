@@ -19,7 +19,6 @@ module Sphinx::Integration
       [
         Riddle::Query::Insert,
         Riddle::Query::Select,
-        Riddle::Configuration,
         Riddle::Client,
         ThinkingSphinx,
         ThinkingSphinx::Configuration,

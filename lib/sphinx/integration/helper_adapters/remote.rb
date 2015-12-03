@@ -94,6 +94,8 @@ module Sphinx
 
         def copy_config
           @ssh.file_upload(config.generated_config_file, config.config_file)
+          sql_file = Rails.root.join("config", "sphinx.sql")
+          @ssh.file_upload(sql_file.to_s, config.configuration.searchd.sphinxql_state) if sql_file.exist?
         end
 
         def index(online)
