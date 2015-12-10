@@ -16,6 +16,19 @@ module Sphinx
           searchd
         end
 
+        def suspend
+          # no-op
+        end
+
+        def resume
+          # no-op
+        end
+
+        def restart
+          stop
+          start
+        end
+
         def remove_indexes
           remove_files("#{config.searchd_file_path}/*_{core,rt0,rt1}.*")
         end

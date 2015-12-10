@@ -5,6 +5,10 @@ module Sphinx
         @servers = Array.wrap(hosts).map { |host| Server.new(host, port, options) }
       end
 
+      def find_server(host)
+        @servers.find { |server| server.host == host }
+      end
+
       def take
         skip_servers = Set.new
         server = choose(skip_servers)
@@ -27,14 +31,15 @@ module Sphinx
 
       def take_all
         skip_servers = Set.new
+        servers = @servers.select { |server| server.server_status.available? }
 
-        @servers.each do |server|
+        servers.each do |server|
           begin
             yield server
           rescue Exception
             skip_servers << server
 
-            if skip_servers.size >= @servers.size
+            if skip_servers.size >= servers.size
               ::ThinkingSphinx.fatal("Error on servers: #{skip_servers.map(&:to_s).join(", ")}")
               raise
             else
@@ -53,7 +58,7 @@ module Sphinx
           servers = @servers
         end
 
-        best_servers = servers.select { |server| server.error_rate.value < 0.1 }
+        best_servers = servers.select(&:fine?)
 
         if best_servers.empty?
           @servers.min_by { |server| server.error_rate.value }

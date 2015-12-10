@@ -10,6 +10,7 @@ module Sphinx
     autoload :WasteRecords, 'sphinx/integration/waste_records'
     autoload :ServerPool, 'sphinx/integration/server_pool'
     autoload :Server, 'sphinx/integration/server'
+    autoload :ServerStatus, 'sphinx/integration/server_status'
   end
 end
 

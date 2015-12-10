@@ -15,7 +15,10 @@ module Sphinx::Integration
     delegate :recent_rt, to: 'self.class'
     delegate :log, to: 'ThinkingSphinx'
 
-    [:running?, :stop, :start, :remove_indexes, :remove_binlog, :copy_config, :reload].each do |method_name|
+    [
+      :running?, :stop, :start, :suspend, :resume, :restart,
+      :remove_indexes, :remove_binlog, :copy_config, :reload
+    ].each do |method_name|
       class_eval <<-EORUBY, __FILE__, __LINE__ + 1
         def #{method_name}
           log "#{method_name.capitalize}" do
@@ -42,11 +45,6 @@ module Sphinx::Integration
       end
 
       @sphinx = config.remote? ? HelperAdapters::Remote.new(options) : HelperAdapters::Local.new(options)
-    end
-
-    def restart
-      stop
-      start
     end
 
     def configure

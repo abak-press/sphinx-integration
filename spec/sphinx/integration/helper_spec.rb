@@ -11,14 +11,6 @@ describe Sphinx::Integration::Helper do
     class_double("Sphinx::Integration::HelperAdapters::Local", new: adapter).as_stubbed_const
   end
 
-  describe "#restart" do
-    it do
-      expect(helper).to receive(:stop)
-      expect(helper).to receive(:start)
-      helper.restart
-    end
-  end
-
   describe "#configure" do
     it do
       expect(ThinkingSphinx::Configuration.instance).to receive(:build).with(/test\.sphinx\.conf/)

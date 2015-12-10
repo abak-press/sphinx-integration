@@ -30,6 +30,7 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency 'riddle', '>= 1.5.8'
   gem.add_runtime_dependency 'thinking-sphinx', '= 2.0.14'
   gem.add_runtime_dependency 'net-ssh', '< 3.0'  # начиная с 3.0 нужен ruby 2.0 (тянется rye)
+  gem.add_runtime_dependency 'request_store', '>= 1.0.8'
 
   gem.add_development_dependency 'rake'
   gem.add_development_dependency 'bundler'

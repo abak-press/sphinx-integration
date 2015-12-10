@@ -2,6 +2,8 @@ module Sphinx
   module Integration
     # A float value which decays exponentially toward 0 over time.
     class Decaying
+      MAX_ERROR_RATE = 0.1
+
       attr_accessor :e
       attr_accessor :p
 
@@ -30,6 +32,10 @@ module Sphinx
         dt = now - @t0
         @t0 = now
         @p *= @e**(@r * dt)
+      end
+
+      def satisfy?
+        value < MAX_ERROR_RATE
       end
     end
   end

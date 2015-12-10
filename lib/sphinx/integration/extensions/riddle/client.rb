@@ -19,8 +19,8 @@ module Sphinx
               @server_pool
             end
 
-            def init_server_pool(servers, host)
-              @server_pool = ::Sphinx::Integration::ServerPool.new(servers, host, mysql: false)
+            def init_server_pool(servers, port)
+              @server_pool = ::Sphinx::Integration::ServerPool.new(servers, port, mysql: false)
             end
           end
 

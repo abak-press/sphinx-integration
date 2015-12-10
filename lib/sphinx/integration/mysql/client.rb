@@ -2,6 +2,8 @@ module Sphinx
   module Integration
     module Mysql
       class Client
+        attr_reader :server_pool
+
         def initialize(hosts, port)
           @server_pool = ServerPool.new(hosts, port)
         end
