@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-12-10 [b5dbbb6](../../commit/b5dbbb6) - __(Michail Merkushin)__ feature: suspend and resume working nodes
+
+#### v4.1.0
+ * 2015-12-03 [ccb31c9](../../commit/ccb31c9) - __(Michail Merkushin)__ Release 4.1.0
  * 2015-11-30 [22b2e80](../../commit/22b2e80) - __(Michail Merkushin)__ feature: render common section. add sphinx.sql file
 
 #### v4.0.3
