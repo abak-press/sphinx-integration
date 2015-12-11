@@ -21,12 +21,14 @@ Redis.current = MockRedis.new
 Redis::Classy.db = Redis.current
 
 require "support/helpers/sphinx_conf"
+require "request_store"
 
 RSpec.configure do |config|
   include SphinxConf
 
   config.before(:each) do
     Redis.current.flushdb
+    RequestStore.clear!
     ThinkingSphinx::Configuration.instance.reset
   end
 end

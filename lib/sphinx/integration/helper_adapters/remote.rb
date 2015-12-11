@@ -83,6 +83,23 @@ module Sphinx
           @ssh.execute("searchd", "--config #{config.config_file}")
         end
 
+        def suspend
+          set_servers_availability(false)
+        end
+
+        def resume
+          set_servers_availability(true)
+        end
+
+        def restart
+          suspend
+          # Wait for all request to be complete
+          sleep(3)
+          stop
+          start
+          resume
+        end
+
         def remove_indexes
           remove_files("#{config.searchd_file_path}/*.*")
         end
@@ -144,6 +161,13 @@ module Sphinx
 
         def reindex_host
           @reindex_host ||= hosts.first
+        end
+
+        def set_servers_availability(value)
+          hosts.each do |host|
+            config.client.class.server_pool.find_server(host).server_status.available = value
+            config.mysql_client.server_pool.find_server(host).server_status.available = value
+          end
         end
       end
     end

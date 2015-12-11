@@ -30,6 +30,22 @@ describe Sphinx::Integration::HelperAdapters::Remote do
     end
   end
 
+  describe "#suspend" do
+    it do
+      adapter.suspend
+      server_status = Sphinx::Integration::ServerStatus.new(ThinkingSphinx::Configuration.instance.address)
+      expect(server_status.available?).to be false
+    end
+  end
+
+  describe "#resume" do
+    it do
+      adapter.resume
+      server_status = Sphinx::Integration::ServerStatus.new(ThinkingSphinx::Configuration.instance.address)
+      expect(server_status.available?).to be true
+    end
+  end
+
   describe "#remove_indexes" do
     it do
       expect(adapter).to receive(:remove_files).with(%r{db/sphinx/test})

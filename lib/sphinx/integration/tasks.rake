@@ -46,6 +46,16 @@ namespace :sphinx do
     Sphinx::Integration::Helper.new(args).stop
   end
 
+  desc 'Suspend Sphinx'
+  task :suspend, [:host] => :environment do |_, args|
+    Sphinx::Integration::Helper.new(args).suspend
+  end
+
+  desc 'Resume Sphinx'
+  task :resume, [:host] => :environment do |_, args|
+    Sphinx::Integration::Helper.new(args).resume
+  end
+
   desc 'Restart Sphinx'
   task :restart, [:host] => :environment do |_, args|
     Sphinx::Integration::Helper.new(args).restart
