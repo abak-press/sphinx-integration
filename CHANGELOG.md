@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2015-12-14 [874a01e](../../commit/874a01e) - __(Michail Merkushin)__ fix: change min request_store version to 1.2.1
+
+#### v4.2.0
+ * 2015-12-11 [e9d5059](../../commit/e9d5059) - __(Michail Merkushin)__ Release 4.2.0
  * 2015-12-10 [b5dbbb6](../../commit/b5dbbb6) - __(Michail Merkushin)__ feature: suspend and resume working nodes
 
 #### v4.1.0
