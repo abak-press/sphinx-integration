@@ -47,15 +47,17 @@ module Sphinx
 
         def find_in_batches(index_name, options = {})
           primary_key = options.fetch(:primary_key, "sphinx_internal_id").to_s.freeze
-          batch_size = options.fetch(:batch_size, 1_000)
+          batch_size = options.fetch(:batch_size, ThinkingSphinx.max_matches)
           batch_order = "#{primary_key} ASC"
           where = options.fetch(:where, {})
           where[primary_key.to_sym] = -> { "> 0" }
+          where_not = options.fetch(:where_not, {})
 
           query = ::Riddle::Query::Select.new.reset_values.
             values(primary_key).
             from(index_name).
             where(where).
+            where_not(where_not).
             order_by(batch_order).
             limit(batch_size).
             matching(options[:matching])
