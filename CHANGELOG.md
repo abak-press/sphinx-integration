@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2016-02-25 [0fd29f9](../../commit/0fd29f9) - __(Michail Merkushin)__ Find in batches with `where_not`
+
+#### v4.2.1
+ * 2015-12-14 [2b129e4](../../commit/2b129e4) - __(Michail Merkushin)__ Release 4.2.1
  * 2015-12-14 [874a01e](../../commit/874a01e) - __(Michail Merkushin)__ fix: change min request_store version to 1.2.1
 
 #### v4.2.0
