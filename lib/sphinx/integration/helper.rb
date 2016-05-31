@@ -13,7 +13,10 @@ module Sphinx::Integration
     attr_reader :sphinx
 
     delegate :recent_rt, to: 'self.class'
-    delegate :log, to: 'ThinkingSphinx'
+    delegate :log,
+             :indexes,
+             :rt_indexes,
+             to: '::ThinkingSphinx'
 
     [
       :running?, :stop, :start, :suspend, :resume, :restart,
@@ -37,14 +40,17 @@ module Sphinx::Integration
     end
 
     def initialize(options = {})
+      @options = options
+
       ThinkingSphinx.context.define_indexes
 
-      ThinkingSphinx.logger = ::Logger.new(Rails.root.join("log", "index.log")).tap do |logger|
-        logger.formatter = ::Logger::Formatter.new
-        logger.level = ::Logger::INFO
-      end
+      setup_logger
 
-      @sphinx = config.remote? ? HelperAdapters::Remote.new(options) : HelperAdapters::Local.new(options)
+      @sphinx = if config.remote?
+                  HelperAdapters::Remote.new(options.slice(:host, :rotate))
+                else
+                  HelperAdapters::Local.new(options.slice(:rotate))
+                end
     end
 
     def configure
@@ -53,19 +59,19 @@ module Sphinx::Integration
       end
     end
 
-    def index(online = true)
+    def index
       reset_waste_records
 
       log "Index sphinx" do
         with_index_lock do
-          @sphinx.index(online)
-          recent_rt.switch if online
+          @sphinx.index
+          recent_rt.switch if rotate?
         end
       end
 
       ThinkingSphinx.set_last_indexing_finish_time
 
-      return unless online
+      return unless rotate?
 
       truncate_rt_indexes(recent_rt.prev)
       cleanup_waste_records
@@ -79,7 +85,7 @@ module Sphinx::Integration
         copy_config
         remove_indexes
         remove_binlog
-        index(false)
+        index
         start
       end
     end
@@ -90,7 +96,7 @@ module Sphinx::Integration
     def truncate_rt_indexes(partition = nil)
       log "Truncate rt indexes"
 
-      rt_indexes do |index|
+      rt_indexes.each do |index|
         log "- #{index.name}" do
           if partition
             index.truncate(index.rt_name(partition))
@@ -104,10 +110,21 @@ module Sphinx::Integration
 
     private
 
+    def setup_logger
+      ThinkingSphinx.logger = ::Logger.new(Rails.root.join("log", "index.log")).tap do |logger|
+        logger.formatter = ::Logger::Formatter.new
+        logger.level = ::Logger::INFO
+      end
+    end
+
+    def rotate?
+      !!@options[:rotate]
+    end
+
     def reset_waste_records
       log "Reset waste records"
 
-      rt_indexes do |index|
+      rt_indexes.each do |index|
         log "- #{index.name}" do
           Sphinx::Integration::WasteRecords.for(index).reset
         end
@@ -122,7 +139,7 @@ module Sphinx::Integration
         sleep 120
       end
 
-      rt_indexes do |index|
+      rt_indexes.each do |index|
         waste_records = Sphinx::Integration::WasteRecords.for(index)
         log "- #{index.name} (#{waste_records.size} records)" do
           waste_records.cleanup
@@ -146,20 +163,6 @@ module Sphinx::Integration
     def with_index_lock
       Redis::Mutex.with_lock(:full_reindex, expire: 10.hours) do
         yield
-      end
-    end
-
-    # Итератор по всем rt индексам
-    #
-    # Yields ThinkingSphinx::Index, ActiveRecord::Base
-    def rt_indexes
-      ThinkingSphinx.context.indexed_models.each do |model_name|
-        model = model_name.constantize
-        next unless model.rt_indexed_by_sphinx?
-
-        model.sphinx_indexes.each do |index|
-          yield index
-        end
       end
     end
   end

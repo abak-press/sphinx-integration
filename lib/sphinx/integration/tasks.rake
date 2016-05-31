@@ -1,3 +1,4 @@
+# coding: utf-8
 [:start, :stop, :running_start, :index, :reindex, :rebuild, :configure].each do |task|
   Rake::Task["thinking_sphinx:#{task}"].clear_actions
 end
@@ -28,12 +29,20 @@ namespace :sphinx do
     Sphinx::Integration::Helper.new(args).restart
   end
 
-  desc 'Index Sphinx'
-  task :index, [:host, :offline] => :environment do |_, args|
+  desc <<-TEXT
+    Index Sphinx
+
+    host – A domain of remote Sphinx, used all hosts when is empty (default: '')
+    rotate – Should rotate indexes when indexing is complete (default: true)
+  TEXT
+  task :index, [:host, :rotate] => :environment do |_, args|
     Rails.application.eager_load!
 
-    is_offline = (offline = args.delete(:offline)).present? && %w(true yes y da offline).include?(offline)
-    Sphinx::Integration::Helper.new(args).index(!is_offline)
+    rotate = %w(true yes y 1).include?(args[:rotate].presence || 'true')
+
+    Sphinx::Integration::Helper.
+      new(host: args[:host], rotate: rotate).
+      index
   end
 
   desc 'Rebuild Sphinx'

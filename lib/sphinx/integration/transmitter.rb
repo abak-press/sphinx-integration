@@ -22,7 +22,7 @@ module Sphinx::Integration
     def replace(record)
       return false if write_disabled?
 
-      rt_indexes do |index|
+      rt_indexes.each do |index|
         transmit(index, record)
       end
 
@@ -37,7 +37,7 @@ module Sphinx::Integration
     def delete(record)
       return false if write_disabled?
 
-      rt_indexes do |index|
+      rt_indexes.each do |index|
         partitions { |partition| mysql_client.delete(index.rt_name(partition), record.sphinx_document_id) }
         mysql_client.soft_delete(index.core_name, record.sphinx_document_id)
         Sphinx::Integration::WasteRecords.for(index).add(record.sphinx_document_id) if full_reindex?
@@ -69,7 +69,7 @@ module Sphinx::Integration
 
       matching = where.delete(:matching)
 
-      rt_indexes do |index|
+      rt_indexes.each do |index|
         if full_reindex?
           # вначале обновим всё что уже есть в rt индексе
           partitions { |partition| mysql_client.update(index.rt_name(partition), fields, where) }
@@ -149,15 +149,11 @@ module Sphinx::Integration
       attrs
     end
 
-    # Итератор по всем rt индексам
+    # RealTime индексы модели
     #
-    # Yields ThinkingSphinx::Index
-    #
-    # Returns nothing
+    # Returns Array
     def rt_indexes
-      klass.sphinx_indexes.select(&:rt?).each do |index|
-        yield index
-      end
+      @rt_indexes ||= klass.sphinx_indexes.select(&:rt?)
     end
 
     # Итератор по текущим активным частям rt индексов

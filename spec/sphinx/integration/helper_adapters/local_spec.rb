@@ -45,16 +45,18 @@ describe Sphinx::Integration::HelperAdapters::Local do
 
   describe "#index" do
     context "when is online" do
+      let(:adapter) { described_class.new(rotate: true) }
+
       it do
-        expect(rye).to receive(:shell).with(:indexer, /--config/, "--rotate")
-        adapter.index(true)
+        expect(rye).to receive(:shell).with(:indexer, /--config/, "--rotate", /_core$/)
+        adapter.index
       end
     end
 
     context "when is offline" do
       it do
-        expect(rye).to receive(:shell).with(:indexer, /--config/)
-        adapter.index(false)
+        expect(rye).to receive(:shell).with(:indexer, /--config/, /_core$/)
+        adapter.index
       end
     end
   end

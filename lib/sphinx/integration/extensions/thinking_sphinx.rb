@@ -31,10 +31,20 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
       @ts_max_matches ||= ThinkingSphinx::Configuration.instance.configuration.searchd.max_matches || 5000
     end
 
+    def indexed_models
+      @models ||= context.indexed_models.map(&:constantize)
+    end
+
     def reset_indexed_models
-      context.indexed_models.each do |model|
-        model.constantize.reset_indexes
-      end
+      indexed_models.each(&:reset_indexes)
+    end
+
+    def indexes
+      @indexes ||= indexed_models.flat_map(&:sphinx_indexes)
+    end
+
+    def rt_indexes
+      @rt_indexes ||= indexes.select(&:rt?)
     end
 
     def error(exception_or_message, severity = ::Logger::ERROR)
