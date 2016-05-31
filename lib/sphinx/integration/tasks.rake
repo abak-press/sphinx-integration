@@ -1,38 +1,5 @@
-namespace :thinking_sphinx do
-  def wrap_task(*args, &block)
-    name, params, deps = Rake.application.resolve_args(args.dup)
-    task = Rake::Task["thinking_sphinx:#{name}"]
-    task.clear_actions
-    task.enhance(&block)
-  end
-
-  wrap_task :stop do
-    Sphinx::Integration::Helper.new.stop
-  end
-
-  wrap_task :start do
-    Sphinx::Integration::Helper.new.start
-  end
-
-  wrap_task :running_start do
-    Sphinx::Integration::Helper.new.restart
-  end
-
-  wrap_task :index do
-    Sphinx::Integration::Helper.new.index
-  end
-
-  wrap_task :reindex do
-    Sphinx::Integration::Helper.new.reindex
-  end
-
-  wrap_task :rebuild do
-    Sphinx::Integration::Helper.new.rebuild
-  end
-
-  wrap_task :configure do
-    Sphinx::Integration::Helper.new.configure
-  end
+[:start, :stop, :running_start, :index, :reindex, :rebuild, :configure].each do |task|
+  Rake::Task["thinking_sphinx:#{task}"].clear_actions
 end
 
 namespace :sphinx do
