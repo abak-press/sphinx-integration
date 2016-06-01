@@ -71,22 +71,20 @@ describe Sphinx::Integration::HelperAdapters::Remote do
   end
 
   describe "#index" do
-    before { stub_sphinx_conf(config_file: "/path/sphinx.conf", searchd_file_path: "/path/data") }
-
     context "when is online" do
-      context "when one host" do
-        it do
-          expect(ssh).to receive(:execute).with("indexer", "--all", "--config /path/sphinx.conf", "--rotate")
-          adapter.index(true)
-        end
-      end
+      let(:adapter) { described_class.new(rotate: true) }
 
       context "when many hosts" do
+        before do
+          stub_sphinx_conf(config_file: "/path/sphinx.conf",
+                           searchd_file_path: "/path/data",
+                           address: %w(s1.dev s2.dev))
+        end
+
         it do
-          expect(ThinkingSphinx::Configuration.instance).to receive(:address).and_return(%w(s1.dev s2.dev))
           expect(ssh).to receive(:within).with("s1.dev").and_yield
           expect(ssh).to receive(:execute).
-            with("indexer", "--all", "--config /path/sphinx.conf", "--rotate", "--nohup", exit_status: [0, 2])
+            with("indexer", "--config /path/sphinx.conf", "--rotate", "--nohup", /_core$/, exit_status: [0, 2])
           expect(ssh).to receive(:execute).
             with('for NAME in /path/data/*_core.tmp.*; do mv -f "${NAME}" "${NAME/\.tmp\./.new.}"; done')
           server = double("server", opts: {port: 22}, user: "sphinx", host: "s1.dev")
@@ -94,16 +92,71 @@ describe Sphinx::Integration::HelperAdapters::Remote do
           expect(ssh).to receive(:execute).with("rsync", any_args)
           expect(ssh).to receive(:execute).with("kill", /SIGHUP/)
 
-          adapter.index(true)
+          adapter.index
+        end
+      end
+
+      context "when one host" do
+        before do
+          stub_sphinx_conf(config_file: "/path/sphinx.conf",
+                           searchd_file_path: "/path/data",
+                           address: "s1.dev")
+        end
+
+        it do
+          expect(ssh).to receive(:within).with("s1.dev").and_yield
+          expect(ssh).to receive(:execute).
+            with("indexer", "--config /path/sphinx.conf", "--rotate", "--nohup", /_core$/, exit_status: [0, 2])
+          expect(ssh).to receive(:execute).
+            with('for NAME in /path/data/*_core.tmp.*; do mv -f "${NAME}" "${NAME/\.tmp\./.new.}"; done')
+          expect(ssh).to_not receive(:without)
+          expect(ssh).to_not receive(:execute).with("rsync", any_args)
+          expect(ssh).to receive(:execute).with("kill", /SIGHUP/)
+
+          adapter.index
         end
       end
     end
 
     context "when is offline" do
-      context "when one host" do
+      context "when many hosts" do
+        before do
+          stub_sphinx_conf(config_file: "/path/sphinx.conf",
+                           searchd_file_path: "/path/data",
+                           address: %w(s1.dev s2.dev))
+        end
+
         it do
-          expect(ssh).to receive(:execute).with("indexer", "--all", "--config /path/sphinx.conf")
-          adapter.index(false)
+          expect(ssh).to receive(:within).with("s1.dev").and_yield
+          expect(ssh).to receive(:execute).
+            with("indexer", "--config /path/sphinx.conf", /_core$/, exit_status: [0, 2])
+          expect(ssh).to_not receive(:execute).with(/for NAME/)
+          server = double("server", opts: {port: 22}, user: "sphinx", host: "s1.dev")
+          expect(ssh).to receive(:without).with("s1.dev").and_yield(server)
+          expect(ssh).to receive(:execute).with("rsync", any_args)
+          expect(ssh).to_not receive(:execute).with("kill", /SIGHUP/)
+
+          adapter.index
+        end
+      end
+
+      context "when one host" do
+        before do
+          stub_sphinx_conf(config_file: "/path/sphinx.conf",
+                           searchd_file_path: "/path/data",
+                           address: "s1.dev")
+        end
+
+        it do
+          expect(ssh).to receive(:within).with("s1.dev").and_yield
+          expect(ssh).to receive(:execute).
+            with("indexer", "--config /path/sphinx.conf", /_core$/, exit_status: [0, 2])
+          expect(ssh).to_not receive(:execute).with(/for NAME/)
+          expect(ssh).to_not receive(:without)
+          expect(ssh).to_not receive(:execute).with("rsync", any_args)
+          expect(ssh).to_not receive(:execute).with("kill", /SIGHUP/)
+
+          adapter.index
         end
       end
     end

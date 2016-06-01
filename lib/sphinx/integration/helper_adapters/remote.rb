@@ -115,31 +115,10 @@ module Sphinx
           @ssh.file_upload(sql_file.to_s, config.configuration.searchd.sphinxql_state) if sql_file.exist?
         end
 
-        def index(online)
-          indexer_args = ["--all", "--config #{config.config_file}"]
-          indexer_args << "--rotate" if online
-
-          if hosts.one?
-            @ssh.execute("indexer", *indexer_args)
-            return
-          end
-
-          @ssh.within(reindex_host) do
-            indexer_args << "--nohup" if online
-            @ssh.execute("indexer", *indexer_args, exit_status: [0, 2])
-            if online
-              @ssh.execute("for NAME in #{config.searchd_file_path}/*_core.tmp.*; " +
-                           'do mv -f "${NAME}" "${NAME/\.tmp\./.new.}"; done')
-            end
-          end
-
-          files = "#{config.searchd_file_path}/*_core#{".new" if online}.*"
-          @ssh.without(reindex_host) do |server|
-            @ssh.execute("rsync", "-ptzv", "-e 'ssh -p #{server.opts[:port]}'",
-                         "#{server.user}@#{server.host}:#{files} #{config.searchd_file_path}")
-          end
-
-          reload if online
+        def index
+          exec_indexer
+          copy_indexes if hosts.many?
+          reload if rotate?
         end
 
         def reload
@@ -147,6 +126,32 @@ module Sphinx
         end
 
         private
+
+        def indexer_args
+          args = ["--config #{config.config_file}"]
+          args.concat(%w(--rotate --nohup)) if rotate?
+          args
+        end
+
+        def exec_indexer
+          @ssh.within(reindex_host) do
+            @ssh.execute("indexer", *indexer_args, index_names, exit_status: [0, 2])
+
+            if rotate?
+              @ssh.execute("for NAME in #{config.searchd_file_path}/*_core.tmp.*; " +
+                           'do mv -f "${NAME}" "${NAME/\.tmp\./.new.}"; done')
+            end
+          end
+        end
+
+        def copy_indexes
+          files = "#{config.searchd_file_path}/*_core#{'.new' if rotate?}.*"
+
+          @ssh.without(reindex_host) do |server|
+            @ssh.execute("rsync", "-ptzv", "-e 'ssh -p #{server.opts[:port]}'",
+                         "#{server.user}@#{server.host}:#{files} #{config.searchd_file_path}")
+          end
+        end
 
         def hosts
           return @hosts if @hosts

@@ -42,8 +42,12 @@ module Sphinx
           # no-op
         end
 
-        def index(online)
-          online ? indexer("--rotate") : indexer
+        def index
+          if rotate?
+            indexer("--rotate", index_names)
+          else
+            indexer(index_names)
+          end
         end
 
         def reload
@@ -57,7 +61,7 @@ module Sphinx
         end
 
         def indexer(*params)
-          log Rye.shell(:indexer, "--config #{config.config_file} --all", *params).inspect
+          log Rye.shell(:indexer, "--config #{config.config_file}", *params).inspect
         end
 
         def remove_files(pattern)
