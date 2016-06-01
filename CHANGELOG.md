@@ -1,5 +1,10 @@
 
 #### [Current]
+ * 2016-05-31 [033761a](../../commit/033761a) - __(Michail Merkushin)__ feat: Run indexer with list of index names
+ * 2016-05-31 [4381d3f](../../commit/4381d3f) - __(Michail Merkushin)__ chore: Drop support for original tasks
+
+#### v4.3.0
+ * 2016-02-25 [ca6f9d2](../../commit/ca6f9d2) - __(Michail Merkushin)__ Release 4.3.0
  * 2016-02-25 [0fd29f9](../../commit/0fd29f9) - __(Michail Merkushin)__ Find in batches with `where_not`
 
 #### v4.2.1
