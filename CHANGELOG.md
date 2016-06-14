@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2016-06-14 [a8a773a](../../commit/a8a773a) - __(Michail Merkushin)__ fix: Init helper with true hash
+
+#### v5.0.0
+ * 2016-06-01 [2138465](../../commit/2138465) - __(Michail Merkushin)__ Release 5.0.0
  * 2016-05-31 [033761a](../../commit/033761a) - __(Michail Merkushin)__ feat: Run indexer with list of index names
  * 2016-05-31 [4381d3f](../../commit/4381d3f) - __(Michail Merkushin)__ chore: Drop support for original tasks
 
