@@ -6,27 +6,27 @@ end
 namespace :sphinx do
   desc 'Start Sphinx'
   task :start, [:host] => :environment do |_, args|
-    Sphinx::Integration::Helper.new(args).start
+    Sphinx::Integration::Helper.new(args.to_hash).start
   end
 
   desc 'Stop Sphinx'
   task :stop, [:host] => :environment do |_, args|
-    Sphinx::Integration::Helper.new(args).stop
+    Sphinx::Integration::Helper.new(args.to_hash).stop
   end
 
   desc 'Suspend Sphinx'
   task :suspend, [:host] => :environment do |_, args|
-    Sphinx::Integration::Helper.new(args).suspend
+    Sphinx::Integration::Helper.new(args.to_hash).suspend
   end
 
   desc 'Resume Sphinx'
   task :resume, [:host] => :environment do |_, args|
-    Sphinx::Integration::Helper.new(args).resume
+    Sphinx::Integration::Helper.new(args.to_hash).resume
   end
 
   desc 'Restart Sphinx'
   task :restart, [:host] => :environment do |_, args|
-    Sphinx::Integration::Helper.new(args).restart
+    Sphinx::Integration::Helper.new(args.to_hash).restart
   end
 
   desc <<-TEXT
@@ -64,21 +64,21 @@ namespace :sphinx do
 
   desc 'Copy configuration files'
   task :copy_conf, [:host] => :environment do |_, args|
-    Sphinx::Integration::Helper.new(args).copy_config
+    Sphinx::Integration::Helper.new(args.to_hash).copy_config
   end
 
   desc 'Remove indexes files'
   task :rm_indexes, [:host] => :environment do |_, args|
-    Sphinx::Integration::Helper.new(args).remove_indexes
+    Sphinx::Integration::Helper.new(args.to_hash).remove_indexes
   end
 
   desc 'Remove binlog files'
   task :rm_binlog, [:host] => :environment do |_, args|
-    Sphinx::Integration::Helper.new(args).remove_binlog
+    Sphinx::Integration::Helper.new(args.to_hash).remove_binlog
   end
 
   desc 'Reload config or rotate indexes'
   task :reload, [:host] => :environment do |_, args|
-    Sphinx::Integration::Helper.new(args).reload
+    Sphinx::Integration::Helper.new(args.to_hash).reload
   end
 end
