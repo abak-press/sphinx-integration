@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2016-06-14 [258622c](../../commit/258622c) - __(Michail Merkushin)__ feat: Copy config file in Local adapter
+
+#### v5.0.1
+ * 2016-06-14 [bf76e18](../../commit/bf76e18) - __(Michail Merkushin)__ Release 5.0.1
  * 2016-06-14 [a8a773a](../../commit/a8a773a) - __(Michail Merkushin)__ fix: Init helper with true hash
 
 #### v5.0.0
