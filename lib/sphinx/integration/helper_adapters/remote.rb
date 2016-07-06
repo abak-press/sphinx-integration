@@ -5,11 +5,14 @@ module Sphinx
     module HelperAdapters
       class SshProxy
         DEFAULT_SSH_OPTIONS = {
+          user: "sphinx",
+          port: 22,
           quiet: false,
           info: true,
           safe: false,
           debug: false,
-          forward_agent: true
+          forward_agent: true,
+          password_prompt: false
         }.freeze
 
         delegate :file_upload, to: "@servers"
@@ -18,13 +21,14 @@ module Sphinx
         #           :hosts             - Array of String (required)
         #           :port              - Integer ssh port (default: 22)
         #           :user              - String (default: sphinx)
+        #           :password          - String (optional)
         def initialize(options = {})
-          options.reverse_merge!(user: "sphinx", port: 22)
-
           @servers = Rye::Set.new("servers", parallel: true)
 
+          ssh_options = options.slice(:user, :port, :password).select { |_, value| !value.nil? }
+
           Array.wrap(options.fetch(:hosts)).each do |host|
-            server = Rye::Box.new(host, DEFAULT_SSH_OPTIONS.merge(options.slice(:user, :port)))
+            server = Rye::Box.new(host, DEFAULT_SSH_OPTIONS.merge(ssh_options))
             server.stdout_hook = proc { |data| ::ThinkingSphinx.info(data) }
             server.pre_command_hook = proc { |cmd, *| ::ThinkingSphinx.info(cmd) }
             @servers.add_box(server)
@@ -66,7 +70,7 @@ module Sphinx
         def initialize(*)
           super
 
-          @ssh = SshProxy.new(hosts: hosts, port: config.ssh_port, user: config.user)
+          @ssh = SshProxy.new(hosts: hosts, port: config.ssh_port, user: config.user, password: config.ssh_password)
         end
 
         def running?

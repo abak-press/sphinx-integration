@@ -3,7 +3,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
   extend ActiveSupport::Concern
 
   included do
-    attr_accessor :remote, :user, :password, :exclude, :ssh_port,
+    attr_accessor :remote, :user, :password, :exclude, :ssh_port, :ssh_password,
                   :log_level, :mysql_read_timeout, :mysql_connect_timeout
 
     alias_method_chain :shuffled_addresses, :integration
