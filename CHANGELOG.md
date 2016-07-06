@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2016-07-06 [112a4b3](../../commit/112a4b3) - __(Michail Merkushin)__ feature: Use ssh_password in remote helper
+
+#### v5.1.0
+ * 2016-06-15 [0a948bd](../../commit/0a948bd) - __(Michail Merkushin)__ Release 5.1.0
  * 2016-06-14 [258622c](../../commit/258622c) - __(Michail Merkushin)__ feat: Copy config file in Local adapter
 
 #### v5.0.1
