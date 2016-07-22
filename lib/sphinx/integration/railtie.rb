@@ -40,9 +40,8 @@ module Sphinx::Integration
     end
 
     initializer 'sphinx_integration.rspec' do
-      if defined?(::RSpec)
-        require 'rspec/version'
-        if Gem::Version.new(RSpec::Version::STRING) >= Gem::Version.new('3.0.0')
+      if defined?(::RSpec::Core)
+        if Gem::Version.new(RSpec::Core::Version::STRING) >= Gem::Version.new('3.0.0')
           RSpec.configure do |c|
             c.before(:each) do |example|
               unless example.metadata.fetch(:with_sphinx, false)
