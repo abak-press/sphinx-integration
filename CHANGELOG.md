@@ -1,5 +1,9 @@
 
 #### [Current]
+ * 2016-07-22 [2ff5f9c](../../commit/2ff5f9c) - __(Semyon Pupkov)__ fix: allow to use stanalone rspec-rails
+
+#### v5.2.0
+ * 2016-07-06 [467cf7e](../../commit/467cf7e) - __(Michail Merkushin)__ Release 5.2.0
  * 2016-07-06 [112a4b3](../../commit/112a4b3) - __(Michail Merkushin)__ feature: Use ssh_password in remote helper
 
 #### v5.1.0
