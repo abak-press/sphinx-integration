@@ -1,0 +1,36 @@
+version: '2'
+
+services:
+  app:
+    image: abakpress/ruby:$RUBY_IMAGE_TAG
+    environment:
+      - SSH_AUTH_SOCK=/ssh/auth/sock
+      - BUNDLE_PATH=/bundle/$DOCKER_RUBY_VERSION
+      - BUNDLE_CONFIG=/app/.bundle/config
+      - TEST_DB_HOST=db
+      - TEST_DB_NAME=docker
+      - TEST_DB_USERNAME=postgres
+      - TEST_SPHINX_HOST=sphinx
+      - SPHINX_REMOTE=true
+      - SPHINX_HOST=sphinx
+      - SPHINX_SSH_PASSWORD=secret
+      - SPHINX_SEARCHD_LOG_FILE=/dev/null
+      - SPHINX_QUERY_LOG_FILE=/dev/null
+      - SPHINX_PID_FILE=/tmp/searchd.pid
+      - SPHINX_SEARCHD_FILE_PATH=/sphinx/data
+      - SPHINX_BINLOG_PATH=/sphinx/binlog
+      - SPHINX_CONFIG_FILE=/sphinx/conf/sphinx.conf
+    command: bash
+    depends_on:
+      - sphinx
+      - db
+
+  sphinx:
+    image: abakpress/sphinx:2.2
+    depends_on:
+      - db
+
+  db:
+    image: abakpress/postgres:9.3
+    environment:
+      - POSTGRES_DB=docker

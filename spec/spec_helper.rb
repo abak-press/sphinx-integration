@@ -4,8 +4,6 @@ require 'bundler'
 require 'simplecov'
 SimpleCov.start { minimum_coverage 85 }
 
-require 'pry-debugger'
-
 Bundler.require :default, :development
 
 require 'sphinx/integration/railtie'

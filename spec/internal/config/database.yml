@@ -1,0 +1,5 @@
+test:
+  adapter: postgresql
+  host: <%= ENV.fetch("TEST_DB_HOST", "localhost") %>
+  database: <%= ENV.fetch("TEST_DB_NAME") %>
+  username: <%= ENV.fetch("TEST_DB_USERNAME") %>
