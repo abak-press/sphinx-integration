@@ -51,8 +51,8 @@ describe Sphinx::Integration::Transmitter do
       before { transmitter.stub(:full_reindex? => true) }
 
       it do
-        expect(mysql_client).to receive(:update).with("model_with_rt_rt0", {field: 123}, id: 1)
-        expect(mysql_client).to receive(:update).with("model_with_rt_rt1", {field: 123}, id: 1)
+        expect(mysql_client).to receive(:update).with("model_with_rt_rt0", {field: 123}, {id: 1}, "@id_idx 1")
+        expect(mysql_client).to receive(:update).with("model_with_rt_rt1", {field: 123}, {id: 1}, "@id_idx 1")
         expect(mysql_client).
           to receive(:find_in_batches).
             with("model_with_rt_core", where: {id: 1}, matching: "@id_idx 1").

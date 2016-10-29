@@ -6,20 +6,33 @@ module Sphinx::Integration::Extensions
     module Query
       class Update < ::Riddle::Query::Insert
 
-        def initialize(index, fields, where)
-          @index   = index
-          @fields  = fields
-          @where   = where
+        def initialize(index, fields, where, matching)
+          @index    = index
+          @fields   = fields
+          @where    = where
+          @matching = matching
         end
 
         def to_sql
-          "UPDATE #{@index} SET #{fields_to_s} WHERE #{where_to_s}"
+          "UPDATE #{@index} SET #{fields_to_s} WHERE #{combined_wheres}"
         end
 
         private
 
         def fields_to_s
           @fields.map { |field, value| "#{field} = #{translated_value(value)}" }.join(', ')
+        end
+
+        def combined_wheres
+          wheres = where_to_s
+
+          if @matching.nil?
+            wheres
+          elsif wheres.empty?
+            "MATCH(#{::Riddle::Query.quote @matching})"
+          else
+            "MATCH(#{::Riddle::Query.quote @matching}) AND #{wheres}"
+          end
         end
 
         def where_to_s
