@@ -72,7 +72,7 @@ module Sphinx::Integration
       rt_indexes.each do |index|
         if full_reindex?
           # вначале обновим всё что уже есть в rt индексе
-          partitions { |partition| mysql_client.update(index.rt_name(partition), fields, where) }
+          partitions { |partition| mysql_client.update(index.rt_name(partition), fields, where, matching) }
 
           # и зареплейсим всё что осталось в core
           # TODO: implement sphinx transactions
@@ -82,7 +82,7 @@ module Sphinx::Integration
             sleep 1 # empirical number
           end
         else
-          mysql_client.update(index.name, fields, where)
+          mysql_client.update(index.name, fields, where, matching)
         end
       end
     end

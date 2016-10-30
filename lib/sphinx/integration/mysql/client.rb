@@ -20,8 +20,10 @@ module Sphinx
           write ::Riddle::Query::Insert.new(index_name, data.keys, data.values).replace!.to_sql
         end
 
-        def update(index_name, data, where)
-          write ::Sphinx::Integration::Extensions::Riddle::Query::Update.new(index_name, data, where).to_sql
+        def update(index_name, data, where, matching = nil)
+          write ::Sphinx::Integration::Extensions::Riddle::Query::Update.
+            new(index_name, data, where, matching).
+            to_sql
         end
 
         def delete(index_name, document_id)

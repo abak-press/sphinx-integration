@@ -30,9 +30,26 @@ describe Sphinx::Integration::Mysql::Client do
   end
 
   describe "#update" do
-    it do
-      expect(connection).to receive(:execute).with("UPDATE product SET company_id = 1 WHERE `id` = 1").twice
-      client.update("product", {company_id: 1}, id: 1)
+    context 'with where, without matching' do
+      it do
+        expect(connection).to receive(:execute).with("UPDATE product SET company_id = 1 WHERE `id` = 1").twice
+        client.update("product", {company_id: 1}, id: 1)
+      end
+    end
+
+    context 'with where and matching' do
+      it do
+        expect(connection).to receive(:execute).
+          with("UPDATE product SET company_id = 1 WHERE MATCH('@id_idx 1') AND `id` = 1").twice
+        client.update("product", {company_id: 1}, {id: 1}, "@id_idx 1")
+      end
+    end
+
+    context 'without where, with matching' do
+      it do
+        expect(connection).to receive(:execute).with("UPDATE product SET company_id = 1 WHERE MATCH('@id_idx 1')").twice
+        client.update("product", {company_id: 1}, nil, "@id_idx 1")
+      end
     end
   end
 
