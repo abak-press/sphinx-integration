@@ -1,5 +1,10 @@
 
 #### [Current]
+ * 2016-10-29 [0ac278e](../../commit/0ac278e) - __(Artem Napolskih)__ feature: added matching to update query
+ * 2016-10-28 [9a8e78f](../../commit/9a8e78f) - __(Artem Napolskih)__ feature: dip and dron added
+
+#### v5.2.1
+ * 2016-07-25 [78faa16](../../commit/78faa16) - __(Semyon Pupkov)__ Release 5.2.1
  * 2016-07-22 [2ff5f9c](../../commit/2ff5f9c) - __(Semyon Pupkov)__ fix: allow to use stanalone rspec-rails
 
 #### v5.2.0
