@@ -19,10 +19,10 @@ Gem::Specification.new do |gem|
 
   gem.metadata['allowed_push_host'] = 'https://gems.railsc.ru'
 
-  gem.add_runtime_dependency 'redis-classy', '~> 1.2'
-  gem.add_runtime_dependency 'redis-mutex', '~> 2.1'
-  gem.add_runtime_dependency 'redis', '~> 3.0'
-  gem.add_runtime_dependency 'redis-namespace', '~> 1.3'
+  gem.add_runtime_dependency 'redis-classy', '< 2'
+  gem.add_runtime_dependency 'redis-mutex', '>= 2.1'
+  gem.add_runtime_dependency 'redis', '>= 3.0'
+  gem.add_runtime_dependency 'redis-namespace', '>= 1.3'
   gem.add_runtime_dependency 'mysql2', '>= 0.2.19b5'
   gem.add_runtime_dependency 'pg'
   gem.add_runtime_dependency 'innertube'
@@ -33,9 +33,9 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency 'request_store', '>= 1.2.1'
 
   gem.add_development_dependency 'rake'
-  gem.add_development_dependency 'bundler', '~> 1.6'
+  gem.add_development_dependency 'bundler', '>= 1.6'
   gem.add_development_dependency 'rails', '< 4.1'
-  gem.add_development_dependency 'rspec', '~> 3.3'
+  gem.add_development_dependency 'rspec', '>= 3.3'
   gem.add_development_dependency 'rspec-rails'
   gem.add_development_dependency 'appraisal', '>= 1.0.2'
   gem.add_development_dependency 'combustion', '>= 0.5.4'
