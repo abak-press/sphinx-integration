@@ -1,5 +1,11 @@
 
 #### [Current]
+ * 2017-02-17 [c9fc84f](../../commit/c9fc84f) - __(Michail Merkushin)__ Release 5.3.2
+ * 2017-02-16 [6dca1c4](../../commit/6dca1c4) - __(Michail Merkushin)__ chore: Update drone testing
+ * 2017-02-16 [06c8d89](../../commit/06c8d89) - __(Michail Merkushin)__ chore: Relax dependencies
+
+#### v5.3.1
+ * 2016-10-30 [2a07aa7](../../commit/2a07aa7) - __(Artem Napolskih)__ Release 5.3.1
  * 2016-10-29 [0ac278e](../../commit/0ac278e) - __(Artem Napolskih)__ feature: added matching to update query
  * 2016-10-28 [9a8e78f](../../commit/9a8e78f) - __(Artem Napolskih)__ feature: dip and dron added
 
