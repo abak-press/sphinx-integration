@@ -1,3 +1,6 @@
+require "dry/container"
+require "dry/auto_inject"
+
 module Sphinx
   module Integration
     autoload :Helper, 'sphinx/integration/helper'
@@ -11,6 +14,9 @@ module Sphinx
     autoload :ServerPool, 'sphinx/integration/server_pool'
     autoload :Server, 'sphinx/integration/server'
     autoload :ServerStatus, 'sphinx/integration/server_status'
+
+    Container = ::Dry::Container.new
+    AutoInject = ::Dry::AutoInject(Container)
   end
 end
 

@@ -1,6 +1,7 @@
 # coding: utf-8
 require 'rails'
 require 'thinking-sphinx'
+require 'twinkle/client'
 require 'sphinx-integration'
 
 module Sphinx::Integration
@@ -39,6 +40,36 @@ module Sphinx::Integration
       end
     end
 
+    initializer "sphinx-integration.common", before: :load_config_initializers do
+      ::Sphinx::Integration::Container.namespace("logger") do
+        register "stdout", -> do
+          logger = ::Logger.new(STDOUT)
+          logger.formatter = ::Logger::Formatter.new
+          logger.level = ::Logger.const_get(::ThinkingSphinx::Configuration.instance.log_level.upcase)
+          logger
+        end
+
+        register "sphinx_log", -> do
+          logger = ::Logger.new(::Rails.root.join("log", "sphinx.log"))
+          logger.formatter = ::Logger::Formatter.new
+          logger.level = ::Logger.const_get(::ThinkingSphinx::Configuration.instance.log_level.upcase)
+          logger
+        end
+
+        register "index_log", -> do
+          logger = ::Logger.new(::Rails.root.join("log", "index.log"))
+          logger.formatter = ::Logger::Formatter.new
+          logger.level = ::Logger::INFO
+          logger
+        end
+
+        register "notificator", ->(message) do
+          client = ::Twinkle::Client
+          client.create_message("sadness", message, hashtags: ["#sphinx"]) if client.config.token
+        end
+      end
+    end
+
     initializer 'sphinx_integration.rspec' do
       if defined?(::RSpec::Core)
         if Gem::Version.new(RSpec::Core::Version::STRING) >= Gem::Version.new('3.0.0')
@@ -51,7 +82,7 @@ module Sphinx::Integration
 
             c.after(:each) do |example|
               if example.metadata.fetch(:with_sphinx, false)
-                Sphinx::Integration::Helper.new.truncate_rt_indexes
+                Sphinx::Integration::Helper.new(logger: ::Logger.new("/dev/null")).truncate_rt_indexes
               else
                 Sphinx::Integration::Transmitter.write_disabled = false
               end
@@ -67,7 +98,7 @@ module Sphinx::Integration
 
             c.after(:each) do
               if example.metadata.fetch(:with_sphinx, false)
-                Sphinx::Integration::Helper.new.truncate_rt_indexes
+                Sphinx::Integration::Helper.new(logger: ::Logger.new("/dev/null")).truncate_rt_indexes
               else
                 Sphinx::Integration::Transmitter.write_disabled = false
               end

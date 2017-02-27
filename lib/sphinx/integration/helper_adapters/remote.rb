@@ -4,6 +4,8 @@ module Sphinx
   module Integration
     module HelperAdapters
       class SshProxy
+        include ::Sphinx::Integration::AutoInject.hash[logger: "logger.stdout"]
+
         DEFAULT_SSH_OPTIONS = {
           user: "sphinx",
           port: 22,
@@ -23,14 +25,16 @@ module Sphinx
         #           :user              - String (default: sphinx)
         #           :password          - String (optional)
         def initialize(options = {})
+          super
+
           @servers = Rye::Set.new("servers", parallel: true)
 
           ssh_options = options.slice(:user, :port, :password).select { |_, value| !value.nil? }
 
           Array.wrap(options.fetch(:hosts)).each do |host|
             server = Rye::Box.new(host, DEFAULT_SSH_OPTIONS.merge(ssh_options))
-            server.stdout_hook = proc { |data| ::ThinkingSphinx.info(data) }
-            server.pre_command_hook = proc { |cmd, *| ::ThinkingSphinx.info(cmd) }
+            server.stdout_hook = proc { |data| data.to_s.split("\n").each { |msg| logger.info(msg) } }
+            server.pre_command_hook = proc { |cmd, *| logger.info(cmd) }
             @servers.add_box(server)
           end
         end
@@ -58,7 +62,7 @@ module Sphinx
           raps.each do |rap|
             real_status = rap[0].is_a?(::Rye::Err) ? rap[0].exit_status : rap.exit_status
             unless exit_status.include?(real_status)
-              ThinkingSphinx.fatal(rap.inspect)
+              logger.error(rap.inspect)
               has_errors ||= true
             end
           end
@@ -70,7 +74,11 @@ module Sphinx
         def initialize(*)
           super
 
-          @ssh = SshProxy.new(hosts: hosts, port: config.ssh_port, user: config.user, password: config.ssh_password)
+          @ssh = SshProxy.new(hosts: hosts,
+                              port: config.ssh_port,
+                              user: config.user,
+                              password: config.ssh_password,
+                              logger: logger)
         end
 
         def running?

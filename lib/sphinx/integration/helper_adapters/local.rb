@@ -61,16 +61,16 @@ module Sphinx
         private
 
         def searchd(*params)
-          log Rye.shell(:searchd, "--config #{config.config_file}", *params).inspect
+          logger.info Rye.shell(:searchd, "--config #{config.config_file}", *params).inspect
         end
 
         def indexer(*params)
-          log Rye.shell(:indexer, "--config #{config.config_file}", *params).inspect
+          logger.info Rye.shell(:indexer, "--config #{config.config_file}", *params).inspect
         end
 
         def remove_files(pattern)
           files = Dir.glob(pattern)
-          log files.join("\n")
+          logger.info files.join("\n")
           FileUtils.rm(files)
         end
       end

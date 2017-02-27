@@ -41,19 +41,23 @@ namespace :sphinx do
     rotate = %w(true yes y 1).include?(args[:rotate].presence || 'true')
 
     Sphinx::Integration::Helper.
-      new(host: args[:host], rotate: rotate).
+      new(host: args[:host], rotate: rotate, logger: Sphinx::Integration::Container["logger.index_log"]).
       index
   end
 
   desc 'Rebuild Sphinx'
   task :rebuild => :environment do
     Rails.application.eager_load!
-    Sphinx::Integration::Helper.new.rebuild
+
+    Sphinx::Integration::Helper.
+      new(logger: Sphinx::Integration::Container["logger.index_log"]).
+      rebuild
   end
 
   desc 'Generate configuration files'
   task :conf => ['sphinx:set_indexing_mode', :environment] do
     Rails.application.eager_load!
+
     Sphinx::Integration::Helper.new.configure
   end
 
