@@ -2,7 +2,7 @@ version: '2'
 
 services:
   app:
-    image: abakpress/ruby:$RUBY_IMAGE_TAG
+    image: abakpress/ruby-app:$RUBY_IMAGE_TAG
     environment:
       - SSH_AUTH_SOCK=/ssh/auth/sock
       - BUNDLE_PATH=/bundle/$DOCKER_RUBY_VERSION
@@ -26,11 +26,11 @@ services:
       - db
 
   sphinx:
-    image: abakpress/sphinx:$SPHINX_IMAGE_TAG
+    image: abakpress/sphinx-index:$SPHINX_IMAGE_TAG
     depends_on:
       - db
 
   db:
-    image: abakpress/postgres:$POSTGRES_IMAGE_TAG
+    image: abakpress/postgres-db:$POSTGRES_IMAGE_TAG
     environment:
       - POSTGRES_DB=docker

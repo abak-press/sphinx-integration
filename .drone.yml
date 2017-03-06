@@ -1,13 +1,13 @@
 matrix:
   include:
     - DOCKER_RUBY_VERSION: 1.9
-      RUBY_IMAGE_TAG: 1.9.3
+      RUBY_IMAGE_TAG: 1.9-latest
 
     - DOCKER_RUBY_VERSION: 2.2
-      RUBY_IMAGE_TAG: 2.2
+      RUBY_IMAGE_TAG: 2.2-latest
 
 build:
-  image: abakpress/dind
+  image: abakpress/dind-testing
   pull: true
   privileged: true
   volumes:
@@ -16,16 +16,16 @@ build:
     - /home/data/drone/key_cache:/ssh_keys
   environment:
     - COMPOSE_FILE_EXT=drone
-    - POSTGRES_IMAGE_TAG=9.3
-    - SPHINX_IMAGE_TAG=2.2
+    - POSTGRES_IMAGE_TAG=9.3-latest
+    - SPHINX_IMAGE_TAG=2.2-latest
   commands:
     - wrapdocker docker -v
 
     - fetch-images
       --image whilp/ssh-agent
-      --image abakpress/ruby:$RUBY_IMAGE_TAG
-      --image abakpress/postgres:$POSTGRES_IMAGE_TAG
-      --image abakpress/sphinx:$SPHINX_IMAGE_TAG
+      --image abakpress/ruby-app:$RUBY_IMAGE_TAG
+      --image abakpress/postgres-db:$POSTGRES_IMAGE_TAG
+      --image abakpress/sphinx-index:$SPHINX_IMAGE_TAG
 
     - dip ssh add -T -v /ssh_keys -k /ssh_keys/id_rsa
     - dip provision
