@@ -1,5 +1,11 @@
 
 #### [Current]
+ * 2017-03-06 [d1421f0](../../commit/d1421f0) - __(Michail Merkushin)__ Release 5.4.0
+ * 2017-02-27 [62894f4](../../commit/62894f4) - __(Michail Merkushin)__ feature: Refactor logging. Notifications to Twinkle
+ * 2017-03-06 [8cec7a6](../../commit/8cec7a6) - __(Michail Merkushin)__ chore: Update docker images
+
+#### v5.3.2
+ * 2017-02-17 [add5d11](../../commit/add5d11) - __(Michail Merkushin)__ Update CHANGELOG.md
  * 2017-02-17 [c9fc84f](../../commit/c9fc84f) - __(Michail Merkushin)__ Release 5.3.2
  * 2017-02-16 [6dca1c4](../../commit/6dca1c4) - __(Michail Merkushin)__ chore: Update drone testing
  * 2017-02-16 [06c8d89](../../commit/06c8d89) - __(Michail Merkushin)__ chore: Relax dependencies
