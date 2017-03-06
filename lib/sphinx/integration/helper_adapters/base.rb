@@ -2,9 +2,11 @@ module Sphinx
   module Integration
     module HelperAdapters
       class Base
-        delegate :log, to: 'ThinkingSphinx'
+        include ::Sphinx::Integration::AutoInject.hash[logger: "logger.stdout"]
 
         def initialize(options = {})
+          super
+
           @options = options
         end
 

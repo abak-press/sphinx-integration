@@ -84,10 +84,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
     alias_method :info, :log
 
     def logger
-      @logger ||= ::Logger.new(Rails.root.join("log", "sphinx.log")).tap do |logger|
-        logger.formatter = ::Logger::Formatter.new
-        logger.level = ::Logger.const_get(::ThinkingSphinx::Configuration.instance.log_level.upcase)
-      end
+      @logger ||= ::Sphinx::Integration::Container["logger.sphinx_log"]
     end
   end
 end

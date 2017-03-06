@@ -10,11 +10,12 @@ module Sphinx::Integration
   end
 
   class Helper
+    include ::Sphinx::Integration::AutoInject.hash["logger.notificator", logger: "logger.stdout"]
+
     attr_reader :sphinx
 
     delegate :recent_rt, to: 'self.class'
-    delegate :log,
-             :indexes,
+    delegate :indexes,
              :rt_indexes,
              to: '::ThinkingSphinx'
 
@@ -24,9 +25,11 @@ module Sphinx::Integration
     ].each do |method_name|
       class_eval <<-EORUBY, __FILE__, __LINE__ + 1
         def #{method_name}
-          log "#{method_name.capitalize}" do
-            sphinx.#{method_name}
-          end
+          log "#{method_name.capitalize}"
+          sphinx.#{method_name}
+        rescue => error
+          log_error(error)
+          raise
         end
       EORUBY
     end
@@ -40,33 +43,35 @@ module Sphinx::Integration
     end
 
     def initialize(options = {})
-      @options = options
+      super
 
       ThinkingSphinx.context.define_indexes
 
-      setup_logger
+      @options = options
 
       @sphinx = if config.remote?
-                  HelperAdapters::Remote.new(options.slice(:host, :rotate))
+                  HelperAdapters::Remote.new(options.slice(:host, :rotate).merge!(logger: logger))
                 else
-                  HelperAdapters::Local.new(options.slice(:rotate))
+                  HelperAdapters::Local.new(options.slice(:rotate).merge!(logger: logger))
                 end
     end
 
     def configure
-      log "Configure sphinx" do
-        config.build(config.generated_config_file)
-      end
+      log "Configure sphinx"
+      config.build(config.generated_config_file)
+    rescue => error
+      log_error(error)
+      raise
     end
 
     def index
+      log "Index sphinx"
+
       reset_waste_records
 
-      log "Index sphinx" do
-        with_index_lock do
-          @sphinx.index
-          recent_rt.switch if rotate?
-        end
+      with_index_lock do
+        @sphinx.index
+        recent_rt.switch if rotate?
       end
 
       ThinkingSphinx.set_last_indexing_finish_time
@@ -75,10 +80,16 @@ module Sphinx::Integration
 
       truncate_rt_indexes(recent_rt.prev)
       cleanup_waste_records
+    rescue => error
+      log_error(error)
+      raise
     end
+
     alias_method :reindex, :index
 
     def rebuild
+      log "Rebuild sphinx"
+
       with_updates_lock do
         stop rescue nil
         configure
@@ -97,25 +108,18 @@ module Sphinx::Integration
       log "Truncate rt indexes"
 
       rt_indexes.each do |index|
-        log "- #{index.name}" do
-          if partition
-            index.truncate(index.rt_name(partition))
-          else
-            index.truncate(index.rt_name(0))
-            index.truncate(index.rt_name(1))
-          end
+        log "- #{index.name}"
+
+        if partition
+          index.truncate(index.rt_name(partition))
+        else
+          index.truncate(index.rt_name(0))
+          index.truncate(index.rt_name(1))
         end
       end
     end
 
     private
-
-    def setup_logger
-      ThinkingSphinx.logger = ::Logger.new(Rails.root.join("log", "index.log")).tap do |logger|
-        logger.formatter = ::Logger::Formatter.new
-        logger.level = ::Logger::INFO
-      end
-    end
 
     def rotate?
       !!@options[:rotate]
@@ -141,9 +145,8 @@ module Sphinx::Integration
 
       rt_indexes.each do |index|
         waste_records = Sphinx::Integration::WasteRecords.for(index)
-        log "- #{index.name} (#{waste_records.size} records)" do
-          waste_records.cleanup
-        end
+        log "- #{index.name} (#{waste_records.size} records)"
+        waste_records.cleanup
       end
     end
 
@@ -164,6 +167,16 @@ module Sphinx::Integration
       Redis::Mutex.with_lock(:full_reindex, expire: 10.hours) do
         yield
       end
+    end
+
+    def log(message, severity = ::Logger::INFO)
+      message.to_s.split("\n").each { |m| logger.add(severity, m) }
+    end
+
+    def log_error(exception)
+      logger.error(error.message)
+      logger.debug(error.backtrace.join("\n"))
+      notificator.call(error.message)
     end
   end
 end

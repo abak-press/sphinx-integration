@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'sphinx/integration/version'
@@ -31,6 +31,9 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency 'thinking-sphinx', '= 2.0.14'
   gem.add_runtime_dependency 'net-ssh'
   gem.add_runtime_dependency 'request_store', '>= 1.2.1'
+  gem.add_runtime_dependency 'dry-container', '>= 0.3.4'
+  gem.add_runtime_dependency 'dry-auto_inject', '>= 0.3.0'
+  gem.add_runtime_dependency 'twinkle-client', '>= 0.2.0'
 
   gem.add_development_dependency 'rake'
   gem.add_development_dependency 'bundler', '>= 1.6'
