@@ -46,7 +46,7 @@ namespace :sphinx do
   end
 
   desc 'Rebuild Sphinx'
-  task :rebuild => :environment do
+  task :rebuild => ['sphinx:set_indexing_mode', :environment] do
     Rails.application.eager_load!
 
     Sphinx::Integration::Helper.
@@ -62,6 +62,8 @@ namespace :sphinx do
   end
 
   task :set_indexing_mode do
+    next if Rails.env.test?
+
     require 'sphinx/integration/extensions/thinking_sphinx/indexing_mode'
     ThinkingSphinx.indexing_mode = true
   end
