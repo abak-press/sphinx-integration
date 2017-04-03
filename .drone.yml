@@ -1,11 +1,3 @@
-matrix:
-  include:
-    - DOCKER_RUBY_VERSION: 1.9
-      RUBY_IMAGE_TAG: 1.9-latest
-
-    - DOCKER_RUBY_VERSION: 2.2
-      RUBY_IMAGE_TAG: 2.2-latest
-
 build:
   image: abakpress/dind-testing
   pull: true
@@ -15,6 +7,8 @@ build:
     - /home/data/drone/gems:/bundle
     - /home/data/drone/key_cache:/ssh_keys
   environment:
+    - RUBY_IMAGE_TAG=2.2-latest
+    - DOCKER_RUBY_VERSION=2.2
     - COMPOSE_FILE_EXT=drone
     - POSTGRES_IMAGE_TAG=9.3-latest
     - SPHINX_IMAGE_TAG=2.2-latest

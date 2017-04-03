@@ -48,4 +48,6 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'rspec-its'
   gem.add_development_dependency 'rspec-activemodel-mocks'
   gem.add_development_dependency 'simplecov'
+  gem.add_development_dependency 'test-unit'
+  gem.add_development_dependency 'pry-byebug'
 end
