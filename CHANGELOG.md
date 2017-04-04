@@ -1,5 +1,10 @@
+#  (tag: v5.4.2)
+
+ * 2017-04-04 [f10256b](../../commit/f10256b) - __(Mikhail Nelaev)__ Release 5.4.2 
+
 #  (tag: v5.4.1)
 
+ * 2017-04-04 [26d5174](../../commit/26d5174) - __(Automated Release)__ Update CHANGELOG.md 
  * 2017-04-03 [019c0b8](../../commit/019c0b8) - __(Mikhail Nelaev)__ Release 5.4.1 
  * 2017-04-03 [62a3b69](../../commit/62a3b69) - __(Mikhail Nelaev)__ feature: autorelease 
  * 2017-04-03 [349f715](../../commit/349f715) - __(Mikhail Nelaev)__ chore: drop ruby 1.9 and rails 3.1 support 
