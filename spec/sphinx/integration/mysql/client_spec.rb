@@ -69,7 +69,9 @@ describe Sphinx::Integration::Mysql::Client do
 
   describe "#select" do
     it do
-      expect(connection).to receive(:execute).with("SELECT company_id FROM product WHERE `id` = 1").once
+      expect(connection).to receive(:execute).with(
+        "SELECT company_id FROM product WHERE `id` = 1 OPTION max_matches=#{ThinkingSphinx.max_matches}"
+      ).once
       client.select("company_id", "product", id: 1)
     end
   end
@@ -81,7 +83,8 @@ describe Sphinx::Integration::Mysql::Client do
         "FROM product " +
         "WHERE MATCH('@company_id_idx 1') " +
         "AND `company_id` = 1 AND `sphinx_internal_id` > 0 " +
-        "ORDER BY `sphinx_internal_id` ASC LIMIT 1"
+        "ORDER BY `sphinx_internal_id` ASC LIMIT 1 " +
+        "OPTION max_matches=#{ThinkingSphinx.max_matches}"
       ).and_return([{"sphinx_internal_id" => "1"}])
 
       expect(connection).to receive(:execute).with(
@@ -89,7 +92,8 @@ describe Sphinx::Integration::Mysql::Client do
         "FROM product " +
         "WHERE MATCH('@company_id_idx 1') " +
         "AND `company_id` = 1 AND `sphinx_internal_id` > 1 " +
-        "ORDER BY `sphinx_internal_id` ASC LIMIT 1"
+        "ORDER BY `sphinx_internal_id` ASC LIMIT 1 " +
+        "OPTION max_matches=#{ThinkingSphinx.max_matches}"
       ).and_return([])
 
       result = []

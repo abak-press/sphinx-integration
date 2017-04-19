@@ -42,6 +42,7 @@ module Sphinx
             from(index_name).
             where(where).
             limit(limit).
+            with_options(max_matches: ThinkingSphinx.max_matches).
             to_sql
 
           read(sql).to_a
@@ -62,6 +63,7 @@ module Sphinx
             where_not(where_not).
             order_by(batch_order).
             limit(batch_size).
+            with_options(max_matches: ThinkingSphinx.max_matches).
             matching(options[:matching])
 
           records = read(query.to_sql).to_a
