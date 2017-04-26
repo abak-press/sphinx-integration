@@ -60,6 +60,19 @@ describe Sphinx::Integration::Transmitter do
 
         transmitter.update_fields({field: 123}, id: 1, matching: "@id_idx 1")
       end
+
+      context 'when with sphinx_internal_id condition' do
+        it do
+          expect(mysql_client).to receive(:update).
+            with("model_with_rt_rt0", {field: 123}, {sphinx_internal_id: 1}, "@id_idx 1")
+          expect(mysql_client).to receive(:update).
+            with("model_with_rt_rt1", {field: 123}, {sphinx_internal_id: 1}, "@id_idx 1")
+          expect(ModelWithRt).to receive(:where).with(id: 1).and_return([record])
+          expect(transmitter).to receive(:transmit).with(ModelWithRt.sphinx_indexes.first, record)
+
+          transmitter.update_fields({field: 123}, sphinx_internal_id: 1, matching: "@id_idx 1")
+        end
+      end
     end
 
     context 'when no full reindex' do
