@@ -1,5 +1,5 @@
 module Sphinx
   module Integration
-    VERSION = '5.4.2'.freeze
+    VERSION = '5.4.3'.freeze
   end
 end
