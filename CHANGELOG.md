@@ -1,5 +1,14 @@
+#  (tag: v5.4.3)
+
+ * 2017-04-26 [7cc0615](../../commit/7cc0615) - __(TamarinEA)__ Release 5.4.3 
+ * 2017-04-26 [fed8962](../../commit/fed8962) - __(TamarinEA)__ fix: update fields by ids when full reindex and ids present 
+https://jira.railsc.ru/browse/BPC-10249
+ * 2017-04-19 [0a53cd6](../../commit/0a53cd6) - __(TamarinEA)__ fix: add max matches option to riddle query select 
+https://jira.railsc.ru/browse/BPC-10212
+
 #  (tag: v5.4.2)
 
+ * 2017-04-04 [fc78d46](../../commit/fc78d46) - __(Automated Release)__ Update CHANGELOG.md 
  * 2017-04-04 [f10256b](../../commit/f10256b) - __(Mikhail Nelaev)__ Release 5.4.2 
 
 #  (tag: v5.4.1)
