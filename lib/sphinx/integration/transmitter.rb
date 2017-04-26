@@ -75,11 +75,15 @@ module Sphinx::Integration
           partitions { |partition| mysql_client.update(index.rt_name(partition), fields, where, matching) }
 
           # и зареплейсим всё что осталось в core
-          # TODO: implement sphinx transactions
-          batch_options = {where: where, matching: matching}
-          mysql_client.find_in_batches(index.core_name, batch_options) do |ids|
-            klass.where(id: ids).each { |record| transmit(index, record) }
-            sleep 1 # empirical number
+          if where[:sphinx_internal_id].present?
+            transmit_all(index, where[:sphinx_internal_id])
+          else
+            # TODO: implement sphinx transactions
+            batch_options = {where: where, matching: matching}
+            mysql_client.find_in_batches(index.core_name, batch_options) do |ids|
+              transmit_all(index, ids)
+              sleep 1 # empirical number
+            end
           end
         else
           mysql_client.update(index.name, fields, where, matching)
@@ -104,6 +108,10 @@ module Sphinx::Integration
       mysql_client.soft_delete(index.core_name, record.sphinx_document_id)
 
       Sphinx::Integration::WasteRecords.for(index).add(record.sphinx_document_id) if full_reindex?
+    end
+
+    def transmit_all(index, ids)
+      klass.where(id: ids).each { |record| transmit(index, record) }
     end
 
     # Данные, необходимые для записи в индекс сфинкса
