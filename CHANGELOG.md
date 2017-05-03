@@ -1,5 +1,11 @@
+#  (tag: v5.4.4)
+
+ * 2017-05-03 [7d2c08e](../../commit/7d2c08e) - __(Michail Merkushin)__ Release 5.4.4 
+ * 2017-05-03 [1f1065b](../../commit/1f1065b) - __(Michail Merkushin)__ fix: Mistype when log error 
+
 #  (tag: v5.4.3)
 
+ * 2017-04-26 [515a030](../../commit/515a030) - __(Automated Release)__ Update CHANGELOG.md 
  * 2017-04-26 [7cc0615](../../commit/7cc0615) - __(TamarinEA)__ Release 5.4.3 
  * 2017-04-26 [fed8962](../../commit/fed8962) - __(TamarinEA)__ fix: update fields by ids when full reindex and ids present 
 https://jira.railsc.ru/browse/BPC-10249
@@ -330,10 +336,10 @@ PC4-13419
  * 2013-09-30 [f39c877](../../commit/f39c877) - __(Merkushin)__ fix(transmitter): many bugs when write to index 
  * 2013-09-30 [66fc121](../../commit/66fc121) - __(Merkushin)__ version bump to 1.0.1 
  * 2013-09-30 [fc4edde](../../commit/fc4edde) - __(Merkushin)__ feature(index): agent_query_timeout for master distributed 
- * 2013-09-27 [007268c](../../commit/007268c) - __(Merkushin)__ version bump to 1.0.0 
- * 2013-09-02 [e715b80](../../commit/e715b80) - __(Merkushin)__ feature shpinx replication 
  * 2013-09-09 [0dad002](../../commit/0dad002) - __(Nikolay Kondratyev)__ Bump to 0.0.18 
  * 2013-09-09 [6f81afe](../../commit/6f81afe) - __(Nikolay Kondratyev)__ fix(gemspec) Изменён спецификатор версии для гема mysql2 
+ * 2013-09-27 [007268c](../../commit/007268c) - __(Merkushin)__ version bump to 1.0.0 
+ * 2013-09-02 [e715b80](../../commit/e715b80) - __(Merkushin)__ feature shpinx replication 
  * 2013-08-23 [aea2284](../../commit/aea2284) - __(Merkushin)__ version bump to 0.0.17 
  * 2013-08-23 [ce54223](../../commit/ce54223) - __(Merkushin)__ fix(transmitter) type cast to multi 
  * 2013-07-15 [ca52020](../../commit/ca52020) - __(Merkushin)__ version bump to 0.0.16 
