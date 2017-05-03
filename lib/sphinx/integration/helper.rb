@@ -174,9 +174,9 @@ module Sphinx::Integration
     end
 
     def log_error(exception)
-      logger.error(error.message)
-      logger.debug(error.backtrace.join("\n"))
-      notificator.call(error.message)
+      logger.error(exception.message)
+      logger.debug(exception.backtrace.join("\n")) if exception.backtrace
+      notificator.call(exception.message)
     end
   end
 end

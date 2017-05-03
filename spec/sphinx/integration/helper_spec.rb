@@ -37,6 +37,19 @@ describe Sphinx::Integration::Helper do
         expect(helper.recent_rt.prev).to eq 1
       end
     end
+
+    context "when raised exception" do
+      it "logs a error" do
+        logger = spy(:logger)
+        notificator = spy(:notificator)
+        helper = described_class.new(logger: logger, notificator: notificator)
+
+        expect(adapter).to receive(:index).and_raise(StandardError.new("error message"))
+        expect { helper.index }.to raise_error(StandardError)
+        expect(logger).to have_received(:error).with("error message")
+        expect(notificator).to have_received(:call).with("error message")
+      end
+    end
   end
 
   describe "#rebuild" do
