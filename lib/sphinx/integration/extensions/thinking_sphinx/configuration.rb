@@ -4,7 +4,8 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
 
   included do
     attr_accessor :remote, :user, :password, :exclude, :ssh_port, :ssh_password,
-                  :log_level, :mysql_read_timeout, :mysql_connect_timeout
+                  :log_level, :mysql_read_timeout, :mysql_connect_timeout,
+                  :start_args
 
     alias_method_chain :shuffled_addresses, :integration
     alias_method_chain :reset, :integration
@@ -43,6 +44,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
     self.mysql_connect_timeout = 2
     self.mysql_read_timeout = 5
     self.ssh_port = 22
+    self.start_args = []
     @mysql_client = nil
 
     reset_without_integration(custom_app_root)

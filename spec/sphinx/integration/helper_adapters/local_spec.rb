@@ -17,6 +17,12 @@ describe Sphinx::Integration::HelperAdapters::Local do
       expect(rye).to receive(:shell).with(:searchd, /--config/)
       adapter.start
     end
+
+    it "starts searchd with start_args" do
+      stub_sphinx_conf(start_args: ["--cpustats"])
+      expect(rye).to receive(:shell).with(:searchd, /--config/, "--cpustats")
+      adapter.start
+    end
   end
 
   describe "#remove_indexes" do

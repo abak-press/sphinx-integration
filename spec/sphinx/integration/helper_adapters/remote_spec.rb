@@ -28,6 +28,12 @@ describe Sphinx::Integration::HelperAdapters::Remote do
       expect(ssh).to receive(:execute).with("searchd", /--config/)
       adapter.start
     end
+
+    it "starts searchd with start_args" do
+      stub_sphinx_conf(start_args: ["--cpustats"])
+      expect(ssh).to receive(:execute).with("searchd", /--config/, "--cpustats")
+      adapter.start
+    end
   end
 
   describe "#suspend" do
