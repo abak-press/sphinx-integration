@@ -13,7 +13,7 @@ module Sphinx
         end
 
         def start
-          searchd
+          searchd(*config.start_args)
         end
 
         def suspend
@@ -61,7 +61,8 @@ module Sphinx
         private
 
         def searchd(*params)
-          logger.info Rye.shell(:searchd, "--config #{config.config_file}", *params).inspect
+          cmd_args = [:searchd, "--config #{config.config_file}"] + params
+          logger.info Rye.shell(*cmd_args).inspect
         end
 
         def indexer(*params)

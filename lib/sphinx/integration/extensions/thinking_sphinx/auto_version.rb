@@ -14,10 +14,16 @@ module Sphinx
           module ClassMethods
             def detect_with_integration
               version = ::ThinkingSphinx::Configuration.instance.version
-              if version =~ /2.2.\d/
-                require 'riddle/2.1.0'
+
+              case version
+              when '0.9.8', '0.9.9'
+                require "riddle/#{version}"
+              when /1.10/
+                require 'riddle/1.10'
+              when /2.0.[12]/
+                require 'riddle/2.0.1'
               else
-                detect_without_integration
+                require 'riddle/2.1.0'
               end
             end
           end
