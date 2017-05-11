@@ -9,17 +9,10 @@ module Sphinx::Integration::Extensions
           alias_method_chain :translated_value, :ext
         end
 
-        # Riddle не совсем корректно обрабатывает все типы значений, например nil или Array
+        # Riddle не совсем корректно обрабатывает все типы значений, например nil
         def translated_value_with_ext(value)
-          if value.nil?
-            "''"
-          elsif value.is_a?(Array)
-            "(#{value.join(',')})"
-          else
-            translated_value_without_ext(value)
-          end
+          value.nil? ? "''" : translated_value_without_ext(value)
         end
-
       end
     end
   end
