@@ -92,7 +92,8 @@ module Sphinx
         end
 
         def start
-          @ssh.execute("searchd", "--config #{config.config_file}")
+          args = ["searchd", "--config #{config.config_file}"] + config.start_args
+          @ssh.execute(*args)
         end
 
         def suspend
