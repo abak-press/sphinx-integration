@@ -8,9 +8,9 @@ build:
       - /home/data/drone/gems:/bundle
       - /home/data/drone/key_cache:/ssh_keys
     environment:
-      - RUBY_IMAGE_TAG=2.2-latest
       - COMPOSE_FILE_EXT=drone
-      - POSTGRES_IMAGE_TAG=9.3-latest
+      - RUBY_IMAGE_TAG=2.2-latest
+      - POSTGRES_IMAGE_TAG=9.6-latest
       - SPHINX_IMAGE_TAG=2.2-latest
     commands:
       - wrapdocker docker -v
@@ -26,7 +26,7 @@ build:
       - dip rspec
 
   release:
-    image: abakpress/gem-publication:latest
+    image: abakpress/gem-publication
     pull: true
     when:
       event: push
