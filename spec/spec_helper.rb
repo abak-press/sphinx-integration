@@ -8,7 +8,9 @@ Bundler.require :default, :development
 
 require 'sphinx/integration/railtie'
 
-Combustion.initialize! :active_record
+Combustion.initialize! :active_record do
+  config.eager_load = true
+end
 
 require 'rspec/rails'
 
