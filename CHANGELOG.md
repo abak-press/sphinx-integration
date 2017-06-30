@@ -1,6 +1,12 @@
+# v5.6.0
+
+* 2017-06-30 [fbca7b7](../../commit/fbca7b7) - __(Andrew N. Shalaev)__ Release v5.6.0 
+* 2017-06-30 [5c34320](../../commit/5c34320) - __(Andrew N. Shalaev)__ feature: add hostname to notification message 
+* 2017-06-07 [49430f3](../../commit/49430f3) - __(Artem Napolskih)__ chore: update drone config 
+* 2017-06-06 [f09ff40](../../commit/f09ff40) - __(Artem Napolskih)__ chore: specs on rails 4.0 
+
 # v5.5.0
 
-* 2017-05-17 [a108d3f](../../commit/a108d3f) - __(Michail Merkushin)__ Release 5.5.0 
 * 2017-05-10 [59c4a6b](../../commit/59c4a6b) - __(Michail Merkushin)__ feat: Set riddle-2-1-0 as default version of protocol 
 * 2017-05-10 [46ce6c8](../../commit/46ce6c8) - __(Michail Merkushin)__ feat: Add start args for searchd 
 https://jira.railsc.ru/browse/PC4-19637
