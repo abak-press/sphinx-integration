@@ -65,7 +65,7 @@ module Sphinx::Integration
 
         register "notificator", ->(message) do
           client = ::Twinkle::Client
-          client.create_message("sadness", message, hashtags: ["#sphinx"]) if client.config.token
+          client.create_message("sadness", "#{message} on #{`hostname`}", hashtags: ["#sphinx"]) if client.config.token
         end
       end
     end
