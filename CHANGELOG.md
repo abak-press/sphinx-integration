@@ -1,6 +1,11 @@
+# v5.6.1
+
+* 2017-08-10 [9e04cb2](../../commit/9e04cb2) - __(Andrew N. Shalaev)__ Release v5.6.1 
+* 2017-08-10 [e953df6](../../commit/e953df6) - __(Andrew N. Shalaev)__ fix: parse database.yml config as erb 
+https://jira.railsc.ru/browse/BPC-10871
+
 # v5.6.0
 
-* 2017-06-30 [fbca7b7](../../commit/fbca7b7) - __(Andrew N. Shalaev)__ Release v5.6.0 
 * 2017-06-30 [5c34320](../../commit/5c34320) - __(Andrew N. Shalaev)__ feature: add hostname to notification message 
 * 2017-06-07 [49430f3](../../commit/49430f3) - __(Artem Napolskih)__ chore: update drone config 
 * 2017-06-06 [f09ff40](../../commit/f09ff40) - __(Artem Napolskih)__ chore: specs on rails 4.0 
