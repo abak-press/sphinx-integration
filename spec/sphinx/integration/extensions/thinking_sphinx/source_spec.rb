@@ -2,6 +2,7 @@
 require 'spec_helper'
 
 describe ThinkingSphinx::Source do
+  let(:index_source) { index.sources.first }
 
   describe '#set_source_database_settings' do
     let(:db_config) do
@@ -23,8 +24,6 @@ describe ThinkingSphinx::Source do
         }
       }.with_indifferent_access
     end
-
-    let(:index_source){ index.sources.first }
 
     before do
       index_source.stub(:db_config).and_return(db_config)
@@ -74,4 +73,20 @@ describe ThinkingSphinx::Source do
     end
   end
 
+  describe '#db_config' do
+    let(:database_config) do
+      YAML.load(ERB.new(File.read(Rails.root.join("config", "database.yml"))).result)
+    end
+
+    let(:index) do
+      ThinkingSphinx::Index::Builder.generate(ModelWithDisk, nil) do
+        indexes 'content', :as => :content
+        set_property :use_slave_db => 'test'
+      end
+    end
+
+    it do
+      expect(index_source.db_config).to eq database_config
+    end
+  end
 end
