@@ -40,7 +40,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Source
   end
 
   def db_config
-    @db_config ||= YAML.load(IO.read("#{Rails.root}/config/database.yml")).with_indifferent_access
+    @db_config ||= YAML.load(ERB.new(IO.read("#{Rails.root}/config/database.yml")).result).with_indifferent_access
   end
 
 end
