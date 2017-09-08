@@ -59,11 +59,16 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Source::SQL
 
     if @index.local_options.key?(:source_joins)
       join_sql = []
-      @index.local_options[:source_joins].each do |join_table, join_options|
-        join_table = "(#{join_options.fetch(:query, '')})" if join_options[:query]
+      @index.local_options[:source_joins].each do |join_alias, join_options|
+        join_table = if (query = join_options[:query])
+                       "(#{query})"
+                     else
+                       join_options.fetch(:table_name)
+                     end
+        join_on = join_options.fetch(:on)
+        join_type = join_options[:type].to_s.upcase
 
-        join_sql << "#{join_options[:type].to_s.upcase} JOIN #{join_table} AS #{join_options.fetch(:as, join_table)}" \
-                    " ON #{join_options[:on]}"
+        join_sql << "#{join_type} JOIN #{join_table} AS #{join_alias} ON #{join_on}"
       end
 
       unless join_sql.empty?
