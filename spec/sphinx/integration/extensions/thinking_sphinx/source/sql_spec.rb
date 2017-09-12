@@ -36,10 +36,20 @@ describe ThinkingSphinx::Source::SQL do
       index = ThinkingSphinx::Index::Builder.generate(ModelWithDisk, nil) do
         indexes 'content', :as => :content
         set_property :source_joins => {
-          :rubrics => {:type => :left, :on => 'model_with_disks.rubric_id = rubrics.id'},
+          :rubrics => {
+            :type => :left,
+            :table_name => :rubrics,
+            :on => 'model_with_disks.rubric_id = rubrics.id'
+          },
+          :rubrics_alias => {
+            :type => :left,
+            :table_name => :rubrics,
+            :on => 'model_with_disks.rubric_id = rubrics_alias.id'
+          }
         }
       end
-      expected_sql = 'LEFT JOIN rubrics AS rubrics ON model_with_disks.rubric_id = rubrics.id'
+      expected_sql = 'LEFT JOIN rubrics AS rubrics ON model_with_disks.rubric_id = rubrics.id ' \
+                     'LEFT JOIN rubrics AS rubrics_alias ON model_with_disks.rubric_id = rubrics_alias.id'
       index.sources.first.to_sql(:offset => 0).should include(expected_sql)
     end
 

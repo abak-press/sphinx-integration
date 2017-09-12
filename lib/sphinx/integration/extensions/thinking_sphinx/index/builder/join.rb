@@ -17,11 +17,12 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index::Builder
         table_name, table_alias = name
       end
 
-      self.key = table_name
+      self.key = table_alias || table_name
 
       index.local_options[:source_joins] ||= {}
       index.local_options[:source_joins][key] = {}
-      as(table_alias || table_name)
+      index.local_options[:source_joins][key][:table_name] = table_name
+      as(key)
 
       self
     end
