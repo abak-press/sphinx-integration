@@ -49,12 +49,18 @@ describe ThinkingSphinx::Source::SQL do
           :products => {
             :type => :left,
             :on => 'model_with_disks.products_id = products.id'
+          },
+          'public.traits' => {
+            :type => :left,
+            :on => 'model_with_disks.traits_id = traits_alias.id',
+            :as => 'traits_alias'
           }
         }
       end
       expected_sql = 'LEFT JOIN rubrics AS rubrics ON model_with_disks.rubric_id = rubrics.id ' \
                      'LEFT JOIN rubrics AS rubrics_alias ON model_with_disks.rubric_id = rubrics_alias.id ' \
-                     'LEFT JOIN products AS products ON model_with_disks.products_id = products.id'
+                     'LEFT JOIN products AS products ON model_with_disks.products_id = products.id ' \
+                     'LEFT JOIN public.traits AS traits_alias ON model_with_disks.traits_id = traits_alias.id'
       index.sources.first.to_sql(:offset => 0).should include(expected_sql)
     end
 
