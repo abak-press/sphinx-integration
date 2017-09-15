@@ -63,7 +63,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Source::SQL
         join_table = if (query = join_options[:query])
                        "(#{query})"
                      else
-                       join_options.fetch(:table_name)
+                       join_options.fetch(:table_name, join_alias)
                      end
         join_on = join_options.fetch(:on)
         join_type = join_options[:type].to_s.upcase
