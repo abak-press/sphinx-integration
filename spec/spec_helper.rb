@@ -1,4 +1,3 @@
-# coding: utf-8
 require 'bundler'
 
 require 'simplecov'
@@ -8,7 +7,7 @@ Bundler.require :default, :development
 
 require 'sphinx/integration/railtie'
 
-Combustion.initialize! :active_record do
+Combustion.initialize! :active_record, database_reset: !ENV['DATABASE_RESET'].to_s.empty?, load_schema: true do
   config.eager_load = true
 end
 

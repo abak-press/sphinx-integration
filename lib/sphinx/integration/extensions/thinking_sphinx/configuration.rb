@@ -1,4 +1,3 @@
-# coding: utf-8
 module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
   extend ActiveSupport::Concern
 
@@ -22,7 +21,11 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
 
     port = configuration.searchd.mysql41
     port = 9306 if port.is_a?(TrueClass)
-    @mysql_client = Sphinx::Integration::Mysql::Client.new(shuffled_addresses, port)
+    @mysql_client = Sphinx::Integration::Mysql::Client.new(shuffled_addresses, port, query_log: query_log)
+  end
+
+  def query_log
+    @query_log ||= ::Sphinx::Integration::Mysql::QueryLog.new
   end
 
   def shuffled_addresses_with_integration

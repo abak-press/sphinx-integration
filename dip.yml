@@ -8,6 +8,7 @@ environment:
   COMPOSE_FILE_EXT: development
   RAILS_ENV: test
   APRESS_GEMS_CREDENTIALS: ""
+  DATABASE_RESET: ""
 
 compose:
   files:

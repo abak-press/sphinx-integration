@@ -1,8 +1,9 @@
-# coding: utf-8
 require 'redis-mutex'
 
 module Sphinx::Integration
   class Transmitter
+    PRIMARY_KEY = "sphinx_internal_id".freeze
+
     attr_reader :klass
 
     class_attribute :write_disabled
@@ -39,8 +40,8 @@ module Sphinx::Integration
 
       rt_indexes.each do |index|
         partitions { |partition| mysql_client.delete(index.rt_name(partition), record.sphinx_document_id) }
+
         mysql_client.soft_delete(index.core_name, record.sphinx_document_id)
-        Sphinx::Integration::WasteRecords.for(index).add(record.sphinx_document_id) if full_reindex?
       end
 
       true
@@ -60,33 +61,35 @@ module Sphinx::Integration
 
     # Обновление отдельных атрибутов индекса по условию
     #
-    # fields  - Hash (:field => value)
-    # where   - Hash
+    # Массовое обновление колонок, при работающей полной переиндексации, может работать в двух режимах – `strict`.
+    # В `строгом` режиме происходит полный перенос строк с помощью медленного replace из core в rt индексы. После
+    # переиндексации строчка в core помечается как удаленная. То есть возможна временная достпуность и старых
+    # и новых данных.
+    # В `нестрогом` режиме обновление строк происходит с помощью быстрого update. После переиндексации
+    # все эти обновления выполнятся вновь. То есть возможна временная недоуступность
+    # новых данных. Это связано с тем, что indexer ротирует core индексы, тем самым в core могут быть старые значения,
+    # а в rt обновляемых строк и вовсе не было.
+    #
+    # data      - Hash
+    # :strict   - boolean (default: false). Строгость попадания данных в индекс во время индексации.
+    # :matching - String
+    # where     - Hash
     #
     # Returns nothing
-    def update_fields(fields, where)
+    def update_fields(data, strict: false, matching: nil, **where)
       return if write_disabled?
-
-      matching = where.delete(:matching)
 
       rt_indexes.each do |index|
         if full_reindex?
-          # вначале обновим всё что уже есть в rt индексе
-          partitions { |partition| mysql_client.update(index.rt_name(partition), fields, where, matching) }
+          partitions { |partition| mysql_client.update(index.rt_name(partition), data, matching: matching, **where) }
 
-          # и зареплейсим всё что осталось в core
-          if where[:sphinx_internal_id].present?
-            transmit_all(index, where[:sphinx_internal_id])
+          if strict
+            retransmit(index, matching: matching, **where)
           else
-            # TODO: implement sphinx transactions
-            batch_options = {where: where, matching: matching}
-            mysql_client.find_in_batches(index.core_name, batch_options) do |ids|
-              transmit_all(index, ids)
-              sleep 1 # empirical number
-            end
+            mysql_client.update(index.core_name, data, matching: matching, **where)
           end
         else
-          mysql_client.update(index.name, fields, where, matching)
+          mysql_client.update(index.name, data, matching: matching, **where)
         end
       end
     end
@@ -106,12 +109,25 @@ module Sphinx::Integration
       partitions { |partition| mysql_client.replace(index.rt_name(partition), data) }
 
       mysql_client.soft_delete(index.core_name, record.sphinx_document_id)
-
-      Sphinx::Integration::WasteRecords.for(index).add(record.sphinx_document_id) if full_reindex?
     end
 
     def transmit_all(index, ids)
       klass.where(id: ids).each { |record| transmit(index, record) }
+    end
+
+    # Перекладывает строчки из core в rt.
+    #
+    # index     - ThinkingSphinx::Index
+    # :matching - String
+    # where     - Hash
+    #
+    # Returns nothing
+    def retransmit(index, matching: nil, **where)
+      mysql_client.find_while_exists(index.core_name, PRIMARY_KEY, matching: matching, **where) do |rows|
+        ids = rows.map { |row| row[PRIMARY_KEY].to_i }
+        transmit_all(index, ids)
+        sleep 0.1 # empirical throttle number
+      end
     end
 
     # Данные, необходимые для записи в индекс сфинкса
@@ -122,21 +138,23 @@ module Sphinx::Integration
     # Returns Hash
     def transmitted_data(index, record)
       sql = index.single_query_sql.gsub('%{ID}', record.id.to_s)
-      if index.local_options[:with_sql] && index.local_options[:with_sql][:update]
-        sql = index.local_options[:with_sql][:update].call(sql)
+      query_options = index.local_options[:with_sql]
+      if (update_proc = query_options[:update]).respond_to?(:call)
+        sql = update_proc.call(sql)
       end
       row = record.class.connection.execute(sql).first
       return unless row
+
       row.merge!(mva_attributes(index, record))
 
       row.each do |key, value|
         row[key] = case index.attributes_types_map[key]
-          when :integer then value.to_i
-          when :float then value.to_f
-          when :multi then type_cast_to_multi(value)
-          when :boolean then ActiveRecord::ConnectionAdapters::Column.value_to_boolean(value)
-          else value
-          end
+                   when :integer then value.to_i
+                   when :float then value.to_f
+                   when :multi then type_cast_to_multi(value)
+                   when :boolean then ActiveRecord::ConnectionAdapters::Column.value_to_boolean(value)
+                   else value
+                   end
       end
 
       row

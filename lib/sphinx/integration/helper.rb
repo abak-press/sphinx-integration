@@ -1,4 +1,3 @@
-# coding: utf-8
 require "redis-mutex"
 require "logger"
 
@@ -10,6 +9,8 @@ module Sphinx::Integration
   end
 
   class Helper
+    MUTEX_EXPIRE = 10.hours
+
     include ::Sphinx::Integration::AutoInject.hash["logger.notificator", logger: "logger.stdout"]
 
     attr_reader :sphinx
@@ -18,6 +19,7 @@ module Sphinx::Integration
     delegate :indexes,
              :rt_indexes,
              to: '::ThinkingSphinx'
+    delegate :query_log, :mysql_client, to: :"ThinkingSphinx::Configuration.instance"
 
     [
       :running?, :stop, :start, :suspend, :resume, :restart,
@@ -35,7 +37,20 @@ module Sphinx::Integration
     end
 
     def self.full_reindex?
-      Redis::Mutex.new(:full_reindex).locked?
+      mutex(:full_reindex).locked?
+    end
+
+    def self.log_updates?
+      mutex(:log_updates).locked?
+    end
+
+    def self.log_core_updates?
+      mutex(:log_core_updates).locked?
+    end
+
+    def self.mutex(name)
+      @mutex ||= {}
+      @mutex[name] ||= Redis::Mutex.new(name, expire: MUTEX_EXPIRE)
     end
 
     def self.recent_rt
@@ -67,9 +82,9 @@ module Sphinx::Integration
     def index
       log "Index sphinx"
 
-      reset_waste_records
+      start_query_log(only_core_updates: true) if rotate?
 
-      with_index_lock do
+      self.class.mutex(:full_reindex).with_lock do
         @sphinx.index
         recent_rt.switch if rotate?
       end
@@ -79,8 +94,9 @@ module Sphinx::Integration
       return unless rotate?
 
       truncate_rt_indexes(recent_rt.prev)
-      cleanup_waste_records
+      replay_query_log
     rescue => error
+      finish_query_log if rotate?
       log_error(error)
       raise
     end
@@ -90,15 +106,13 @@ module Sphinx::Integration
     def rebuild
       log "Rebuild sphinx"
 
-      with_updates_lock do
-        stop rescue nil
-        configure
-        copy_config
-        remove_indexes
-        remove_binlog
-        index
-        start
-      end
+      stop rescue nil
+      configure
+      copy_config
+      remove_indexes
+      remove_binlog
+      index
+      start
     end
 
     # Очистить rt индексы
@@ -119,54 +133,45 @@ module Sphinx::Integration
       end
     end
 
+    def start_query_log(only_core_updates: false)
+      log "Start writing#{' only core' if only_core_updates} queries"
+      reset_query_log
+      self.class.mutex(:log_updates).unlock(true)
+      self.class.mutex(:log_core_updates).unlock(true)
+      mutex_name = only_core_updates ? :log_core_updates : :log_updates
+      self.class.mutex(mutex_name).lock!
+    end
+
+    def finish_query_log
+      log "Finish writing queries"
+      self.class.mutex(:log_updates).unlock(true)
+      self.class.mutex(:log_core_updates).unlock(true)
+    end
+
+    def replay_query_log
+      log "Replay queries. count: #{query_log.size}"
+
+      query_log.each do |query|
+        mysql_client.write(query, log_query: false)
+      end
+
+      finish_query_log
+      reset_query_log
+    end
+
+    def reset_query_log
+      log "Reset query log"
+      query_log.reset
+    end
+
     private
 
     def rotate?
       !!@options[:rotate]
     end
 
-    def reset_waste_records
-      log "Reset waste records"
-
-      rt_indexes.each do |index|
-        log "- #{index.name}" do
-          Sphinx::Integration::WasteRecords.for(index).reset
-        end
-      end
-    end
-
-    def cleanup_waste_records
-      log "Cleanup waste records"
-
-      if Rails.env.production?
-        log "sleep 120 sec"
-        sleep 120
-      end
-
-      rt_indexes.each do |index|
-        waste_records = Sphinx::Integration::WasteRecords.for(index)
-        log "- #{index.name} (#{waste_records.size} records)"
-        waste_records.cleanup
-      end
-    end
-
     def config
-      ThinkingSphinx::Configuration.instance
-    end
-
-    # Установить блокировку на изменение данных в приложении
-    #
-    # Returns nothing
-    def with_updates_lock
-      Redis::Mutex.with_lock(:updates, expire: 10.hours) do
-        yield
-      end
-    end
-
-    def with_index_lock
-      Redis::Mutex.with_lock(:full_reindex, expire: 10.hours) do
-        yield
-      end
+      @config ||= ThinkingSphinx::Configuration.instance
     end
 
     def log(message, severity = ::Logger::INFO)
