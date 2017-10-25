@@ -1,4 +1,3 @@
-# coding: utf-8
 module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
   extend ActiveSupport::Concern
 
@@ -11,13 +10,12 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
       @transmitter ||= Sphinx::Integration::Transmitter.new(self)
     end
 
-    # Обновить атрибуты в сфинксе по условию
+    # Обновление отдельных атрибутов индекса по условию
     #
-    # fields - Hash
-    # where  - Hash
-    def update_sphinx_fields(fields, where)
+    # @see Sphinx::Integration::Transmitter#update_fields
+    def update_sphinx_fields(*args, **options)
       define_indexes
-      transmitter.update_fields(fields, where)
+      transmitter.update_fields(*args, **options)
     end
   end
 

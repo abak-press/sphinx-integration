@@ -34,7 +34,7 @@ describe ThinkingSphinx::Configuration do
     context "when one address" do
       it do
         stub_sphinx_conf(address: "s1", mysql41: true)
-        expect(Sphinx::Integration::Mysql::Client).to receive(:new).with(%w(s1), 9306)
+        expect(Sphinx::Integration::Mysql::Client).to receive(:new).with(%w(s1), 9306, any_args)
         config.mysql_client
       end
     end
@@ -42,7 +42,7 @@ describe ThinkingSphinx::Configuration do
     context "when many addresses" do
       it do
         stub_sphinx_conf(address: %w(s1 s2), mysql41: 9300)
-        expect(Sphinx::Integration::Mysql::Client).to receive(:new).with(%w(s1 s2), 9300)
+        expect(Sphinx::Integration::Mysql::Client).to receive(:new).with(%w(s1 s2), 9300, any_args)
         config.mysql_client
       end
     end

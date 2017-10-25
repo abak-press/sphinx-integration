@@ -20,6 +20,7 @@ services:
       - SPHINX_SEARCHD_FILE_PATH=/sphinx/data
       - SPHINX_BINLOG_PATH=/sphinx/binlog
       - SPHINX_CONFIG_FILE=/sphinx/conf/sphinx.conf
+      - DATABASE_RESET=$DATABASE_RESET
     command: bash
     depends_on:
       - sphinx

@@ -12,6 +12,7 @@ build:
       - RUBY_IMAGE_TAG=2.2-latest
       - POSTGRES_IMAGE_TAG=9.6-latest
       - SPHINX_IMAGE_TAG=2.2-latest
+      - DATABASE_RESET=true
     commands:
       - wrapdocker docker -v
 
