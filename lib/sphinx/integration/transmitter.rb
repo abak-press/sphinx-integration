@@ -3,6 +3,7 @@ require 'redis-mutex'
 module Sphinx::Integration
   class Transmitter
     PRIMARY_KEY = "sphinx_internal_id".freeze
+    TEMPLATE_ID = '%{ID}'.freeze
 
     attr_reader :klass
 
@@ -137,9 +138,9 @@ module Sphinx::Integration
     #
     # Returns Hash
     def transmitted_data(index, record)
-      sql = index.single_query_sql.gsub('%{ID}', record.id.to_s)
+      sql = index.single_query_sql.gsub(TEMPLATE_ID, record.id.to_s)
       query_options = index.local_options[:with_sql]
-      if (update_proc = query_options[:update]).respond_to?(:call)
+      if query_options && (update_proc = query_options[:update]).respond_to?(:call)
         sql = update_proc.call(sql)
       end
       row = record.class.connection.execute(sql).first
