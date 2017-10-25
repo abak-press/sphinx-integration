@@ -17,14 +17,15 @@ describe Sphinx::Integration::Transmitter do
 
     record.stub(
       sphinx_document_id: 1,
-      exists_in_sphinx?: true
+      exists_in_sphinx?: true,
+      model_with_rt_rubrics: []
     )
   end
 
   describe '#replace' do
     it "send valid quries to sphinx" do
-      expect(transmitter).to receive(:transmitted_data).and_return(field: 123)
-      expect(mysql_client).to receive(:replace).with('model_with_rt_rt0', field: 123)
+      expect(record.class.connection).to receive(:execute).with(/^SELECT/).and_return([{"region_id" => "123"}])
+      expect(mysql_client).to receive(:replace).with('model_with_rt_rt0', "region_id" => 123, rubrics: [])
       expect(mysql_client).to receive(:soft_delete)
 
       transmitter.replace(record)
