@@ -16,6 +16,33 @@ describe ThinkingSphinx::Index::Builder do
       join = index.local_options[:source_joins][:rubrics]
       expect(join).to include(type: :left, on: "rubrics.id = model.rubric_id", as: :rubs)
     end
+
+    context 'when joins the same table twice' do
+      let(:index) do
+        ThinkingSphinx::Index::Builder.generate(ModelWithDisk) do
+          left_join(:rubrics).on('rubrics.id = model.rubric_id')
+          left_join(:rubrics => :rubrics_alias).on('rubrics_alias.id = model.rubric_id')
+        end
+      end
+      let(:join) { index.local_options[:source_joins] }
+
+      it do
+        expect(join).to eq(
+          :rubrics => {
+            :table_name => :rubrics,
+            :as => :rubrics,
+            :type => :left,
+            :on => 'rubrics.id = model.rubric_id'
+          },
+          :rubrics_alias => {
+            :table_name => :rubrics,
+            :as => :rubrics_alias,
+            :type => :left,
+            :on => 'rubrics_alias.id = model.rubric_id'
+          }
+        )
+      end
+    end
   end
 
   describe 'inner_join' do
@@ -40,13 +67,18 @@ describe ThinkingSphinx::Index::Builder do
         left_join(:rubrics).on('rubrics.id = model.rubric_id').as(:rubs)
         left_join(:foo).on('rubrics.id = model.rubric_id').as(:rubs)
         left_join(:bar).on('rubrics.id = model.rubric_id').as(:rubs)
+        left_join(rubrics: :baz).on('rubrics.id = model.rubric_id').as(:rubs)
+        left_join(rubrics: :qux).on('rubrics.id = model.rubric_id').as(:rubs)
 
-        delete_joins(:rubrics, :bar)
+        delete_joins(:rubrics, :bar, :qux)
       end
     end
 
-    it { index.local_options[:source_joins].should have(1).item }
-    it { index.local_options[:source_joins][:foo].should be_present }
+    it do
+      index.local_options[:source_joins].should have(2).item
+      index.local_options[:source_joins][:foo].should be_present
+      index.local_options[:source_joins][:baz].should be_present
+    end
   end
 
   describe 'delete_attributes' do
