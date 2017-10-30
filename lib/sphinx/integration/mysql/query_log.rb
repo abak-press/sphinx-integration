@@ -3,58 +3,43 @@ module Sphinx
     module Mysql
       class QueryLog
         PAYLOAD_VERSION = 1
-        MAXIMUM_RETRIES = 2
         REDIS_KEY = 'sphinx:query_log'.freeze
 
         class BaseException < StandardError; end
         class MissingPayloadVersion < BaseException; end
 
-        def initialize(namespace: nil, retry_delay: 5)
+        def initialize(namespace: nil)
           @namespace = namespace
-          @retry_delay = retry_delay
         end
 
         def add(query)
-          redis.rpush(redis_key, encode(query: query))
+          redis_client.rpush(redis_key, encode(query: query))
         end
 
-        def each
-          retries = 0
-          last_entry = nil
+        def each_batch(limit: 50)
+          key = redis_key
+          redis = redis_client
+          range_stop = limit - 1
 
-          begin
-            while last_entry ||= redis.lpop(redis_key)
-              payload = decode(last_entry)
-              yield payload.fetch(:query)
-
-              last_entry = nil
-            end
-          rescue => error
-            retries += 1
-
-            if retries > MAXIMUM_RETRIES
-              redis.lpush(redis_key, last_entry) if last_entry
-              raise error
-            else
-              ::ThinkingSphinx.error "Retrying. #{error.message}"
-              sleep @retry_delay
-              retry
-            end
+          until (entries = redis.lrange(key, 0, range_stop)).empty?
+            queries = entries.map { |entry| decode(entry).fetch(:query) }
+            yield queries
+            redis.ltrim(key, limit, -1)
           end
         end
 
         def reset
-          redis.del(redis_key)
+          redis_client.del(redis_key)
         end
 
         def size
-          redis.llen(redis_key)
+          redis_client.llen(redis_key)
         end
 
         private
 
-        def redis
-          @redis ||= Redis.current
+        def redis_client
+          @redis_client ||= Redis.current
         end
 
         def redis_key

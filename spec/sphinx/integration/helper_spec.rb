@@ -116,8 +116,9 @@ describe Sphinx::Integration::Helper do
     it "sends queries to sphinx" do
       helper = described_class.new
       helper.start_query_log
-      query_log.add("select 1")
-      expect(mysql_client).to receive(:write).with("select 1", log_query: false)
+      query_log.add("update 1")
+      query_log.add("update 2")
+      expect(mysql_client).to receive(:batch_write).with(["update 1", "update 2"])
       helper.replay_query_log
       expect(query_log.size).to eq 0
       expect(helper.class.log_updates?).to be false
