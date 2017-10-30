@@ -23,6 +23,16 @@ module Sphinx
           execute(sql, all: true)
         end
 
+        def batch_write(queries)
+          @server_pool.take_all do |server|
+            server.take do |connection|
+              queries.each do |query|
+                connection.execute(query)
+              end
+            end
+          end
+        end
+
         def replace(index_name, data)
           write(
             ::Riddle::Query::Insert.new(index_name, data.keys, data.values).replace!.to_sql,

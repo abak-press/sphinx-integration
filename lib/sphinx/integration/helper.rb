@@ -19,7 +19,7 @@ module Sphinx::Integration
     delegate :indexes,
              :rt_indexes,
              to: '::ThinkingSphinx'
-    delegate :query_log, :mysql_client, to: :"ThinkingSphinx::Configuration.instance"
+    delegate :query_log, to: :"ThinkingSphinx::Configuration.instance"
 
     [
       :running?, :stop, :start, :suspend, :resume, :restart,
@@ -148,12 +148,33 @@ module Sphinx::Integration
       self.class.mutex(:log_core_updates).unlock(true)
     end
 
+    # Проигрывание запросов из QueryLog
+    #
+    # Общая схема работы такая:
+    #
+    # 1) Запустили индексацию и запись лога
+    # 2) Будем, например, рассматривать какою-то строку с каком-то то полем, до запуска там было значение А
+    # 3) Индексатор уже пробежал ее и в новый core положил то же значение А
+    # 4) Прилетел запрос на обновление этой строки значением Б, в старый (пока активный) core записали Б
+    #    и записали Б в лог
+    # 5) Закончилась индексация, ротировался core, пока видно только значение А, начинаем проигрывать лог
+    # 6) Опять прилетел запрос на обновление этой строки значением В, в core записали В и записали В в лог
+    # 7) Проигрывать лога дошел до этой строки и записал в core значение Б
+    # 8) Проигрыватель лога опять дошел до этой строки и записал в core значение В
+    # 9) У проигрывателя закончились записи, но он еще не успел выключить запись лог,
+    #    но это не страшно, так как это уже не имеет никакого значения.
     def replay_query_log
-      log "Replay queries. count: #{query_log.size}"
+      log "Replay #{query_log.size} queries"
 
-      query_log.each do |query|
-        mysql_client.write(query, log_query: false)
+      mysql_client = ::ThinkingSphinx::Configuration.instance.mysql_client
+      count = 0
+
+      query_log.each_batch do |queries|
+        mysql_client.batch_write(queries)
+        count += queries.size
       end
+
+      log "Replayed total #{count} queries"
 
       finish_query_log
       reset_query_log

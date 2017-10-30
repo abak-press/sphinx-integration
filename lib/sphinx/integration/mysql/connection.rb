@@ -4,6 +4,8 @@ module Sphinx
   module Integration
     module Mysql
       class Connection
+        QUERIES_DELIMETER = ';'.freeze
+
         def initialize(host, port)
           config = ::ThinkingSphinx::Configuration.instance
 
@@ -24,7 +26,7 @@ module Sphinx
         end
 
         def execute(statement)
-          query(statement).first
+          query(statement)
         end
 
         def query_all(*statements)
@@ -55,9 +57,13 @@ module Sphinx
         end
 
         def results_for(*statements)
-          results  = [client.query(statements.join('; '))]
-          results << client.store_result while client.next_result
-          results
+          if statements.size > 1
+            results = [client.query(statements.join(QUERIES_DELIMETER))]
+            results << client.store_result while client.next_result
+            results
+          else
+            client.query(statements[0])
+          end
         end
       end
     end
