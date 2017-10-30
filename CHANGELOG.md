@@ -1,6 +1,17 @@
+# v5.7.0
+
+* 2017-10-25 [49180dc](../../commit/49180dc) - __(korotaev)__ Release 5.7.0 
+* 2017-09-15 [f7531ec](../../commit/f7531ec) - __(Mikhail Nelaev)__ fix: respect :as key in options 
+https://jira.railsc.ru/browse/GOODS-696
+
+* 2017-09-15 [27632e1](../../commit/27632e1) - __(Mikhail Nelaev)__ fix: :table_name key may be missing 
+https://jira.railsc.ru/browse/GOODS-696
+
+* 2017-09-08 [18aa4d7](../../commit/18aa4d7) - __(Mikhail Nelaev)__ feature: allow to join the same table more than once 
+https://jira.railsc.ru/browse/GOODS-696
+
 # v5.6.1
 
-* 2017-08-10 [9e04cb2](../../commit/9e04cb2) - __(Andrew N. Shalaev)__ Release v5.6.1 
 * 2017-08-10 [e953df6](../../commit/e953df6) - __(Andrew N. Shalaev)__ fix: parse database.yml config as erb 
 https://jira.railsc.ru/browse/BPC-10871
 
