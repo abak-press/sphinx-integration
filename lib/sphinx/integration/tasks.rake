@@ -87,26 +87,4 @@ namespace :sphinx do
   task :reload, [:host] => :environment do |_, args|
     Sphinx::Integration::Helper.new(args.to_hash).reload
   end
-
-  namespace :query_log do
-    desc 'Start writing queries'
-    task :start => :environment do
-      Sphinx::Integration::Helper.new.start_query_log
-    end
-
-    desc 'Finish writing queries'
-    task :finish => :environment do
-      Sphinx::Integration::Helper.new.finish_query_log
-    end
-
-    desc 'Replay query log'
-    task :replay => :environment do
-      Sphinx::Integration::Helper.new.replay_query_log
-    end
-
-    desc 'Reset query log'
-    task :reset => :environment do
-      Sphinx::Integration::Helper.new.reset_query_log
-    end
-  end
 end

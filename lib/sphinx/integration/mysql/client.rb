@@ -5,21 +5,28 @@ module Sphinx
         CORE_INDEX_NAME_POSTFIX = '_core'.freeze
 
         attr_reader :server_pool
+        attr_writer :log_enabled
 
-        delegate :log_updates?, :log_core_updates?, to: :'Sphinx::Integration::Helper'
+        delegate :log_updates?, :online_indexing?, :full_reindex?, to: :'Sphinx::Integration::Helper'
 
-        def initialize(hosts, port, query_log: nil)
+        def initialize(hosts, port, log_enabled: true)
           @server_pool = ServerPool.new(hosts, port)
-          @query_log = query_log || ::ThinkingSphinx::Configuration.instance.query_log
+
+          @log_enabled = log_enabled
+          config = ThinkingSphinx::Configuration.instance
+          @update_log = config.update_log
+          @soft_delete_log = config.soft_delete_log
+        end
+
+        def log_enabled?
+          !!@log_enabled
         end
 
         def read(sql)
           execute(sql, all: false)
         end
 
-        def write(sql, log_query: false)
-          @query_log.add(sql) if log_query
-
+        def write(sql)
           execute(sql, all: true)
         end
 
@@ -34,10 +41,14 @@ module Sphinx
         end
 
         def replace(index_name, data)
-          write(
-            ::Riddle::Query::Insert.new(index_name, data.keys, data.values).replace!.to_sql,
-            log_query: log_query_to?(index_name)
-          )
+          sql = ::Riddle::Query::Insert.
+            new(index_name, data.keys, data.values).
+            replace!.
+            to_sql
+
+          @update_log.add(query: sql) if log_enabled? && log_updates?
+
+          write(sql)
         end
 
         def update(index_name, data, matching: nil, **where)
@@ -45,18 +56,33 @@ module Sphinx
             new(index_name, data, where.merge!(sphinx_deleted: 0), matching).
             to_sql
 
-          write(sql, log_query: log_query_to?(index_name))
+          if log_enabled? && (log_updates? || (core_index?(index_name) && online_indexing?))
+            @update_log.add(query: sql)
+          end
+
+          write(sql)
         end
 
         def delete(index_name, document_id)
-          write(
-            ::Riddle::Query::Delete.new(index_name, document_id).to_sql,
-            log_query: log_query_to?(index_name)
-          )
+          sql = ::Riddle::Query::Delete.
+            new(index_name, document_id).
+            to_sql
+
+          @update_log.add(query: sql) if log_enabled? && log_updates?
+
+          write(sql)
         end
 
         def soft_delete(index_name, document_id)
-          update(index_name, {sphinx_deleted: 1}, id: document_id)
+          sql = ::Sphinx::Integration::Extensions::Riddle::Query::Update.
+            new(index_name, {sphinx_deleted: 1}, {id: document_id, sphinx_deleted: 0}, nil).
+            to_sql
+
+          if log_enabled? && (log_updates? || full_reindex?)
+            @soft_delete_log.add(index_name: index_name, document_id: document_id)
+          end
+
+          write(sql)
         end
 
         def select(index_name, values, limit: nil, matching: nil, **where)
@@ -135,12 +161,8 @@ module Sphinx
           result
         end
 
-        def log_query_to?(index_name)
-          if log_core_updates?
-            index_name.end_with?(CORE_INDEX_NAME_POSTFIX)
-          else
-            log_updates?
-          end
+        def core_index?(index_name)
+          index_name.end_with?(CORE_INDEX_NAME_POSTFIX)
         end
       end
     end

@@ -9,7 +9,7 @@ module Sphinx::Integration
 
     class_attribute :write_disabled
 
-    delegate :full_reindex?, to: :'Sphinx::Integration::Helper'
+    delegate :full_reindex?, :online_indexing?, to: :'Sphinx::Integration::Helper'
     delegate :mysql_client, to: :"ThinkingSphinx::Configuration.instance"
 
     def initialize(klass)
@@ -81,14 +81,16 @@ module Sphinx::Integration
       return if write_disabled?
 
       rt_indexes.each do |index|
-        if full_reindex?
+        if strict && full_reindex?
+          # Вначале обновим все что уже есть в rt.
           partitions { |partition| mysql_client.update(index.rt_name(partition), data, matching: matching, **where) }
-
-          if strict
-            retransmit(index, matching: matching, **where)
-          else
-            mysql_client.update(index.core_name, data, matching: matching, **where)
-          end
+          # Перенесем всё неудаленное из core, т.е. всё то, чего не было в rt.
+          retransmit(index, matching: matching, **where)
+        elsif !strict && online_indexing?
+          # Вначале обновим все что уже есть в rt.
+          partitions { |partition| mysql_client.update(index.rt_name(partition), data, matching: matching, **where) }
+          # Обновим всё в core и этот запрос запишется в query log, который потом повторится после ротации.
+          mysql_client.update(index.core_name, data, matching: matching, **where)
         else
           mysql_client.update(index.name, data, matching: matching, **where)
         end

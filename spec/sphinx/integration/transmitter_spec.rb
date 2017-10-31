@@ -1,4 +1,3 @@
-# coding: utf-8
 require 'spec_helper'
 
 describe Sphinx::Integration::Transmitter do
@@ -48,18 +47,23 @@ describe Sphinx::Integration::Transmitter do
   end
 
   describe '#update_fields' do
-    context 'when strict full reindex' do
-      before { allow(transmitter).to receive(:full_reindex?).and_return(true) }
+    context 'when full reindex' do
+      before do
+        allow(transmitter).to receive(:full_reindex?).and_return(true)
+        allow(transmitter).to receive(:online_indexing?).and_return(true)
+      end
 
-      it do
-        expect(mysql_client).to receive(:update).with("model_with_rt_rt0", {field: 123}, matching: "@id_idx 1", id: 1)
-        expect(mysql_client).to receive(:update).with("model_with_rt_rt1", {field: 123}, matching: "@id_idx 1", id: 1)
-        expect(mysql_client).
-          to receive(:find_while_exists).
-          with("model_with_rt_core", "sphinx_internal_id", matching: "@id_idx 1", id: 1).
-          and_yield([{"sphinx_internal_id" => 1}])
+      context 'when strict' do
+        it do
+          expect(mysql_client).to receive(:update).with("model_with_rt_rt0", {field: 123}, matching: "@id_idx 1", id: 1)
+          expect(mysql_client).to receive(:update).with("model_with_rt_rt1", {field: 123}, matching: "@id_idx 1", id: 1)
+          expect(mysql_client).
+            to receive(:find_while_exists).
+            with("model_with_rt_core", "sphinx_internal_id", matching: "@id_idx 1", id: 1).
+            and_yield([{"sphinx_internal_id" => 1}])
 
-        transmitter.update_fields({field: 123}, id: 1, strict: true, matching: "@id_idx 1")
+          transmitter.update_fields({field: 123}, id: 1, strict: true, matching: "@id_idx 1")
+        end
       end
 
       context "when no strict" do
