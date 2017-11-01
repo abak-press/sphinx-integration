@@ -3,28 +3,29 @@ module Sphinx
     module Mysql
       class QueryLog
         PAYLOAD_VERSION = 1
-        REDIS_KEY = 'sphinx:query_log'.freeze
+        ROOT_REDIS_KEY = 'sphinx:query_log'.freeze
 
         class BaseException < StandardError; end
         class MissingPayloadVersion < BaseException; end
 
-        def initialize(namespace: nil)
-          @namespace = namespace
+        def initialize(namespace:)
+          @namespace = namespace.to_s
+          raise ArgumentError if @namespace.empty?
         end
 
-        def add(query)
-          redis_client.rpush(redis_key, encode(query: query))
+        def add(payload)
+          redis_client.rpush(redis_key, encode(payload))
         end
 
-        def each_batch(limit: 50)
+        def each_batch(batch_size:)
           key = redis_key
           redis = redis_client
-          range_stop = limit - 1
+          range_stop = batch_size - 1
 
           until (entries = redis.lrange(key, 0, range_stop)).empty?
-            queries = entries.map { |entry| decode(entry).fetch(:query) }
-            yield queries
-            redis.ltrim(key, limit, -1)
+            payloads = entries.map { |entry| decode(entry) }
+            yield payloads
+            redis.ltrim(key, batch_size, -1)
           end
         end
 
@@ -43,12 +44,7 @@ module Sphinx
         end
 
         def redis_key
-          @redis_key ||=
-            if @namespace
-              "#{REDIS_KEY}:#{@namespace}".freeze
-            else
-              REDIS_KEY
-            end
+          @redis_key ||= "#{ROOT_REDIS_KEY}:#{@namespace}"
         end
 
         def encode(payload)

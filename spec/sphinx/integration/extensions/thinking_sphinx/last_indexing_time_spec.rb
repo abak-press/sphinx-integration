@@ -1,11 +1,9 @@
-# coding: utf-8
 require 'spec_helper'
 
 describe ThinkingSphinx do
   let(:time) { Time.now.utc }
 
-  before { ThinkingSphinx::LastIndexing.redis.flushdb }
-  before { ThinkingSphinx.stub(:db_current_time).and_return(time) }
+  before { allow(ThinkingSphinx).to receive(:db_current_time).and_return(time) }
 
   it do
     expect(ThinkingSphinx.last_indexing_finish_time).to be_nil

@@ -1,4 +1,3 @@
-# coding: utf-8
 require 'spec_helper'
 
 describe ThinkingSphinx::Attribute do
@@ -12,7 +11,8 @@ describe ThinkingSphinx::Attribute do
 
       id_expr = ThinkingSphinx.unique_id_expression(index.send(:adapter), 0)
       exptected_sql = %{ranged-query; SELECT post_id #{id_expr} AS id, region_id AS regions FROM post_regions WHERE id>=$start AND id<=$end; SELECT MIN(id), MAX(id) FROM post_regions}
-      index.sources.first.attributes.detect{ |x| x.unique_name == :regions }.send(:source_value, 0, false).should eql exptected_sql
+      expect(index.sources.first.attributes.detect { |x| x.unique_name == :regions }.send(:source_value, 0, false)).
+        to eq exptected_sql
     end
   end
 
