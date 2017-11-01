@@ -9,12 +9,12 @@ describe Sphinx::Integration::Transmitter do
     client
   end
 
-  before(:all){ ThinkingSphinx.context.define_indexes }
+  before(:all) { ThinkingSphinx.context.define_indexes }
 
   before do
     allow(transmitter).to receive(:write_disabled?).and_return(false)
 
-    record.stub(
+    allow(record).to receive_messages(
       sphinx_document_id: 1,
       exists_in_sphinx?: true,
       model_with_rt_rubrics: []

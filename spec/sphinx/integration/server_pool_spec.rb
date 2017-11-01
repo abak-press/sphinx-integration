@@ -20,7 +20,7 @@ describe Sphinx::Integration::ServerPool do
     end
 
     it "fails if all servers dies" do
-      expect { pool.take { |_| raise } }.to raise_error
+      expect { pool.take { |_| raise } }.to raise_error(RuntimeError)
     end
   end
 
@@ -43,7 +43,7 @@ describe Sphinx::Integration::ServerPool do
     end
 
     it "fails if all servers dies" do
-      expect { pool.take_all { |_| raise } }.to raise_error
+      expect { pool.take_all { |_| raise } }.to raise_error(RuntimeError)
     end
   end
 end

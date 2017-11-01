@@ -1,14 +1,12 @@
-# coding: utf-8
 require 'spec_helper'
 
 describe ThinkingSphinx::Source::SQL do
-
   describe '#sql_query_info' do
     it 'generate default table name' do
       index = ThinkingSphinx::Index::Builder.generate(ModelWithDisk, nil) do
         indexes 'content', :as => :content
       end
-      index.sources.first.to_sql_query_info(0).should include('"model_with_disks"')
+      expect(index.sources.first.to_sql_query_info(0)).to include('"model_with_disks"')
     end
 
     it 'generate custom table name' do
@@ -16,7 +14,7 @@ describe ThinkingSphinx::Source::SQL do
         indexes 'content', :as => :content
         set_property :source_table => 'custom_table_name'
       end
-      index.sources.first.to_sql_query_info(0).should include('"custom_table_name"')
+      expect(index.sources.first.to_sql_query_info(0)).to include('"custom_table_name"')
     end
   end
 
@@ -29,7 +27,7 @@ describe ThinkingSphinx::Source::SQL do
         }
       end
       expected_sql = 'WITH cte_table AS (select id from temp_table where "model_with_disks"."id" >= $start AND "model_with_disks"."id" <= $end)'
-      index.sources.first.to_sql(:offset => 0).should include(expected_sql)
+      expect(index.sources.first.to_sql(:offset => 0)).to include(expected_sql)
     end
 
     it 'generate joins' do
@@ -61,7 +59,7 @@ describe ThinkingSphinx::Source::SQL do
                      'LEFT JOIN rubrics AS rubrics_alias ON model_with_disks.rubric_id = rubrics_alias.id ' \
                      'LEFT JOIN products AS products ON model_with_disks.products_id = products.id ' \
                      'LEFT JOIN public.traits AS traits_alias ON model_with_disks.traits_id = traits_alias.id'
-      index.sources.first.to_sql(:offset => 0).should include(expected_sql)
+      expect(index.sources.first.to_sql(:offset => 0)).to include(expected_sql)
     end
 
     it 'generate no groupping' do
@@ -69,7 +67,7 @@ describe ThinkingSphinx::Source::SQL do
         indexes 'content', :as => :content
         set_property :source_no_grouping => true
       end
-      index.sources.first.to_sql(:offset => 0).should_not include('GROUP BY')
+      expect(index.sources.first.to_sql(:offset => 0)).to_not include('GROUP BY')
     end
 
     it 'generate limit' do
@@ -77,7 +75,7 @@ describe ThinkingSphinx::Source::SQL do
         indexes 'content', :as => :content
         set_property :sql_query_limit => 1000
       end
-      index.sources.first.to_sql(:offset => 0).should include('LIMIT 100')
+      expect(index.sources.first.to_sql(:offset => 0)).to include('LIMIT 100')
     end
   end
 
@@ -88,7 +86,7 @@ describe ThinkingSphinx::Source::SQL do
         indexes 'content', :as => :content
         set_property :sql_query_range => expected_sql
       end
-      index.sources.first.to_sql_query_range({}).should include(expected_sql)
+      expect(index.sources.first.to_sql_query_range({})).to include(expected_sql)
     end
 
     it 'no generate query range' do
@@ -96,7 +94,7 @@ describe ThinkingSphinx::Source::SQL do
         indexes 'content', :as => :content
         set_property :disable_range => true
       end
-      index.sources.first.to_sql_query_range({}).should be_blank
+      expect(index.sources.first.to_sql_query_range({})).to be_blank
     end
   end
 
@@ -105,7 +103,7 @@ describe ThinkingSphinx::Source::SQL do
       index = ThinkingSphinx::Index::Builder.generate(ModelWithDisk, nil) do
         indexes 'content', :as => :content
       end
-      index.sources.first.to_sql_query_info(0).should include('"model_with_disks"')
+      expect(index.sources.first.to_sql_query_info(0)).to include('"model_with_disks"')
     end
 
     it 'generate custom table name' do
@@ -113,7 +111,7 @@ describe ThinkingSphinx::Source::SQL do
         indexes 'content', :as => :content
         set_property :source_table => 'custom_table_name'
       end
-      index.sources.first.to_sql_query_info(0).should include('"custom_table_name"')
+      expect(index.sources.first.to_sql_query_info(0)).to include('"custom_table_name"')
     end
   end
 
@@ -122,7 +120,7 @@ describe ThinkingSphinx::Source::SQL do
       index = ThinkingSphinx::Index::Builder.generate(ModelWithDisk, nil) do
         indexes 'content', :as => :content
       end
-      index.sources.first.sql_select_clause(0).should include('"model_with_disks"."id"')
+      expect(index.sources.first.sql_select_clause(0)).to include('"model_with_disks"."id"')
     end
 
     it 'generate custom table name' do
@@ -130,7 +128,7 @@ describe ThinkingSphinx::Source::SQL do
         indexes 'content', :as => :content
         set_property :source_table => 'custom_table_name'
       end
-      index.sources.first.sql_select_clause(0).should include('"custom_table_name"."id"')
+      expect(index.sources.first.sql_select_clause(0)).to include('"custom_table_name"."id"')
     end
   end
 
@@ -140,7 +138,7 @@ describe ThinkingSphinx::Source::SQL do
         indexes 'content', :as => :content
         set_property :use_own_sql_query_range => true
       end
-      index.sources.first.sql_select_clause(0).should_not include('$start', '$end')
+      expect(index.sources.first.sql_select_clause(0)).to_not include('$start', '$end')
     end
   end
 
@@ -150,8 +148,7 @@ describe ThinkingSphinx::Source::SQL do
         indexes 'content', :as => :content
         group_by! :id, :region_id
       end
-      index.sources.first.sql_group_clause.should eql 'id, region_id'
+      expect(index.sources.first.sql_group_clause).to eq 'id, region_id'
     end
   end
-
 end

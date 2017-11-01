@@ -26,7 +26,7 @@ describe ThinkingSphinx::Source do
     end
 
     before do
-      index_source.stub(:db_config).and_return(db_config)
+      allow(index_source).to receive(:db_config).and_return(db_config)
       index_source.instance_variable_set(:@database_configuration, db_config[:test])
     end
 
