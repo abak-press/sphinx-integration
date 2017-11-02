@@ -1,6 +1,24 @@
+# v6.0.0
+
+* 2017-11-02 [dbc8f4f](../../commit/dbc8f4f) - __(Michail Merkushin)__ Release 6.0.0 
+* 2017-11-02 [e43b182](../../commit/e43b182) - __(Michail Merkushin)__ feat: Log when replaying was finished 
+https://jira.railsc.ru/browse/PC4-20727
+
+* 2017-11-01 [1aac632](../../commit/1aac632) - __(Michail Merkushin)__ tests: Fix rspec deprecations 
+* 2017-10-31 [a409121](../../commit/a409121) - __(Michail Merkushin)__ feat: Add replayer and independent log for soft deletes 
+https://jira.railsc.ru/browse/PC4-20727
+
+* 2017-10-30 [6bcfe8e](../../commit/6bcfe8e) - __(Michail Merkushin)__ feat: Replay query_log with batches 
+https://jira.railsc.ru/browse/PC4-20727
+
+* 2017-10-25 [66b11ee](../../commit/66b11ee) - __(Michail Merkushin)__ fix: Check local_options for existence 
+https://jira.railsc.ru/browse/PC4-20727
+
+* 2017-10-20 [80df413](../../commit/80df413) - __(Michail Merkushin)__ feat: Add later updates from update_sphinx_fields 
+https://jira.railsc.ru/browse/PC4-20727
+
 # v5.7.0
 
-* 2017-10-25 [49180dc](../../commit/49180dc) - __(korotaev)__ Release 5.7.0 
 * 2017-09-15 [f7531ec](../../commit/f7531ec) - __(Mikhail Nelaev)__ fix: respect :as key in options 
 https://jira.railsc.ru/browse/GOODS-696
 
