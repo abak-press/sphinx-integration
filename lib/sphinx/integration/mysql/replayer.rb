@@ -35,6 +35,7 @@ module Sphinx
         def replay
           replay_update_log
           replay_soft_delete_log
+          logger.info "Replaying was finished"
         end
 
         def reset
