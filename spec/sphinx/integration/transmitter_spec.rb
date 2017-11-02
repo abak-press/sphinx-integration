@@ -1,4 +1,3 @@
-# coding: utf-8
 require 'spec_helper'
 
 describe Sphinx::Integration::Transmitter do
@@ -10,21 +9,22 @@ describe Sphinx::Integration::Transmitter do
     client
   end
 
-  before(:all){ ThinkingSphinx.context.define_indexes }
+  before(:all) { ThinkingSphinx.context.define_indexes }
 
   before do
     allow(transmitter).to receive(:write_disabled?).and_return(false)
 
-    record.stub(
+    allow(record).to receive_messages(
       sphinx_document_id: 1,
-      exists_in_sphinx?: true
+      exists_in_sphinx?: true,
+      model_with_rt_rubrics: []
     )
   end
 
   describe '#replace' do
     it "send valid quries to sphinx" do
-      expect(transmitter).to receive(:transmitted_data).and_return(field: 123)
-      expect(mysql_client).to receive(:replace).with('model_with_rt_rt0', field: 123)
+      expect(record.class.connection).to receive(:execute).with(/^SELECT/).and_return([{"region_id" => "123"}])
+      expect(mysql_client).to receive(:replace).with('model_with_rt_rt0', "region_id" => 123, rubrics: [])
       expect(mysql_client).to receive(:soft_delete)
 
       transmitter.replace(record)
@@ -48,29 +48,32 @@ describe Sphinx::Integration::Transmitter do
 
   describe '#update_fields' do
     context 'when full reindex' do
-      before { transmitter.stub(:full_reindex? => true) }
-
-      it do
-        expect(mysql_client).to receive(:update).with("model_with_rt_rt0", {field: 123}, {id: 1}, "@id_idx 1")
-        expect(mysql_client).to receive(:update).with("model_with_rt_rt1", {field: 123}, {id: 1}, "@id_idx 1")
-        expect(mysql_client).
-          to receive(:find_in_batches).
-            with("model_with_rt_core", where: {id: 1}, matching: "@id_idx 1").
-            and_yield([1])
-
-        transmitter.update_fields({field: 123}, id: 1, matching: "@id_idx 1")
+      before do
+        allow(transmitter).to receive(:full_reindex?).and_return(true)
+        allow(transmitter).to receive(:online_indexing?).and_return(true)
       end
 
-      context 'when with sphinx_internal_id condition' do
+      context 'when strict' do
         it do
-          expect(mysql_client).to receive(:update).
-            with("model_with_rt_rt0", {field: 123}, {sphinx_internal_id: 1}, "@id_idx 1")
-          expect(mysql_client).to receive(:update).
-            with("model_with_rt_rt1", {field: 123}, {sphinx_internal_id: 1}, "@id_idx 1")
-          expect(ModelWithRt).to receive(:where).with(id: 1).and_return([record])
-          expect(transmitter).to receive(:transmit).with(ModelWithRt.sphinx_indexes.first, record)
+          expect(mysql_client).to receive(:update).with("model_with_rt_rt0", {field: 123}, matching: "@id_idx 1", id: 1)
+          expect(mysql_client).to receive(:update).with("model_with_rt_rt1", {field: 123}, matching: "@id_idx 1", id: 1)
+          expect(mysql_client).
+            to receive(:find_while_exists).
+            with("model_with_rt_core", "sphinx_internal_id", matching: "@id_idx 1", id: 1).
+            and_yield([{"sphinx_internal_id" => 1}])
 
-          transmitter.update_fields({field: 123}, sphinx_internal_id: 1, matching: "@id_idx 1")
+          transmitter.update_fields({field: 123}, id: 1, strict: true, matching: "@id_idx 1")
+        end
+      end
+
+      context "when no strict" do
+        it do
+          expect(mysql_client).to receive(:update).with('model_with_rt_rt0', {field: 123}, matching: "@id_idx 1", id: 1)
+          expect(mysql_client).to receive(:update).with('model_with_rt_rt1', {field: 123}, matching: "@id_idx 1", id: 1)
+          expect(mysql_client).
+            to receive(:update).with('model_with_rt_core', {field: 123}, matching: "@id_idx 1", id: 1)
+
+          transmitter.update_fields({field: 123}, matching: "@id_idx 1", id: 1)
         end
       end
     end

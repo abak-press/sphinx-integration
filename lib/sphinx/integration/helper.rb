@@ -1,4 +1,3 @@
-# coding: utf-8
 require "redis-mutex"
 require "logger"
 
@@ -10,11 +9,13 @@ module Sphinx::Integration
   end
 
   class Helper
+    MUTEX_EXPIRE = 10.hours
+
     include ::Sphinx::Integration::AutoInject.hash["logger.notificator", logger: "logger.stdout"]
 
     attr_reader :sphinx
 
-    delegate :recent_rt, to: 'self.class'
+    delegate :recent_rt, :mutex, to: 'self.class'
     delegate :indexes,
              :rt_indexes,
              to: '::ThinkingSphinx'
@@ -35,7 +36,20 @@ module Sphinx::Integration
     end
 
     def self.full_reindex?
-      Redis::Mutex.new(:full_reindex).locked?
+      mutex(:full_reindex).locked?
+    end
+
+    def self.log_updates?
+      mutex(:log_updates).locked?
+    end
+
+    def self.online_indexing?
+      mutex(:online_indexing).locked?
+    end
+
+    def self.mutex(name)
+      @mutex ||= {}
+      @mutex[name] ||= Redis::Mutex.new(name, expire: MUTEX_EXPIRE)
     end
 
     def self.recent_rt
@@ -49,11 +63,15 @@ module Sphinx::Integration
 
       @options = options
 
-      @sphinx = if config.remote?
-                  HelperAdapters::Remote.new(options.slice(:host, :rotate).merge!(logger: logger))
-                else
-                  HelperAdapters::Local.new(options.slice(:rotate).merge!(logger: logger))
-                end
+      @sphinx = options.fetch(:sphinx_adapter) do
+        if config.remote?
+          HelperAdapters::Remote.new(options.slice(:host, :rotate).merge!(logger: logger))
+        else
+          HelperAdapters::Local.new(options.slice(:rotate).merge!(logger: logger))
+        end
+      end
+
+      @mysql_client = options.fetch(:mysql_client) { config.mysql_client.dup }
     end
 
     def configure
@@ -67,19 +85,24 @@ module Sphinx::Integration
     def index
       log "Index sphinx"
 
-      reset_waste_records
-
-      with_index_lock do
-        @sphinx.index
-        recent_rt.switch if rotate?
+      unless rotate?
+        mutex(:full_reindex).with_lock { @sphinx.index }
+        ThinkingSphinx.set_last_indexing_finish_time
+        return
       end
 
-      ThinkingSphinx.set_last_indexing_finish_time
+      replayer.reset
 
-      return unless rotate?
+      mutex(:online_indexing).with_lock do
+        mutex(:full_reindex).with_lock do
+          @sphinx.index
+          recent_rt.switch
+        end
 
-      truncate_rt_indexes(recent_rt.prev)
-      cleanup_waste_records
+        ThinkingSphinx.set_last_indexing_finish_time
+        truncate_rt_indexes(recent_rt.prev)
+        replayer.replay
+      end
     rescue => error
       log_error(error)
       raise
@@ -90,15 +113,13 @@ module Sphinx::Integration
     def rebuild
       log "Rebuild sphinx"
 
-      with_updates_lock do
-        stop rescue nil
-        configure
-        copy_config
-        remove_indexes
-        remove_binlog
-        index
-        start
-      end
+      stop rescue nil
+      configure
+      copy_config
+      remove_indexes
+      remove_binlog
+      index
+      start
     end
 
     # Очистить rt индексы
@@ -125,48 +146,14 @@ module Sphinx::Integration
       !!@options[:rotate]
     end
 
-    def reset_waste_records
-      log "Reset waste records"
-
-      rt_indexes.each do |index|
-        log "- #{index.name}" do
-          Sphinx::Integration::WasteRecords.for(index).reset
-        end
-      end
-    end
-
-    def cleanup_waste_records
-      log "Cleanup waste records"
-
-      if Rails.env.production?
-        log "sleep 120 sec"
-        sleep 120
-      end
-
-      rt_indexes.each do |index|
-        waste_records = Sphinx::Integration::WasteRecords.for(index)
-        log "- #{index.name} (#{waste_records.size} records)"
-        waste_records.cleanup
-      end
-    end
-
     def config
-      ThinkingSphinx::Configuration.instance
+      @config ||= ThinkingSphinx::Configuration.instance
     end
 
-    # Установить блокировку на изменение данных в приложении
-    #
-    # Returns nothing
-    def with_updates_lock
-      Redis::Mutex.with_lock(:updates, expire: 10.hours) do
-        yield
-      end
-    end
-
-    def with_index_lock
-      Redis::Mutex.with_lock(:full_reindex, expire: 10.hours) do
-        yield
-      end
+    def replayer
+      # TODO: Переиндексирование одной ноды без остановки редактирования еще не реализовано.
+      #       Для этого здесь нужно выбирать правильного клиента в зависимости он переданного хоста в инициализатор.
+      @replayer ||= ::Sphinx::Integration::Mysql::Replayer.new(mysql_client: @mysql_client, logger: logger)
     end
 
     def log(message, severity = ::Logger::INFO)

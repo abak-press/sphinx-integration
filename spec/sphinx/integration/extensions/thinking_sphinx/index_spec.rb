@@ -14,21 +14,15 @@ describe ThinkingSphinx::Index do
     let(:result) { index.to_riddle(0) }
 
     it 'generate core index' do
-      result.
-        select { |x| x.is_a?(Riddle::Configuration::Index) }.
-        should have(1).items
+      expect(result.select { |x| x.is_a?(Riddle::Configuration::Index) }.size).to eq 1
     end
 
     it 'generate rt index' do
-      result.
-        select { |x| x.is_a?(Riddle::Configuration::RealtimeIndex) }.
-        should have(2).items
+      expect(result.select { |x| x.is_a?(Riddle::Configuration::RealtimeIndex) }.size).to eq 2
     end
 
     it 'generate distributed index' do
-      result.
-        select { |x| x.is_a?(Riddle::Configuration::DistributedIndex) }.
-        should have(1).item
+      expect(result.select { |x| x.is_a?(Riddle::Configuration::DistributedIndex) }.size).to eq 1
     end
   end
 
@@ -41,11 +35,13 @@ describe ThinkingSphinx::Index do
   end
 
   describe '#to_riddle_for_rt' do
-    subject { index.to_riddle_for_rt(0) }
+    subject(:rt) { index.to_riddle_for_rt(0) }
 
-    its(:name) { should eql 'model_with_disk_rt0' }
-    its(:rt_field) { should have(1).item }
-    its(:rt_attr_uint) { should eql [:sphinx_internal_id, :sphinx_deleted, :class_crc, :region_id] }
+    it do
+      expect(rt.name).to eq 'model_with_disk_rt0'
+      expect(rt.rt_field.size).to eq 1
+      expect(rt.rt_attr_uint).to match_array([:sphinx_internal_id, :sphinx_deleted, :class_crc, :region_id])
+    end
   end
 
   describe '#to_riddle_for_core' do
@@ -58,7 +54,7 @@ describe ThinkingSphinx::Index do
 
   describe '#all_names' do
     it 'returns only distributed index name' do
-      index.all_names.should == [index.name]
+      expect(index.all_names).to match_array([index.name])
     end
   end
 end

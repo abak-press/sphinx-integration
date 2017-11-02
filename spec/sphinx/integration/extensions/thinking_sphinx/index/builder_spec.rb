@@ -1,4 +1,3 @@
-# coding: utf-8
 require 'spec_helper'
 
 describe ThinkingSphinx::Index::Builder do
@@ -10,8 +9,8 @@ describe ThinkingSphinx::Index::Builder do
       end
     end
 
-    it { index.local_options[:source_joins].should have(1).item }
-    it { index.local_options[:source_joins][:rubrics].should be_present }
+    it { expect(index.local_options[:source_joins].size).to eq 1 }
+    it { expect(index.local_options[:source_joins][:rubrics]).to be_present }
     it do
       join = index.local_options[:source_joins][:rubrics]
       expect(join).to include(type: :left, on: "rubrics.id = model.rubric_id", as: :rubs)
@@ -52,8 +51,8 @@ describe ThinkingSphinx::Index::Builder do
       end
     end
 
-    it { index.local_options[:source_joins].should have(1).item }
-    it { index.local_options[:source_joins][:rubrics].should be_present }
+    it { expect(index.local_options[:source_joins].size).to eq 1 }
+    it { expect(index.local_options[:source_joins][:rubrics]).to be_present }
     it do
       index.local_options[:source_joins][:rubrics]
       join = index.local_options[:source_joins][:rubrics]
@@ -75,9 +74,9 @@ describe ThinkingSphinx::Index::Builder do
     end
 
     it do
-      index.local_options[:source_joins].should have(2).item
-      index.local_options[:source_joins][:foo].should be_present
-      index.local_options[:source_joins][:baz].should be_present
+      expect(index.local_options[:source_joins].size).to eq 2
+      expect(index.local_options[:source_joins][:foo]).to be_present
+      expect(index.local_options[:source_joins][:baz]).to be_present
     end
   end
 
@@ -92,8 +91,8 @@ describe ThinkingSphinx::Index::Builder do
     end
 
     # 4 internal (:sphinx_internal_id, :sphinx_deleted, :class_crc, :sphinx_internal_class) + 1 user
-    it { index.attributes.should have(5).item }
-    it { index.attributes.select { |attr| attr.alias == :foo }.should be_present }
+    it { expect(index.attributes.size).to eq 5 }
+    it { expect(index.attributes.select { |attr| attr.alias == :foo }).to be_present }
   end
 
   describe 'delete_fields' do
@@ -106,8 +105,8 @@ describe ThinkingSphinx::Index::Builder do
       end
     end
 
-    it { index.fields.should have(1).item }
-    it { index.fields.select { |attr| attr.alias == :content2 }.should be_present }
+    it { expect(index.fields.size).to eq 1 }
+    it { expect(index.fields.select { |attr| attr.alias == :content2 }).to be_present }
   end
 
   describe 'limit' do
@@ -117,7 +116,7 @@ describe ThinkingSphinx::Index::Builder do
       end
     end
 
-    it { index.local_options[:sql_query_limit].should eq 10 }
+    it { expect(index.local_options[:sql_query_limit]).to eq 10 }
   end
 
   describe 'with' do
@@ -127,8 +126,8 @@ describe ThinkingSphinx::Index::Builder do
       end
     end
 
-    it { index.local_options[:source_cte].should have(1).item }
-    it { index.local_options[:source_cte][:_rubrics].should == "select id from rubrics {{where}}" }
+    it { expect(index.local_options[:source_cte].size).to eq 1 }
+    it { expect(index.local_options[:source_cte][:_rubrics]).to eq "select id from rubrics {{where}}" }
   end
 
   describe 'delete with' do
@@ -141,7 +140,7 @@ describe ThinkingSphinx::Index::Builder do
       end
     end
 
-    it { index.local_options[:source_cte].should have(1).item }
-    it { index.local_options[:source_cte][:_rubrics2].should == "select id from rubrics2" }
+    it { expect(index.local_options[:source_cte].size).to eq 1 }
+    it { expect(index.local_options[:source_cte][:_rubrics2]).to eq "select id from rubrics2" }
   end
 end
