@@ -143,4 +143,44 @@ describe ThinkingSphinx::Index::Builder do
     it { expect(index.local_options[:source_cte].size).to eq 1 }
     it { expect(index.local_options[:source_cte][:_rubrics2]).to eq "select id from rubrics2" }
   end
+
+  describe 'composite_index' do
+    let(:index) do
+      ThinkingSphinx::Index::Builder.generate(ModelWithDisk, nil) do
+        composite_index :numbers, z: '1', a: '2'
+      end
+    end
+
+    it { expect(index.local_options[:composite_indexes].size).to eq 1 }
+    it { expect(index.local_options[:composite_indexes][:numbers].keys).to eq [:a, :z] }
+    it { expect(index.fields.find { |attr| attr.alias == :numbers }).to be_present }
+    it { expect(index.sources.first.to_sql).to include "concat_ws(' ', 2, 1) AS \"numbers\"" }
+  end
+
+  describe 'replace_composite_index_fields' do
+    let(:index) do
+      ThinkingSphinx::Index::Builder.generate(ModelWithDisk, nil) do
+        composite_index :numbers, z: '1', a: '2'
+
+        replace_composite_index_fields :numbers, z: '3'
+      end
+    end
+
+    it { expect(index.local_options[:composite_indexes].size).to eq 1 }
+    it { expect(index.local_options[:composite_indexes][:numbers].keys).to eq [:a, :z] }
+    it { expect(index.fields.find { |attr| attr.alias == :numbers }).to be_present }
+    it { expect(index.sources.first.to_sql).to include "concat_ws(' ', 2, 3) AS \"numbers\"" }
+
+    context 'called on not exist index' do
+      let(:index) do
+        ThinkingSphinx::Index::Builder.generate(ModelWithDisk, nil) do
+          composite_index :numbers, z: '1', a: '2'
+
+          replace_composite_index_fields :numbers2, z: '3'
+        end
+      end
+
+      it { expect { index }.to raise_error(KeyError, 'key not found: :numbers2') }
+    end
+  end
 end

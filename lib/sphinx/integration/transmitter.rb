@@ -73,12 +73,14 @@ module Sphinx::Integration
     #
     # data      - Hash
     # :strict   - boolean (default: false). Строгость попадания данных в индекс во время индексации.
-    # :matching - String
+    # :matching - NilClass or String or Hash of [Symbol, String]
     # where     - Hash
     #
     # Returns nothing
     def update_fields(data, strict: false, matching: nil, **where)
       return if write_disabled?
+
+      matching = matching_with_composite_indexes(matching) if matching
 
       rt_indexes.each do |index|
         if strict && full_reindex?
@@ -176,6 +178,44 @@ module Sphinx::Integration
       end if index.mva_sources
 
       attrs
+    end
+
+    # Переписывает matching, подменяя поля композитного индекса на композитный индекс
+    #
+    # matching - String or Hash of [Symbol, String]
+    #
+    # Returns String
+    def matching_with_composite_indexes(matching)
+      matching =
+        case matching
+        when Hash
+          matching.map { |field, match| [composite_indexes_map[field] || field, match] }
+        when String
+          matching.scan(/\@([a-z0-9_]+) ([^@ ]+)/).map do |field, match|
+            field = field.to_sym
+            [composite_indexes_map[field] || field, match]
+          end
+        else
+          raise "unreachable #{matching.class}"
+        end
+
+      matching.map { |field, match| "@#{field} #{match}" }.join(' '.freeze)
+    end
+
+    # Карта перезаписи полей копозитных индексов
+    #
+    # Returns Hash
+    def composite_indexes_map
+      @composite_indexes_map ||=
+        rt_indexes.each_with_object({}) do |index, memo|
+          composite_indexes = index.local_options[:composite_indexes]
+          next unless composite_indexes
+          composite_indexes.each do |name, fields|
+            fields.keys.each do |field_name|
+              memo[field_name] ||= name
+            end
+          end
+        end
     end
 
     # RealTime индексы модели
