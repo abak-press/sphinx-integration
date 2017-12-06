@@ -7,6 +7,8 @@ class ModelWithRt < ActiveRecord::Base
     indexes 'content', :as => :content
     has 'region_id', :type => :integer, :as => :region_id
     has :rubrics, :type => :multi, :source => :ranged_query, :query => "SELECT {{model_with_rt_id}} AS id, rubric_id AS rubrics FROM model_with_rt_rubrics WHERE id>=$start AND id<=$end; SELECT MIN(id), MAX(id) FROM model_with_rt_rubrics"
+    composite_index :composite_idx, a_idx: "'a'", b_idx: "'b'"
+
     set_property :rt => true
     set_property :source_no_grouping => true
 

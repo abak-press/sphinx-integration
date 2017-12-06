@@ -160,4 +160,39 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index::Builder
       source.fields.delete(field)
     end
   end
+
+  # Комбинирует несколько полей в одно(создает 1 общее поле в сфинксе),
+  # позволяет делать запросы через составные поля композитного индекса.
+  # В результатирующем запросе будет происходить подмена conditions.
+  # Для генерации стабильных запросов и индексового запроса,
+  # производится сортировка значений по названию составных полей.
+  #
+  # name - алиас
+  # fields - определение составных частей индекса, могут быть использованы в conditions
+  #
+  # example:
+  #   composite_index(:composite_idx, b_idx: "'b_1'", a_idx: "'a_2'")
+  #
+  #   Model.search conditions: {b_idx: "b_1 | b_2", a_idx: "a_2 | a_1"}
+  #   # => select ... where ... MATCH('@composite_idx (a_2 | a_1) (b_1 | b_2)') ...
+  def composite_index(name, fields)
+    sorted_fields = Hash[fields.sort_by { |k, _v| k }]
+    sql = "concat_ws(' ', #{sorted_fields.values.join(', ')})"
+
+    composite_indexes = @index.local_options[:composite_indexes] ||= {}
+    composite_indexes[name] = sorted_fields
+
+    indexes sql, as: name
+  end
+
+  # Позволяет подменить части существующего композитного индекса
+  def replace_composite_index_fields(name, fields)
+    index_fields = @index.local_options
+      .fetch(:composite_indexes)
+      .fetch(name)
+
+    delete_fields(name)
+
+    composite_index(name, index_fields.merge!(fields))
+  end
 end
