@@ -36,7 +36,8 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Search
 
     composite_indexes.each do |name, fields|
       composite_conditions = fields.keys.each_with_object([]) do |field_name, memo|
-        memo << "(#{conditions.delete(field_name)})" if conditions.key?(field_name)
+        condition = conditions.delete(field_name) if conditions.key?(field_name)
+        memo << "(#{condition})" if condition.present?
       end
 
       next if composite_conditions.empty?
@@ -45,7 +46,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Search
       old_composite_condition = conditions[name]
 
       conditions[name] =
-        if old_composite_condition
+        if old_composite_condition.present?
           "(#{old_composite_condition}) #{composite_conditions}"
         else
           composite_conditions
