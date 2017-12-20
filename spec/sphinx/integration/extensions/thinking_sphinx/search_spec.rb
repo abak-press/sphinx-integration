@@ -21,15 +21,34 @@ RSpec.describe ThinkingSphinx::Search do
       end
 
       it do
-        ModelWithDisk.search(conditions: {one_idx: 'one', b_idx: "b_1 | b_2", a_idx: "a_2 | a_1"}).to_a
+        ModelWithDisk.search(conditions: {one_idx: 'one', b_idx: "b_1 | b_2", a_idx: "(a_2 | a_1)"}).to_a
 
+        # документируем поведение с оператором '|' - части композитного индекса необходимо оборачивать в скобки
         expect(riddle_client).to have_received(:query)
-          .with("@one_idx one @composite_idx (a_2 | a_1) (b_1 | b_2)", 'composite', any_args)
+          .with("@one_idx one @composite_idx (a_2 | a_1) b_1 | b_2", 'composite', any_args)
+      end
+
+      context 'when condition are simple' do
+        it 'do not wrap condition in parentheses' do
+          ModelWithDisk.search(conditions: {one_idx: 'one', b_idx: "b_1", a_idx: "(a_2 | a_1)"}).to_a
+
+          expect(riddle_client).to have_received(:query)
+            .with("@one_idx one @composite_idx (a_2 | a_1) b_1", 'composite', any_args)
+        end
+      end
+
+      context 'when condition are AND' do
+        it 'do not wrap condition in parentheses' do
+          ModelWithDisk.search(conditions: {one_idx: 'one', b_idx: "b_1 b_2", a_idx: "(a_2 | a_1)"}).to_a
+
+          expect(riddle_client).to have_received(:query)
+            .with("@one_idx one @composite_idx (a_2 | a_1) b_1 b_2", 'composite', any_args)
+        end
       end
 
       context 'when condition contains empty string' do
         it do
-          ModelWithDisk.search(conditions: {one_idx: 'one', b_idx: ' ', a_idx: "a_2 | a_1"}).to_a
+          ModelWithDisk.search(conditions: {one_idx: 'one', b_idx: ' ', a_idx: "(a_2 | a_1)"}).to_a
 
           expect(riddle_client).to have_received(:query)
             .with("@one_idx one @composite_idx (a_2 | a_1)", 'composite', any_args)
@@ -38,7 +57,7 @@ RSpec.describe ThinkingSphinx::Search do
 
       context 'when condition contains nil' do
         it do
-          ModelWithDisk.search(conditions: {one_idx: 'one', b_idx: nil, a_idx: "a_2 | a_1"}).to_a
+          ModelWithDisk.search(conditions: {one_idx: 'one', b_idx: nil, a_idx: "(a_2 | a_1)"}).to_a
 
           expect(riddle_client).to have_received(:query)
             .with("@one_idx one @composite_idx (a_2 | a_1)", 'composite', any_args)
@@ -49,7 +68,7 @@ RSpec.describe ThinkingSphinx::Search do
         it do
           ModelWithDisk.search(conditions: {
             one_idx: 'one',
-            composite_idx: 'z_1 | z_2', b_idx: 'b_1 | b_2', a_idx: "a_2 | a_1"
+            composite_idx: '(z_1 | z_2)', b_idx: '(b_1 | b_2)', a_idx: '(a_2 | a_1)'
           }).to_a
 
           expect(riddle_client).to have_received(:query)
@@ -57,11 +76,35 @@ RSpec.describe ThinkingSphinx::Search do
         end
       end
 
+      context 'when old composite condition are simple' do
+        it do
+          ModelWithDisk.search(conditions: {
+            one_idx: 'one',
+            composite_idx: 'z_1', b_idx: '(b_1 | b_2)', a_idx: '(a_2 | a_1)'
+          }).to_a
+
+          expect(riddle_client).to have_received(:query)
+            .with("@one_idx one @composite_idx z_1 (a_2 | a_1) (b_1 | b_2)", 'composite', any_args)
+        end
+      end
+
+      context 'when old composite condition are AND' do
+        it do
+          ModelWithDisk.search(conditions: {
+            one_idx: 'one',
+            composite_idx: 'z_1 z_2', b_idx: '(b_1 | b_2)', a_idx: '(a_2 | a_1)'
+          }).to_a
+
+          expect(riddle_client).to have_received(:query)
+            .with("@one_idx one @composite_idx z_1 z_2 (a_2 | a_1) (b_1 | b_2)", 'composite', any_args)
+        end
+      end
+
       context 'when old composite condition is a empty string' do
         it do
           ModelWithDisk.search(conditions: {
             one_idx: 'one',
-            composite_idx: ' ', b_idx: 'b_1 | b_2', a_idx: "a_2 | a_1"
+            composite_idx: ' ', b_idx: '(b_1 | b_2)', a_idx: '(a_2 | a_1)'
           }).to_a
 
           expect(riddle_client).to have_received(:query)
@@ -73,7 +116,7 @@ RSpec.describe ThinkingSphinx::Search do
         it do
           ModelWithDisk.search(conditions: {
             one_idx: 'one',
-            composite_idx: nil, b_idx: 'b_1 | b_2', a_idx: "a_2 | a_1"
+            composite_idx: nil, b_idx: '(b_1 | b_2)', a_idx: '(a_2 | a_1)'
           }).to_a
 
           expect(riddle_client).to have_received(:query)
