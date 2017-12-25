@@ -1,6 +1,24 @@
+# v6.1.0
+
+* 2017-12-25 [da7cef1](../../commit/da7cef1) - __(Dmitry Bochkarev)__ Release 6.1.0 
+* 2017-12-20 [c6b8fd4](../../commit/c6b8fd4) - __(Dmitry Bochkarev)__ fix: не оборачиваем условия композитного индекса в скобочки 
+https://jira.railsc.ru/browse/PC4-21220
+
+* 2017-12-19 [a105fa7](../../commit/a105fa7) - __(Dmitry Bochkarev)__ fix: не добавляем в композитный матчинг пустые условия 
+https://jira.railsc.ru/browse/PC4-21220
+
+https://github.com/abak-press/pulscen/pull/16040
+
+* 2017-11-28 [96b579c](../../commit/96b579c) - __(Dmitry Bochkarev)__ feature: композитные индексы 
+https://jira.railsc.ru/browse/PC4-21024
+https://jira.railsc.ru/browse/PC4-20969 - проектирование
+
+Пришлось переопределять метод query, т.к. есть места где товарный лоадер
+копируется и в нем проиходит изменение conditions - принял решение
+conditions не модифицировать, а подменять.
+
 # v6.0.0
 
-* 2017-11-02 [dbc8f4f](../../commit/dbc8f4f) - __(Michail Merkushin)__ Release 6.0.0 
 * 2017-11-02 [e43b182](../../commit/e43b182) - __(Michail Merkushin)__ feat: Log when replaying was finished 
 https://jira.railsc.ru/browse/PC4-20727
 
