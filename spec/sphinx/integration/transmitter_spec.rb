@@ -64,6 +64,57 @@ describe Sphinx::Integration::Transmitter do
 
           transmitter.update_fields({field: 123}, id: 1, strict: true, matching: "@id_idx 1")
         end
+
+        context 'when matching is a hash' do
+          it do
+            expect(mysql_client).to receive(:update).
+              with("model_with_rt_rt0", {field: 123}, matching: "@id_idx 1", id: 1)
+            expect(mysql_client).to receive(:update).
+              with("model_with_rt_rt1", {field: 123}, matching: "@id_idx 1", id: 1)
+            expect(mysql_client).
+              to receive(:find_while_exists).
+              with("model_with_rt_core", "sphinx_internal_id", matching: "@id_idx 1", id: 1).
+              and_yield([{"sphinx_internal_id" => 1}])
+
+            transmitter.update_fields({field: 123}, id: 1, strict: true, matching: {id_idx: '1'})
+          end
+        end
+
+        context 'when composite index' do
+          it do
+            expect(mysql_client).to receive(:update)
+              .with("model_with_rt_rt0", {field: 123}, matching: "@composite_idx b @id_idx 1 @composite_idx a", id: 1)
+            expect(mysql_client).to receive(:update)
+              .with("model_with_rt_rt1", {field: 123}, matching: "@composite_idx b @id_idx 1 @composite_idx a", id: 1)
+            expect(mysql_client).
+              to receive(:find_while_exists).
+              with("model_with_rt_core", "sphinx_internal_id",
+                   matching: "@composite_idx b @id_idx 1 @composite_idx a", id: 1).
+              and_yield([{"sphinx_internal_id" => 1}])
+
+            transmitter.update_fields({field: 123}, id: 1, strict: true, matching: "@b_idx b @id_idx 1 @a_idx a")
+          end
+
+          context 'when matching is a hash' do
+            it do
+              expect(mysql_client).to receive(:update)
+                .with("model_with_rt_rt0", {field: 123}, matching: "@composite_idx b @id_idx 1 @composite_idx a", id: 1)
+              expect(mysql_client).to receive(:update)
+                .with("model_with_rt_rt1", {field: 123}, matching: "@composite_idx b @id_idx 1 @composite_idx a", id: 1)
+              expect(mysql_client).
+                to receive(:find_while_exists).
+                with("model_with_rt_core", "sphinx_internal_id",
+                     matching: "@composite_idx b @id_idx 1 @composite_idx a", id: 1).
+                and_yield([{"sphinx_internal_id" => 1}])
+
+              transmitter.update_fields({field: 123}, id: 1, strict: true, matching: {
+                b_idx: 'b',
+                id_idx: '1',
+                a_idx: 'a'
+              })
+            end
+          end
+        end
       end
 
       context "when no strict" do
@@ -74,6 +125,55 @@ describe Sphinx::Integration::Transmitter do
             to receive(:update).with('model_with_rt_core', {field: 123}, matching: "@id_idx 1", id: 1)
 
           transmitter.update_fields({field: 123}, matching: "@id_idx 1", id: 1)
+        end
+
+        context 'when matching is a hash' do
+          it do
+            expect(mysql_client).to receive(:update).
+              with('model_with_rt_rt0', {field: 123}, matching: "@id_idx 1", id: 1)
+            expect(mysql_client).to receive(:update).
+              with('model_with_rt_rt1', {field: 123}, matching: "@id_idx 1", id: 1)
+            expect(mysql_client).
+              to receive(:update).with('model_with_rt_core', {field: 123}, matching: "@id_idx 1", id: 1)
+
+            transmitter.update_fields({field: 123}, matching: {id_idx: '1'}, id: 1)
+          end
+        end
+
+        context 'when composite index' do
+          it do
+            expect(mysql_client).to receive(:update)
+              .with("model_with_rt_rt0", {field: 123}, matching: "@composite_idx b @id_idx 1 @composite_idx a", id: 1)
+            expect(mysql_client).to receive(:update)
+              .with("model_with_rt_rt1", {field: 123}, matching: "@composite_idx b @id_idx 1 @composite_idx a", id: 1)
+            expect(mysql_client).
+              to receive(:find_while_exists).
+              with("model_with_rt_core", "sphinx_internal_id",
+                   matching: "@composite_idx b @id_idx 1 @composite_idx a", id: 1).
+              and_yield([{"sphinx_internal_id" => 1}])
+
+            transmitter.update_fields({field: 123}, id: 1, strict: true, matching: "@b_idx b @id_idx 1 @a_idx a")
+          end
+
+          context 'when matching is a hash' do
+            it do
+              expect(mysql_client).to receive(:update)
+                .with("model_with_rt_rt0", {field: 123}, matching: "@composite_idx b @id_idx 1 @composite_idx a", id: 1)
+              expect(mysql_client).to receive(:update)
+                .with("model_with_rt_rt1", {field: 123}, matching: "@composite_idx b @id_idx 1 @composite_idx a", id: 1)
+              expect(mysql_client).
+                to receive(:find_while_exists).
+                with("model_with_rt_core", "sphinx_internal_id",
+                     matching: "@composite_idx b @id_idx 1 @composite_idx a", id: 1).
+                and_yield([{"sphinx_internal_id" => 1}])
+
+              transmitter.update_fields({field: 123}, id: 1, strict: true, matching: {
+                b_idx: 'b',
+                id_idx: '1',
+                a_idx: 'a'
+              })
+            end
+          end
         end
       end
     end
