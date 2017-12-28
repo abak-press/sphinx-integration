@@ -1,8 +1,7 @@
-# coding: utf-8
 require 'spec_helper'
 
 describe Sphinx::Integration::RecentRt do
-  let(:recent_rt) { described_class.new }
+  let(:recent_rt) { described_class.new('index_name') }
 
   describe '#switch' do
     it do

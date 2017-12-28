@@ -2,6 +2,8 @@ module Sphinx
   module Integration
     module HelperAdapters
       class Base
+        CORE_POSTFIX = 'core'.freeze
+
         include ::Sphinx::Integration::AutoInject.hash[logger: "logger.stdout"]
 
         def initialize(options = {})
@@ -14,10 +16,6 @@ module Sphinx
 
         def config
           ThinkingSphinx::Configuration.instance
-        end
-
-        def index_names
-          ::ThinkingSphinx.indexes.map(&:core_name).join(" ")
         end
 
         def rotate?

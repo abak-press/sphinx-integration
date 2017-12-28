@@ -1,4 +1,3 @@
-# coding: utf-8
 require 'spec_helper'
 
 describe ThinkingSphinx::Index do
@@ -55,6 +54,33 @@ describe ThinkingSphinx::Index do
   describe '#all_names' do
     it 'returns only distributed index name' do
       expect(index.all_names).to match_array([index.name])
+    end
+  end
+
+  describe '#rt_name' do
+    context 'when partition is nil' do
+      it 'returns current name' do
+        expect(index.recent_rt).to receive(:current).and_return(0)
+        expect(index.rt_name).to eq 'model_with_disk_rt0'
+      end
+    end
+
+    context 'when partition is not nil' do
+      it 'returns needed name' do
+        expect(index.rt_name(1)).to eq 'model_with_disk_rt1'
+      end
+    end
+  end
+
+  describe '#switch_rt' do
+    it 'flips current partition' do
+      expect(index.rt_name).to eq 'model_with_disk_rt0'
+      expect(::ThinkingSphinx::Configuration.instance.mysql_client).
+        to receive(:write).with('TRUNCATE RTINDEX model_with_disk_rt0')
+
+      index.switch_rt
+
+      expect(index.rt_name).to eq 'model_with_disk_rt1'
     end
   end
 end

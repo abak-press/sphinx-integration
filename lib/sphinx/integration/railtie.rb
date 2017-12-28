@@ -1,4 +1,3 @@
-# coding: utf-8
 require 'rails'
 require 'thinking-sphinx'
 require 'twinkle/client'
@@ -6,7 +5,6 @@ require 'sphinx-integration'
 
 module Sphinx::Integration
   class Railtie < Rails::Railtie
-
     initializer "sphinx_integration.sphinx", before: "thinking_sphinx.sphinx" do
       ThinkingSphinx::AutoVersion.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::AutoVersion
     end
@@ -72,36 +70,20 @@ module Sphinx::Integration
 
     initializer 'sphinx_integration.rspec' do
       if defined?(::RSpec::Core)
-        if Gem::Version.new(RSpec::Core::Version::STRING) >= Gem::Version.new('3.0.0')
-          RSpec.configure do |c|
-            c.before(:each) do |example|
-              unless example.metadata.fetch(:with_sphinx, false)
-                Sphinx::Integration::Transmitter.write_disabled = true
-              end
-            end
-
-            c.after(:each) do |example|
-              if example.metadata.fetch(:with_sphinx, false)
-                Sphinx::Integration::Helper.new(logger: ::Logger.new("/dev/null")).truncate_rt_indexes
-              else
-                Sphinx::Integration::Transmitter.write_disabled = false
-              end
+        RSpec.configure do |c|
+          c.before(:each) do |example|
+            unless example.metadata.fetch(:with_sphinx, false)
+              Sphinx::Integration::Transmitter.write_disabled = true
             end
           end
-        else
-          RSpec.configure do |c|
-            c.before(:each) do
-              unless example.metadata.fetch(:with_sphinx, false)
-                Sphinx::Integration::Transmitter.write_disabled = true
-              end
-            end
 
-            c.after(:each) do
-              if example.metadata.fetch(:with_sphinx, false)
-                Sphinx::Integration::Helper.new(logger: ::Logger.new("/dev/null")).truncate_rt_indexes
-              else
-                Sphinx::Integration::Transmitter.write_disabled = false
+          c.after(:each) do |example|
+            if example.metadata.fetch(:with_sphinx, false)
+              ::ThinkingSphinx.rt_indexes.each do |index|
+                index.rt.truncate
               end
+            else
+              Sphinx::Integration::Transmitter.write_disabled = false
             end
           end
         end
