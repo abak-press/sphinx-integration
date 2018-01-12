@@ -6,16 +6,7 @@ module Sphinx
       class Replayer
         include ::Sphinx::Integration::AutoInject.hash[logger: "logger.stdout"]
 
-        def initialize(options = {})
-          super
-
-          @mysql_client = options.fetch(:mysql_client)
-          @mysql_client.log_enabled = false
-
-          config = ThinkingSphinx::Configuration.instance
-          @update_log = config.update_log
-          @soft_delete_log = config.soft_delete_log
-        end
+        delegate :mysql_client, :update_log, :soft_delete_log, to: '::ThinkingSphinx::Configuration.instance'
 
         # Проигрывание запросов из QueryLog
         #
@@ -40,19 +31,19 @@ module Sphinx
 
         def reset
           logger.info "Reset query logs"
-          @update_log.reset
-          @soft_delete_log.reset
+          update_log.reset
+          soft_delete_log.reset
         end
 
         private
 
         def replay_update_log
-          logger.info "Replay #{@update_log.size} queries for update"
+          logger.info "Replay #{update_log.size} queries for update"
 
           count = 0
-          @update_log.each_batch(batch_size: 50) do |payloads|
+          update_log.each_batch(batch_size: 50) do |payloads|
             queries = payloads.map { |payload| payload.fetch(:query) }
-            @mysql_client.batch_write(queries)
+            mysql_client.batch_write(queries)
             count += queries.size
           end
 
@@ -60,9 +51,9 @@ module Sphinx
         end
 
         def replay_soft_delete_log
-          logger.info "Replay #{@soft_delete_log.size} queries for soft delete"
+          logger.info "Replay #{soft_delete_log.size} queries for soft delete"
 
-          @soft_delete_log.each_batch(batch_size: 5_000) do |payloads|
+          soft_delete_log.each_batch(batch_size: 5_000) do |payloads|
             ids_by_indexes = payloads.each_with_object({}) do |payload, memo|
               index_name = payload.fetch(:index_name)
               ids = (memo[index_name] ||= Set.new)
@@ -75,7 +66,11 @@ module Sphinx
             end
 
             ids_by_indexes.each do |index_name, ids|
-              @mysql_client.soft_delete(index_name, ids.to_a)
+              sql = ::Sphinx::Integration::Extensions::Riddle::Query::Update.
+                new(index_name, {sphinx_deleted: 1}, {id: ids.to_a, sphinx_deleted: 0}, nil).
+                to_sql
+
+              mysql_client.write(sql)
             end
           end
         end

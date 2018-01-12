@@ -2,10 +2,7 @@ require 'spec_helper'
 
 describe Sphinx::Integration::Helper do
   let(:adapter) { instance_double("Sphinx::Integration::HelperAdapters::Local") }
-  let(:mysql_client) { instance_double("Sphinx::Integration::Mysql::Client", 'log_enabled=': nil) }
-  let(:config) { ThinkingSphinx::Configuration.instance }
-  let(:app_mysql_client) { config.mysql_client }
-  let(:default_options) { {mysql_client: mysql_client, sphinx_adapter: adapter} }
+  let(:default_options) { {sphinx_adapter: adapter} }
 
   describe "#configure" do
     it do
@@ -17,21 +14,22 @@ describe Sphinx::Integration::Helper do
   describe "#index" do
     context "when online indexing" do
       it do
-        helper = described_class.new(default_options.merge(rotate: true))
-        expect(adapter).to receive(:index)
-        expect(app_mysql_client).to receive(:write).with(/TRUNCATE RTINDEX model_with_rt_rt0/)
+        helper = described_class.new(default_options.merge(rotate: true, indexes: 'model_with_rt'))
+        expect(adapter).to receive(:index).with('model_with_rt_core')
+        expect(::ThinkingSphinx::Configuration.instance.mysql_client).
+          to receive(:write).with('TRUNCATE RTINDEX model_with_rt_rt0')
         helper.index
-        expect(helper.recent_rt.prev).to eq 0
+        expect(ModelWithRt.sphinx_indexes.first.recent_rt.current).to eq 1
       end
     end
 
     context "when offline indexing" do
       it do
-        helper = described_class.new(default_options)
-        expect(adapter).to receive(:index)
-        expect(mysql_client).to_not receive(:write)
+        helper = described_class.new(default_options.merge(indexes: 'model_with_rt'))
+        expect(adapter).to receive(:index).with('model_with_rt_core')
+        expect(::ThinkingSphinx::Configuration.instance.mysql_client).to_not receive(:write)
         helper.index
-        expect(helper.recent_rt.prev).to eq 1
+        expect(ModelWithRt.sphinx_indexes.first.recent_rt.current).to eq 0
       end
     end
 
@@ -53,10 +51,9 @@ describe Sphinx::Integration::Helper do
     it do
       helper = described_class.new(default_options)
       expect(helper).to receive(:stop)
+      expect(helper).to receive(:clean)
       expect(helper).to receive(:configure)
       expect(helper).to receive(:copy_config)
-      expect(helper).to receive(:remove_indexes)
-      expect(helper).to receive(:remove_binlog)
       expect(helper).to receive(:index)
       expect(helper).to receive(:start)
       helper.rebuild

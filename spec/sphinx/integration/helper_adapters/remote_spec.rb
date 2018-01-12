@@ -52,27 +52,12 @@ describe Sphinx::Integration::HelperAdapters::Remote do
     end
   end
 
-  describe "#remove_indexes" do
+  describe "#clean" do
     it do
-      expect(adapter).to receive(:remove_files).with(%r{db/sphinx/test})
-      adapter.remove_indexes
-    end
-  end
-
-  describe "#remove_binlog" do
-    context "when path is empty" do
-      it do
-        allow(ThinkingSphinx::Configuration.instance.configuration.searchd).to receive(:binlog_path).and_return("")
-        expect(adapter).to_not receive(:remove_files)
-        adapter.remove_binlog
-      end
-    end
-
-    context "when path is present" do
-      it do
-        expect(adapter).to receive(:remove_files).with(%r{db/sphinx/test})
-        adapter.remove_binlog
-      end
+      config = ThinkingSphinx::Configuration.instance
+      expect(adapter).to receive(:remove_files).with("#{config.searchd_file_path}/*")
+      expect(adapter).to receive(:remove_files).with("#{config.configuration.searchd.binlog_path}/*")
+      adapter.clean
     end
   end
 
@@ -90,7 +75,7 @@ describe Sphinx::Integration::HelperAdapters::Remote do
         it do
           expect(ssh).to receive(:within).with("s1.dev").and_yield
           expect(ssh).to receive(:execute).
-            with("indexer", "--config /path/sphinx.conf", "--rotate", "--nohup", /_core$/, exit_status: [0, 2])
+            with("indexer", "--config /path/sphinx.conf", "--rotate", "--nohup", 'index_name', exit_status: [0, 2])
           expect(ssh).to receive(:execute).
             with('for NAME in /path/data/*_core.tmp.*; do mv -f "${NAME}" "${NAME/\.tmp\./.new.}"; done')
           server = double("server", opts: {port: 22}, user: "sphinx", host: "s1.dev")
@@ -98,7 +83,7 @@ describe Sphinx::Integration::HelperAdapters::Remote do
           expect(ssh).to receive(:execute).with("rsync", any_args)
           expect(ssh).to receive(:execute).with("kill", /SIGHUP/)
 
-          adapter.index
+          adapter.index('index_name')
         end
       end
 
@@ -112,14 +97,14 @@ describe Sphinx::Integration::HelperAdapters::Remote do
         it do
           expect(ssh).to receive(:within).with("s1.dev").and_yield
           expect(ssh).to receive(:execute).
-            with("indexer", "--config /path/sphinx.conf", "--rotate", "--nohup", /_core$/, exit_status: [0, 2])
+            with("indexer", "--config /path/sphinx.conf", "--rotate", "--nohup", 'index_name', exit_status: [0, 2])
           expect(ssh).to receive(:execute).
             with('for NAME in /path/data/*_core.tmp.*; do mv -f "${NAME}" "${NAME/\.tmp\./.new.}"; done')
           expect(ssh).to_not receive(:without)
           expect(ssh).to_not receive(:execute).with("rsync", any_args)
           expect(ssh).to receive(:execute).with("kill", /SIGHUP/)
 
-          adapter.index
+          adapter.index('index_name')
         end
       end
     end
@@ -135,14 +120,14 @@ describe Sphinx::Integration::HelperAdapters::Remote do
         it do
           expect(ssh).to receive(:within).with("s1.dev").and_yield
           expect(ssh).to receive(:execute).
-            with("indexer", "--config /path/sphinx.conf", /_core$/, exit_status: [0, 2])
+            with("indexer", "--config /path/sphinx.conf", 'index_name', exit_status: [0, 2])
           expect(ssh).to_not receive(:execute).with(/for NAME/)
           server = double("server", opts: {port: 22}, user: "sphinx", host: "s1.dev")
           expect(ssh).to receive(:without).with("s1.dev").and_yield(server)
           expect(ssh).to receive(:execute).with("rsync", any_args)
           expect(ssh).to_not receive(:execute).with("kill", /SIGHUP/)
 
-          adapter.index
+          adapter.index('index_name')
         end
       end
 
@@ -156,13 +141,13 @@ describe Sphinx::Integration::HelperAdapters::Remote do
         it do
           expect(ssh).to receive(:within).with("s1.dev").and_yield
           expect(ssh).to receive(:execute).
-            with("indexer", "--config /path/sphinx.conf", /_core$/, exit_status: [0, 2])
+            with("indexer", "--config /path/sphinx.conf", 'index_name', exit_status: [0, 2])
           expect(ssh).to_not receive(:execute).with(/for NAME/)
           expect(ssh).to_not receive(:without)
           expect(ssh).to_not receive(:execute).with("rsync", any_args)
           expect(ssh).to_not receive(:execute).with("kill", /SIGHUP/)
 
-          adapter.index
+          adapter.index('index_name')
         end
       end
     end

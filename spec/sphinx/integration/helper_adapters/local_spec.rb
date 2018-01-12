@@ -25,27 +25,12 @@ describe Sphinx::Integration::HelperAdapters::Local do
     end
   end
 
-  describe "#remove_indexes" do
+  describe "#clean" do
     it do
-      expect(adapter).to receive(:remove_files).with(%r{db/sphinx/test})
-      adapter.remove_indexes
-    end
-  end
-
-  describe "#remove_binlog" do
-    context "when path is empty" do
-      it do
-        allow(ThinkingSphinx::Configuration.instance.configuration.searchd).to receive(:binlog_path).and_return("")
-        expect(adapter).to_not receive(:remove_files)
-        adapter.remove_binlog
-      end
-    end
-
-    context "when path is present" do
-      it do
-        expect(adapter).to receive(:remove_files).with(%r{db/sphinx/test})
-        adapter.remove_binlog
-      end
+      config = ThinkingSphinx::Configuration.instance
+      expect(adapter).to receive(:remove_files).with("#{config.searchd_file_path}/*")
+      expect(adapter).to receive(:remove_files).with("#{config.configuration.searchd.binlog_path}/*")
+      adapter.clean
     end
   end
 
@@ -54,15 +39,15 @@ describe Sphinx::Integration::HelperAdapters::Local do
       let(:adapter) { described_class.new(rotate: true) }
 
       it do
-        expect(rye).to receive(:shell).with(:indexer, /--config/, "--rotate", /_core$/)
-        adapter.index
+        expect(rye).to receive(:shell).with(:indexer, /--config/, "--rotate", 'index_name')
+        adapter.index('index_name')
       end
     end
 
     context "when is offline" do
       it do
-        expect(rye).to receive(:shell).with(:indexer, /--config/, /_core$/)
-        adapter.index
+        expect(rye).to receive(:shell).with(:indexer, /--config/, 'index_name')
+        adapter.index('index_name')
       end
     end
   end

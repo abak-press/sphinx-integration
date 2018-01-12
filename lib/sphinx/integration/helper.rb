@@ -1,4 +1,3 @@
-require "redis-mutex"
 require "logger"
 
 module Sphinx::Integration
@@ -9,75 +8,48 @@ module Sphinx::Integration
   end
 
   class Helper
-    MUTEX_EXPIRE = 10.hours
-
     include ::Sphinx::Integration::AutoInject.hash["logger.notificator", logger: "logger.stdout"]
 
-    attr_reader :sphinx
-
-    delegate :recent_rt, :mutex, to: 'self.class'
-    delegate :indexes,
-             :rt_indexes,
-             to: '::ThinkingSphinx'
-
-    [
-      :running?, :stop, :start, :suspend, :resume, :restart,
-      :remove_indexes, :remove_binlog, :copy_config, :reload
-    ].each do |method_name|
-      class_eval <<-EORUBY, __FILE__, __LINE__ + 1
-        def #{method_name}
-          log "#{method_name.capitalize}"
-          sphinx.#{method_name}
-        rescue => error
+    %i(running? stop start suspend resume restart clean copy_config reload).each do |method_name|
+      define_method(method_name) do
+        begin
+          log(method_name.to_s.capitalize)
+          @sphinx.public_send(method_name)
+        rescue StandardError => error
           log_error(error)
           raise
         end
-      EORUBY
-    end
-
-    def self.full_reindex?
-      mutex(:full_reindex).locked?
-    end
-
-    def self.log_updates?
-      mutex(:log_updates).locked?
-    end
-
-    def self.online_indexing?
-      mutex(:online_indexing).locked?
-    end
-
-    def self.mutex(name)
-      @mutex ||= {}
-      @mutex[name] ||= Redis::Mutex.new(name, expire: MUTEX_EXPIRE)
-    end
-
-    def self.recent_rt
-      @recent_rt ||= Sphinx::Integration::RecentRt.new
+      end
     end
 
     def initialize(options = {})
       super
 
-      ThinkingSphinx.context.define_indexes
+      ::ThinkingSphinx.context.define_indexes
 
       @options = options
+      @options[:indexes] ||= []
+
+      @indexes = ::ThinkingSphinx.
+        indexes.
+        select { |index| @options[:indexes].empty? || @options[:indexes].include?(index.name) }
+
+      adapter_options = {logger: logger, rotate: @options[:rotate]}
 
       @sphinx = options.fetch(:sphinx_adapter) do
         if config.remote?
-          HelperAdapters::Remote.new(options.slice(:host, :rotate).merge!(logger: logger))
+          adapter_options[:host] = @options[:host]
+          HelperAdapters::Remote.new(adapter_options)
         else
-          HelperAdapters::Local.new(options.slice(:rotate).merge!(logger: logger))
+          HelperAdapters::Local.new(adapter_options)
         end
       end
-
-      @mysql_client = options.fetch(:mysql_client) { config.mysql_client.dup }
     end
 
     def configure
       log "Configure sphinx"
       config.build(config.generated_config_file)
-    rescue => error
+    rescue StandardError => error
       log_error(error)
       raise
     end
@@ -85,25 +57,20 @@ module Sphinx::Integration
     def index
       log "Index sphinx"
 
-      unless rotate?
-        mutex(:full_reindex).with_lock { @sphinx.index }
-        ThinkingSphinx.set_last_indexing_finish_time
-        return
-      end
-
       replayer.reset
 
-      mutex(:online_indexing).with_lock do
-        mutex(:full_reindex).with_lock do
-          @sphinx.index
-          recent_rt.switch
-        end
+      @indexes.each do |index|
+        index.indexing do
+          @sphinx.index(index.core_name)
+          index.last_indexing_time.write
 
-        ThinkingSphinx.set_last_indexing_finish_time
-        truncate_rt_indexes(recent_rt.prev)
-        replayer.replay
+          if rotate? && index.rt?
+            index.switch_rt
+            replayer.replay
+          end
+        end
       end
-    rescue => error
+    rescue StandardError => error
       log_error(error)
       raise
     end
@@ -114,30 +81,11 @@ module Sphinx::Integration
       log "Rebuild sphinx"
 
       stop rescue nil
+      clean
       configure
       copy_config
-      remove_indexes
-      remove_binlog
       index
       start
-    end
-
-    # Очистить rt индексы
-    #
-    # Returns nothing
-    def truncate_rt_indexes(partition = nil)
-      log "Truncate rt indexes"
-
-      rt_indexes.each do |index|
-        log "- #{index.name}"
-
-        if partition
-          index.truncate(index.rt_name(partition))
-        else
-          index.truncate(index.rt_name(0))
-          index.truncate(index.rt_name(1))
-        end
-      end
     end
 
     private
@@ -151,9 +99,7 @@ module Sphinx::Integration
     end
 
     def replayer
-      # TODO: Переиндексирование одной ноды без остановки редактирования еще не реализовано.
-      #       Для этого здесь нужно выбирать правильного клиента в зависимости он переданного хоста в инициализатор.
-      @replayer ||= ::Sphinx::Integration::Mysql::Replayer.new(mysql_client: @mysql_client, logger: logger)
+      @replayer ||= ::Sphinx::Integration::Mysql::Replayer.new(logger: logger)
     end
 
     def log(message, severity = ::Logger::INFO)

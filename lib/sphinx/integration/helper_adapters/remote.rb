@@ -113,13 +113,10 @@ module Sphinx
           resume
         end
 
-        def remove_indexes
-          remove_files("#{config.searchd_file_path}/*.*")
-        end
-
-        def remove_binlog
+        def clean
+          remove_files("#{config.searchd_file_path}/*")
           return unless config.configuration.searchd.binlog_path.present?
-          remove_files("#{config.configuration.searchd.binlog_path}/binlog.*")
+          remove_files("#{config.configuration.searchd.binlog_path}/*")
         end
 
         def copy_config
@@ -128,8 +125,8 @@ module Sphinx
           @ssh.file_upload(sql_file.to_s, config.configuration.searchd.sphinxql_state) if sql_file.exist?
         end
 
-        def index
-          exec_indexer
+        def index(index_name)
+          exec_indexer(index_name)
           copy_indexes if hosts.many?
           reload if rotate?
         end
@@ -146,19 +143,19 @@ module Sphinx
           args
         end
 
-        def exec_indexer
+        def exec_indexer(index_name)
           @ssh.within(reindex_host) do
-            @ssh.execute("indexer", *indexer_args, index_names, exit_status: [0, 2])
+            @ssh.execute("indexer", *indexer_args, index_name, exit_status: [0, 2])
 
             if rotate?
-              @ssh.execute("for NAME in #{config.searchd_file_path}/*_core.tmp.*; " +
+              @ssh.execute("for NAME in #{config.searchd_file_path}/*_#{CORE_POSTFIX}.tmp.*; " +
                            'do mv -f "${NAME}" "${NAME/\.tmp\./.new.}"; done')
             end
           end
         end
 
         def copy_indexes
-          files = "#{config.searchd_file_path}/*_core#{'.new' if rotate?}.*"
+          files = "#{config.searchd_file_path}/*_#{CORE_POSTFIX}#{'.new' if rotate?}.*"
 
           @ssh.without(reindex_host) do |server|
             @ssh.execute("rsync", "-ptzv", "-e 'ssh -p #{server.opts[:port]}'",

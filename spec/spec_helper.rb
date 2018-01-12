@@ -14,10 +14,9 @@ end
 require 'rspec/rails'
 
 require 'mock_redis'
-require 'redis-classy'
 
 Redis.current = MockRedis.new
-Redis::Classy.db = Redis.current
+RedisClassy.redis = Redis.current
 
 require "support/helpers/sphinx_conf"
 require "request_store"
