@@ -102,9 +102,9 @@ module Sphinx
             when Hash
               matching.map { |field, match| [composite_indexes_map[field] || field, match] }
             when String
-              matching.scan(/\@([a-z0-9_]+) ([^@ ]+)/).map do |field, match|
+              matching.scan(/\@([^ ]+) ([^@]+)/).map do |field, match|
                 field = field.to_sym
-                [composite_indexes_map[field] || field, match]
+                [composite_indexes_map[field] || field, match.strip]
               end
             else
               raise "unreachable #{matching.class}"

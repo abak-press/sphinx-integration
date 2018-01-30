@@ -44,9 +44,10 @@ describe Sphinx::Integration::Statements::Distributed do
       it do
         expect(client).
           to receive(:write).with("UPDATE model_with_rt SET company_id = 1 " \
-                                  "WHERE MATCH('@composite_idx b @id_idx 1 @composite_idx a') AND `sphinx_deleted` = 0")
+                                  "WHERE MATCH('@composite_idx b @id_idx 1 @composite_idx a @(idx1,idx2) (foo bar)') " \
+                                  "AND `sphinx_deleted` = 0")
 
-        statements.update({company_id: 1}, matching: "@b_idx b @id_idx 1 @a_idx a")
+        statements.update({company_id: 1}, matching: "@b_idx b @id_idx 1 @a_idx a @(idx1,idx2) (foo bar)")
       end
 
       context 'when matching is a hash' do
