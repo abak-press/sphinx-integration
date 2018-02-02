@@ -1,5 +1,3 @@
-require 'redis-mutex'
-
 module Sphinx::Integration
   class Transmitter
     PRIMARY_KEY = "sphinx_internal_id".freeze
@@ -8,9 +6,6 @@ module Sphinx::Integration
     attr_reader :klass
 
     class_attribute :write_disabled
-
-    delegate :full_reindex?, :online_indexing?, to: :'Sphinx::Integration::Helper'
-    delegate :mysql_client, to: :"ThinkingSphinx::Configuration.instance"
 
     def initialize(klass)
       @klass = klass
@@ -40,9 +35,8 @@ module Sphinx::Integration
       return false if write_disabled?
 
       rt_indexes.each do |index|
-        partitions { |partition| mysql_client.delete(index.rt_name(partition), record.sphinx_document_id) }
-
-        mysql_client.soft_delete(index.core_name, record.sphinx_document_id)
+        index.rt.delete(record.sphinx_document_id)
+        index.plain.soft_delete(record.sphinx_document_id)
       end
 
       true
@@ -62,39 +56,28 @@ module Sphinx::Integration
 
     # Обновление отдельных атрибутов индекса по условию
     #
-    # Массовое обновление колонок, при работающей полной переиндексации, может работать в двух режимах – `strict`.
-    # В `строгом` режиме происходит полный перенос строк с помощью медленного replace из core в rt индексы. После
-    # переиндексации строчка в core помечается как удаленная. То есть возможна временная достпуность и старых
-    # и новых данных.
-    # В `нестрогом` режиме обновление строк происходит с помощью быстрого update. После переиндексации
+    # Массовое обновление колонок, при работающей полной переиндексации работает по следующей схеме.
+    # Во время индексации запросы записываются в лог. После переиндексации
     # все эти обновления выполнятся вновь. То есть возможна временная недоуступность
-    # новых данных. Это связано с тем, что indexer ротирует core индексы, тем самым в core могут быть старые значения,
-    # а в rt обновляемых строк и вовсе не было.
+    # новых данных (максимум пару минут). Это связано с тем, что indexer ротирует core индексы,
+    # тем самым в core могут быть старые значения, а в rt обновляемых строк и вовсе не было.
     #
     # data      - Hash
-    # :strict   - boolean (default: false). Строгость попадания данных в индекс во время индексации.
     # :matching - NilClass or String or Hash of [Symbol, String]
     # where     - Hash
     #
     # Returns nothing
-    def update_fields(data, strict: false, matching: nil, **where)
+    def update_fields(data, matching: nil, **where)
       return if write_disabled?
 
-      matching = matching_with_composite_indexes(matching) if matching
-
       rt_indexes.each do |index|
-        if strict && full_reindex?
+        if index.indexing?
           # Вначале обновим все что уже есть в rt.
-          partitions { |partition| mysql_client.update(index.rt_name(partition), data, matching: matching, **where) }
-          # Перенесем всё неудаленное из core, т.е. всё то, чего не было в rt.
-          retransmit(index, matching: matching, **where)
-        elsif !strict && online_indexing?
-          # Вначале обновим все что уже есть в rt.
-          partitions { |partition| mysql_client.update(index.rt_name(partition), data, matching: matching, **where) }
+          index.rt.update(data, matching: matching, where: where)
           # Обновим всё в core и этот запрос запишется в query log, который потом повторится после ротации.
-          mysql_client.update(index.core_name, data, matching: matching, **where)
+          index.plain.update(data, matching: matching, where: where)
         else
-          mysql_client.update(index.name, data, matching: matching, **where)
+          index.distributed.update(data, matching: matching, where: where)
         end
       end
     end
@@ -111,9 +94,8 @@ module Sphinx::Integration
       data = transmitted_data(index, record)
       return unless data
 
-      partitions { |partition| mysql_client.replace(index.rt_name(partition), data) }
-
-      mysql_client.soft_delete(index.core_name, record.sphinx_document_id)
+      index.rt.replace(data)
+      index.plain.soft_delete(record.sphinx_document_id)
     end
 
     def transmit_all(index, ids)
@@ -127,8 +109,8 @@ module Sphinx::Integration
     # where     - Hash
     #
     # Returns nothing
-    def retransmit(index, matching: nil, **where)
-      mysql_client.find_while_exists(index.core_name, PRIMARY_KEY, matching: matching, **where) do |rows|
+    def retransmit(index, matching: nil, where: {})
+      index.plain.find_while_exists(PRIMARY_KEY, matching: matching, where: where) do |rows|
         ids = rows.map { |row| row[PRIMARY_KEY].to_i }
         transmit_all(index, ids)
         sleep 0.1 # empirical throttle number
@@ -180,61 +162,11 @@ module Sphinx::Integration
       attrs
     end
 
-    # Переписывает matching, подменяя поля композитного индекса на композитный индекс
-    #
-    # matching - String or Hash of [Symbol, String]
-    #
-    # Returns String
-    def matching_with_composite_indexes(matching)
-      matching =
-        case matching
-        when Hash
-          matching.map { |field, match| [composite_indexes_map[field] || field, match] }
-        when String
-          matching.scan(/\@([a-z0-9_]+) ([^@ ]+)/).map do |field, match|
-            field = field.to_sym
-            [composite_indexes_map[field] || field, match]
-          end
-        else
-          raise "unreachable #{matching.class}"
-        end
-
-      matching.map { |field, match| "@#{field} #{match}" }.join(' '.freeze)
-    end
-
-    # Карта перезаписи полей копозитных индексов
-    #
-    # Returns Hash
-    def composite_indexes_map
-      @composite_indexes_map ||=
-        rt_indexes.each_with_object({}) do |index, memo|
-          composite_indexes = index.local_options[:composite_indexes]
-          next unless composite_indexes
-          composite_indexes.each do |name, fields|
-            fields.keys.each do |field_name|
-              memo[field_name] ||= name
-            end
-          end
-        end
-    end
-
     # RealTime индексы модели
     #
     # Returns Array
     def rt_indexes
       @rt_indexes ||= klass.sphinx_indexes.select(&:rt?)
-    end
-
-    # Итератор по текущим активным частям rt индексов
-    #
-    # Yields Integer
-    def partitions
-      if full_reindex?
-        yield 0
-        yield 1
-      else
-        yield Sphinx::Integration::Helper.recent_rt.current
-      end
     end
 
     # Привести тип к мульти атрибуту

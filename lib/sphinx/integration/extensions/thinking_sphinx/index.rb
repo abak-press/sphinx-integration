@@ -1,5 +1,6 @@
-# coding: utf-8
 module Sphinx::Integration::Extensions::ThinkingSphinx::Index
+  MUTEX_EXPIRE = 43_200 # 12 hours
+
   extend ActiveSupport::Concern
 
   autoload :Builder, 'sphinx/integration/extensions/thinking_sphinx/index/builder'
@@ -7,16 +8,10 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
   included do
     attr_accessor :merged_with_core, :is_core_index, :mva_sources
 
-    alias_method_chain :initialize, :mutex
     alias_method_chain :to_riddle, :integration
     alias_method_chain :to_riddle_for_distributed, :merged
     alias_method_chain :to_riddle_for_core, :integration
     alias_method_chain :all_names, :rt
-  end
-
-  def initialize_with_mutex(model, &block)
-    @mutex = Mutex.new
-    initialize_without_mutex(model, &block)
   end
 
   # Набор индексов для конфигурационного файла сфинкса
@@ -113,22 +108,17 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     index
   end
 
-  # Truncate rt index
-  #
-  # index_name - String
-  #
-  # Returns nothing
-  def truncate(index_name)
-    ThinkingSphinx::Configuration.instance.mysql_client.write("TRUNCATE RTINDEX #{index_name}")
-  end
-
-  def rt_name(partition)
-    @rt_name ||= {}
-    @rt_name[partition] ||= "#{name}_rt#{partition}"
+  def rt_name(partition = nil)
+    "#{name}_rt#{partition || recent_rt.current}"
   end
 
   def rt?
     !!@options[:rt]
+  end
+
+  def switch_rt
+    recent_rt.switch
+    rt.within_partition(recent_rt.prev, &:truncate)
   end
 
   def merged_with_core?
@@ -156,10 +146,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
   # Returns Hash
   def attributes_types_map
     return @attributes_types_map if @attributes_types_map
-    @mutex.synchronize do
-      return @attributes_types_map if @attributes_types_map
-      @attributes_types_map = attributes.inject({}){ |h, attr| h[attr.unique_name.to_s] = attr.type; h }
-    end
+    @attributes_types_map = attributes.each_with_object({}) { |attr, memo| memo[attr.unique_name.to_s] = attr.type }
   end
 
   def single_query_sql
@@ -168,5 +155,42 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
       to_sql(:offset => model.sphinx_offset).
       gsub(/>= \$start.*?\$end/, "= %{ID}").
       gsub(/LIMIT [0-9]+$/, '') + ' LIMIT 1'
+  end
+
+  def mutex(lock_name)
+    @mutex ||= {}
+    @mutex[lock_name] ||= mutex_class.new("sphinx:index:#{name}:#{lock_name}", expire: MUTEX_EXPIRE)
+  end
+
+  def mutex_class
+    @mutex_class ||= defined?(::RedisMutex) ? ::RedisMutex : ::Redis::Mutex
+  end
+
+  def indexing?
+    mutex(:indexing).locked?
+  end
+
+  def indexing
+    mutex(:indexing).with_lock { yield }
+  end
+
+  def recent_rt
+    @recent_rt ||= ::Sphinx::Integration::RecentRt.new(name)
+  end
+
+  def last_indexing_time
+    @last_indexing_time ||= ::Sphinx::Integration::LastIndexingTime.new(name)
+  end
+
+  def distributed
+    @distributed ||= ::Sphinx::Integration::Statements::Distributed.new(self)
+  end
+
+  def plain
+    @plain ||= ::Sphinx::Integration::Statements::Plain.new(self)
+  end
+
+  def rt
+    @rt ||= ::Sphinx::Integration::Statements::Rt.new(self)
   end
 end
