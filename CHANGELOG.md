@@ -1,6 +1,14 @@
+# v7.0.0
+
+* 2018-02-02 [e9ce0a7](../../commit/e9ce0a7) - __(Michail Merkushin)__ Release 7.0.0 
+* 2018-01-30 [25f981c](../../commit/25f981c) - __(Michail Merkushin)__ fix: Ignore field groups when preparing matching 
+https://jira.railsc.ru/browse/PC4-21238
+
+* 2017-12-28 [0d91973](../../commit/0d91973) - __(Michail Merkushin)__ feat: Distinct sphinx indexing 
+https://jira.railsc.ru/browse/PC4-21238
+
 # v6.1.0
 
-* 2017-12-25 [da7cef1](../../commit/da7cef1) - __(Dmitry Bochkarev)__ Release 6.1.0 
 * 2017-12-20 [c6b8fd4](../../commit/c6b8fd4) - __(Dmitry Bochkarev)__ fix: не оборачиваем условия композитного индекса в скобочки 
 https://jira.railsc.ru/browse/PC4-21220
 
