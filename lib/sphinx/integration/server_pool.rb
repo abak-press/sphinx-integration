@@ -15,15 +15,17 @@ module Sphinx
 
         begin
           yield server
-        rescue Exception
+        rescue Exception => e
           skip_servers << server
 
           if skip_servers.size >= @servers.size
-            ::ThinkingSphinx.fatal("Error on servers: #{skip_servers.map(&:to_s).join(", ")}")
+            ::ThinkingSphinx.fatal("Error on servers: #{skip_servers.map(&:to_s).join(', ')}")
+            ::ThinkingSphinx.fatal("#{e.message}\n#{e.backtrace.join("\n")}")
             raise
           else
             server = choose(skip_servers)
             ::ThinkingSphinx.info("Retrying with next server #{server}")
+            ::ThinkingSphinx.info("#{e.message}\n#{e.backtrace.join("\n")}")
             retry
           end
         end
@@ -36,14 +38,16 @@ module Sphinx
         servers.each do |server|
           begin
             yield server
-          rescue Exception
+          rescue Exception => e
             skip_servers << server
 
             if skip_servers.size >= servers.size
-              ::ThinkingSphinx.fatal("Error on servers: #{skip_servers.map(&:to_s).join(", ")}")
+              ::ThinkingSphinx.fatal("Error on servers: #{skip_servers.map(&:to_s).join(', ')}")
+              ::ThinkingSphinx.fatal("#{e.message}\n#{e.backtrace.join("\n")}")
               raise
             else
               ::ThinkingSphinx.info("Error on server #{server}")
+              ::ThinkingSphinx.info("#{e.message}\n#{e.backtrace.join("\n")}")
             end
           end
         end
