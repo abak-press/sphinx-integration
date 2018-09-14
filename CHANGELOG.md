@@ -1,6 +1,15 @@
+# v7.1.0
+
+* 2018-09-11 [a95ec1e](../../commit/a95ec1e) - __(TamarinEA)__ Release 7.1.0 
+* 2018-09-11 [affa47b](../../commit/affa47b) - __(TamarinEA)__ feature: log error message when error on server 
+https://jira.railsc.ru/browse/BPC-11892
+
+Release 7.1.0
+
+f
+
 # v7.0.0
 
-* 2018-02-02 [e9ce0a7](../../commit/e9ce0a7) - __(Michail Merkushin)__ Release 7.0.0 
 * 2018-01-30 [25f981c](../../commit/25f981c) - __(Michail Merkushin)__ fix: Ignore field groups when preparing matching 
 https://jira.railsc.ru/browse/PC4-21238
 
