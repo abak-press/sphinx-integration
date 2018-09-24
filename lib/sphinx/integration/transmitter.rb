@@ -11,16 +11,18 @@ module Sphinx::Integration
       @klass = klass
     end
 
-    # Обновляет запись в сфинксе
+    # Обновляет записи в сфинксе
     #
-    # record - ActiveRecord::Base
+    # records - Array
     #
     # Returns boolean
-    def replace(record)
+    def replace(records)
       return false if write_disabled?
 
+      records = Array.wrap(records)
+
       rt_indexes.each do |index|
-        transmit(index, record)
+        transmit(index, records)
       end
 
       true
@@ -84,22 +86,23 @@ module Sphinx::Integration
 
     private
 
-    # Запись объекта в rt index
+    # Запись объектов в rt index
     #
     # index  - ThinkingSphinx::Index
-    # record - ActiveRecord::Base
+    # records - Array
     #
     # Returns nothing
-    def transmit(index, record)
-      data = transmitted_data(index, record)
+    def transmit(index, records)
+      data = transmitted_data(index, records)
       return unless data
 
       index.rt.replace(data)
-      index.plain.soft_delete(record.sphinx_document_id)
+      index.plain.soft_delete(records.map(&:sphinx_document_id))
     end
 
     def transmit_all(index, ids)
-      klass.where(id: ids).each { |record| transmit(index, record) }
+      records = klass.where(id: ids)
+      transmit(index, records)
     end
 
     # Перекладывает строчки из core в rt.
@@ -120,31 +123,39 @@ module Sphinx::Integration
     # Данные, необходимые для записи в индекс сфинкса
     #
     # index  - ThinkingSphinx::Index
-    # record - ActiveRecord::Base
+    # records - Array
     #
     # Returns Hash
-    def transmitted_data(index, record)
-      sql = index.single_query_sql.gsub(TEMPLATE_ID, record.id.to_s)
+    def transmitted_data(index, records)
+      rows = connection.select_all(prepared_sql(index, records))
+
+      rows.map! do |row|
+        record = records.find { |r| r.id == row['sphinx_internal_id'].to_i }
+        row.merge!(mva_attributes(index, record))
+
+        row.each do |key, value|
+          row[key] = case index.attributes_types_map[key]
+                     when :integer then value.to_i
+                     when :float then value.to_f
+                     when :multi then type_cast_to_multi(value)
+                     when :boolean then ActiveRecord::ConnectionAdapters::Column.value_to_boolean(value)
+                     else value
+                     end
+        end
+
+        row
+      end
+    end
+
+    def prepared_sql(index, records)
+      sql = index.single_query_sql.gsub(TEMPLATE_ID, "ANY(ARRAY[#{records.map(&:id).join(',')}])").sub('LIMIT 1', '')
+
       query_options = index.local_options[:with_sql]
       if query_options && (update_proc = query_options[:update]).respond_to?(:call)
         sql = update_proc.call(sql)
       end
-      row = record.class.connection.execute(sql).first
-      return unless row
 
-      row.merge!(mva_attributes(index, record))
-
-      row.each do |key, value|
-        row[key] = case index.attributes_types_map[key]
-                   when :integer then value.to_i
-                   when :float then value.to_f
-                   when :multi then type_cast_to_multi(value)
-                   when :boolean then ActiveRecord::ConnectionAdapters::Column.value_to_boolean(value)
-                   else value
-                   end
-      end
-
-      row
+      sql
     end
 
     # MVA data
@@ -182,6 +193,14 @@ module Sphinx::Integration
       else
         value
       end
+    end
+
+    ##
+    # коннекция к бд
+    #
+
+    def connection
+      @connection ||= klass.connection
     end
   end
 end
