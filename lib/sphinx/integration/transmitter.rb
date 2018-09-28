@@ -148,7 +148,7 @@ module Sphinx::Integration
     end
 
     def prepared_sql(index, records)
-      sql = index.single_query_sql.gsub(TEMPLATE_ID, "ANY(ARRAY[#{records.map(&:id).join(',')}])").sub('LIMIT 1', '')
+      sql = index.single_query_sql.gsub(TEMPLATE_ID, records.map(&:id).join(','))
 
       query_options = index.local_options[:with_sql]
       if query_options && (update_proc = query_options[:update]).respond_to?(:call)

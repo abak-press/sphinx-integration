@@ -153,8 +153,8 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     @single_query_sql ||= sources.
       first.
       to_sql(:offset => model.sphinx_offset).
-      gsub(/>= \$start.*?\$end/, "= %{ID}").
-      gsub(/LIMIT [0-9]+$/, '') + ' LIMIT 1'
+      gsub(/>= \$start.*?\$end/, "= ANY(ARRAY[%{ID}])").
+      gsub(/LIMIT [0-9]+$/, '')
   end
 
   def mutex(lock_name)

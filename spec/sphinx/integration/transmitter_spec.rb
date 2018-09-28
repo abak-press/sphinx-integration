@@ -20,7 +20,7 @@ describe Sphinx::Integration::Transmitter do
 
   describe '#replace' do
     context 'when single result from db' do
-      it "send valid quries to sphinx", focus: true do
+      it "send valid quries to sphinx" do
         expect(record.class.connection).to receive(:select_all).with(/^SELECT/).and_return([
           {"sphinx_internal_id" => 1, "region_id" => "123"}
         ])
