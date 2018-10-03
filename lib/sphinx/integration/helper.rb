@@ -80,7 +80,8 @@ module Sphinx::Integration
     def rebuild
       log "Rebuild sphinx"
 
-      stop rescue nil
+      stop unless Sphinx::Integration.fetch(:rebuild, {})[:pass_sphinx_stop]
+
       clean
       configure
       copy_config
