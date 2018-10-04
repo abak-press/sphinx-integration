@@ -34,4 +34,67 @@ describe ActiveRecord::Base do
   describe '.rt_indexed_by_sphinx?' do
     it { expect(ModelWithRt.rt_indexed_by_sphinx?).to be true }
   end
+
+  describe '.need_transmitter_update' do
+    context 'when true' do
+      it do
+        expect_any_instance_of(Sphinx::Integration::Transmitter).to receive(:replace)
+
+        ModelWithRt.create!
+      end
+    end
+
+    context 'when false' do
+      it do
+        expect_any_instance_of(Sphinx::Integration::Transmitter).not_to receive(:replace)
+
+        ModelWithRt.need_transmitter_update = false
+        ModelWithRt.create!
+        ModelWithRt.need_transmitter_update = true
+      end
+    end
+
+    context 'when model has been changed' do
+      let!(:model) { ModelWithRt.create! }
+
+      it do
+        expect_any_instance_of(Sphinx::Integration::Transmitter).to receive(:replace)
+
+        model.update_attributes!(content: "foo#{rand(100)}")
+      end
+    end
+
+    context 'when destroy' do
+      let!(:model) { ModelWithRt.create! }
+
+      it do
+        expect_any_instance_of(Sphinx::Integration::Transmitter).to receive(:delete)
+        expect_any_instance_of(Sphinx::Integration::Transmitter).not_to receive(:replace)
+
+        model.destroy
+      end
+
+      context 'when disabled' do
+        it do
+          expect_any_instance_of(Sphinx::Integration::Transmitter).not_to receive(:delete)
+
+          model
+          ModelWithRt.need_transmitter_update = false
+          model.destroy
+          ModelWithRt.need_transmitter_update = true
+        end
+      end
+    end
+  end
+
+  describe '.transmitter_update' do
+    let!(:model1) { ModelWithRt.create! }
+    let!(:model2) { ModelWithRt.create! }
+
+    it do
+      expect_any_instance_of(Sphinx::Integration::Transmitter).to receive(:replace).with([model1, model2])
+
+      ModelWithRt.transmitter_update([model1, model2])
+    end
+  end
 end

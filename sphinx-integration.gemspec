@@ -49,4 +49,5 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'simplecov'
   gem.add_development_dependency 'test-unit'
   gem.add_development_dependency 'pry-byebug'
+  gem.add_development_dependency 'test_after_commit', '>= 0.2.3', '< 0.5'
 end

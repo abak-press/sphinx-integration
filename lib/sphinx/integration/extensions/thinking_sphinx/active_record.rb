@@ -17,22 +17,34 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
       define_indexes
       transmitter.update_fields(*args, **options)
     end
+
+    def transmitter_update(batch)
+      define_indexes
+
+      transmitter.replace(batch)
+    end
   end
 
   module TransmitterCallbacks
     extend ActiveSupport::Concern
 
     included do
-      after_commit :transmitter_create, :on => :create
-      after_commit :transmitter_update, :on => :update
-      after_commit :transmitter_destroy, :on => :destroy
+      class_attribute :need_transmitter_update
+      self.need_transmitter_update = true
+
+      %i[create update].each do |action|
+        after_commit(on: action, if: :need_transmitter_update) { transmitter_update }
+      end
+
+      after_commit(on: :destroy, if: :need_transmitter_update) { transmitter_destroy }
     end
 
-    def transmitter_create
+    # обновление данных в сфинксе
+    def transmitter_update
       self.class.transmitter.replace(self)
     end
-    alias_method :transmitter_update, :transmitter_create
 
+    # удаление данных в сфинксе
     def transmitter_destroy
       self.class.transmitter.delete(self)
     end

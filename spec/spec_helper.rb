@@ -20,6 +20,7 @@ RedisClassy.redis = Redis.current
 
 require "support/helpers/sphinx_conf"
 require "request_store"
+require 'test_after_commit'
 
 RSpec.configure do |config|
   include SphinxConf
@@ -29,4 +30,7 @@ RSpec.configure do |config|
     RequestStore.clear!
     ThinkingSphinx::Configuration.instance.reset
   end
+
+  config.filter_run_including focus: true
+  config.run_all_when_everything_filtered = true
 end
