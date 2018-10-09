@@ -6,6 +6,10 @@ require 'redis-mutex'
 
 module Sphinx
   module Integration
+    extend SingleForwardable
+
+    def_delegators 'Rails.application.config.sphinx_integration', :[], :[]=, :fetch
+
     autoload :Helper, 'sphinx/integration/helper'
     autoload :Mysql, 'sphinx/integration/mysql'
     autoload :Searchd, 'sphinx/integration/searchd'
