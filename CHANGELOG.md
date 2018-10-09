@@ -1,10 +1,13 @@
+# v7.1.1
+
+* 2018-10-03 [bdff220](../../commit/bdff220) - __(Andrew N. Shalaev)__ Release v7.0.1 
+* 2018-10-03 [216e5f6](../../commit/216e5f6) - __(Andrew N. Shalaev)__ fix: disable notification about failed stop in stage 
+
 # v7.1.0
 
-* 2018-09-11 [a95ec1e](../../commit/a95ec1e) - __(TamarinEA)__ Release 7.1.0 
 * 2018-09-11 [affa47b](../../commit/affa47b) - __(TamarinEA)__ feature: log error message when error on server 
 https://jira.railsc.ru/browse/BPC-11892
 
-Release 7.1.0
 
 f
 
