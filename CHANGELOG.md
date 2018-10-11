@@ -1,3 +1,8 @@
+# v7.1.2
+
+* 2018-10-11 [69a50e8](../../commit/69a50e8) - __(Andrew N. Shalaev)__ Release v7.1.2 
+* 2018-10-11 [2ae2a3f](../../commit/2ae2a3f) - __(Andrew N. Shalaev)__ fix: not raise any errors in when trying to stop sphinx 
+
 # v7.1.1
 
 * 2018-10-03 [bdff220](../../commit/bdff220) - __(Andrew N. Shalaev)__ Release v7.0.1 
