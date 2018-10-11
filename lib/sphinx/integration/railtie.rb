@@ -38,7 +38,7 @@ module Sphinx::Integration
       end
     end
 
-    initializer "sphinx-integration.common", before: :load_config_initializers do
+    initializer "sphinx-integration.common", before: :load_config_initializers do |app|
       ::Sphinx::Integration::Container.namespace("logger") do
         register "stdout", -> do
           logger = ::Logger.new(STDOUT)
@@ -66,6 +66,8 @@ module Sphinx::Integration
           client.create_message("sadness", "#{message} on #{`hostname`}", hashtags: ["#sphinx"]) if client.config.token
         end
       end
+
+      app.config.sphinx_integration = {rebuild: {pass_sphinx_stop: false}}
     end
 
     initializer 'sphinx_integration.rspec' do
