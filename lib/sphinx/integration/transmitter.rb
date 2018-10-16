@@ -13,16 +13,18 @@ module Sphinx::Integration
 
     # Обновляет записи в сфинксе
     #
-    # records - Array
+    # records - Array of Integer | Array of AR instances
     #
     # Returns boolean
     def replace(records)
       return false if write_disabled?
 
-      records = Array.wrap(records)
+      record_ids = Array.wrap(records).map! do |item|
+        item.is_a?(klass) && item.respond_to?(:id) ? item.id : item
+      end
 
       rt_indexes.each do |index|
-        transmit(index, records)
+        transmit(index, record_ids)
       end
 
       true
@@ -89,21 +91,17 @@ module Sphinx::Integration
     # Запись объектов в rt index
     #
     # index  - ThinkingSphinx::Index
-    # records - Array
+    # records - Array of Integer
     #
     # Returns nothing
-    def transmit(index, records)
-      data = transmitted_data(index, records)
+    def transmit(index, record_ids)
+      data = transmitted_data(index, record_ids)
       return unless data
 
       index.rt.replace(data)
-      index.plain.soft_delete(records.map(&:sphinx_document_id))
+      index.plain.soft_delete(sphinx_document_ids(record_ids))
     end
-
-    def transmit_all(index, ids)
-      records = klass.where(id: ids)
-      transmit(index, records)
-    end
+    alias transmit_all transmit
 
     # Перекладывает строчки из core в rt.
     #
@@ -115,7 +113,7 @@ module Sphinx::Integration
     def retransmit(index, matching: nil, where: {})
       index.plain.find_while_exists(PRIMARY_KEY, matching: matching, where: where) do |rows|
         ids = rows.map { |row| row[PRIMARY_KEY].to_i }
-        transmit_all(index, ids)
+        transmit(index, ids)
         sleep 0.1 # empirical throttle number
       end
     end
@@ -123,15 +121,17 @@ module Sphinx::Integration
     # Данные, необходимые для записи в индекс сфинкса
     #
     # index  - ThinkingSphinx::Index
-    # records - Array
+    # records - Array of Integer
     #
     # Returns Hash
-    def transmitted_data(index, records)
-      rows = connection.select_all(prepared_sql(index, records))
+    def transmitted_data(index, record_ids)
+      rows = connection.select_all(prepared_sql(index, record_ids))
+      records = klass.where(id: record_ids) if index.mva_sources.present?
 
       rows.map! do |row|
         record = records.find { |r| r.id == row['sphinx_internal_id'].to_i }
-        row.merge!(mva_attributes(index, record))
+
+        row.merge!(mva_attributes(index, record)) if index.mva_sources.present?
 
         row.each do |key, value|
           row[key] = case index.attributes_types_map[key]
@@ -147,8 +147,8 @@ module Sphinx::Integration
       end
     end
 
-    def prepared_sql(index, records)
-      sql = index.single_query_sql.gsub(TEMPLATE_ID, records.map(&:id).join(','))
+    def prepared_sql(index, record_ids)
+      sql = index.single_query_sql.gsub(TEMPLATE_ID, record_ids.join(','))
 
       query_options = index.local_options[:with_sql]
       if query_options && (update_proc = query_options[:update]).respond_to?(:call)
@@ -164,13 +164,11 @@ module Sphinx::Integration
     #
     # Returns Hash
     def mva_attributes(index, record)
-      attrs = {}
+      return if index.mva_sources.blank?
 
-      index.mva_sources.each do |name, mva_proc|
+      index.mva_sources.each_with_object({}) do |(name, mva_proc), attrs|
         attrs[name] = mva_proc.call(record)
-      end if index.mva_sources
-
-      attrs
+      end
     end
 
     # RealTime индексы модели
@@ -201,6 +199,10 @@ module Sphinx::Integration
 
     def connection
       @connection ||= klass.connection
+    end
+
+    def sphinx_document_ids(ids)
+      ids.map { |id| id * ::ThinkingSphinx.context.indexed_models.size + klass.sphinx_offset }
     end
   end
 end
