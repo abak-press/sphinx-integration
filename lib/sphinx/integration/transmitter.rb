@@ -19,28 +19,24 @@ module Sphinx::Integration
     def replace(records)
       return false if write_disabled?
 
-      record_ids = Array.wrap(records).map! do |item|
-        item.is_a?(klass) && item.respond_to?(:id) ? item.id : item
-      end
-
-      rt_indexes.each do |index|
-        transmit(index, record_ids)
-      end
+      rt_indexes.each { |index| transmit(index, record_ids(records)) }
 
       true
     end
 
-    # Удаляет запись из сфинкса
+    # Удаляет записи из сфинкса
     #
-    # record - ActiveRecord::Base
+    # records - Array of Integer | Array of AR instances
     #
     # Returns boolean
-    def delete(record)
+    def delete(records)
       return false if write_disabled?
 
+      ids = sphinx_document_ids(record_ids(records))
+
       rt_indexes.each do |index|
-        index.rt.delete(record.sphinx_document_id)
-        index.plain.soft_delete(record.sphinx_document_id)
+        index.rt.delete(ids)
+        index.plain.soft_delete(ids)
       end
 
       true
@@ -203,6 +199,12 @@ module Sphinx::Integration
 
     def sphinx_document_ids(ids)
       ids.map { |id| id * ::ThinkingSphinx.context.indexed_models.size + klass.sphinx_offset }
+    end
+
+    def record_ids(records)
+      Array.wrap(records).map! do |item|
+        item.is_a?(klass) && item.respond_to?(:id) ? item.id : item
+      end
     end
   end
 end

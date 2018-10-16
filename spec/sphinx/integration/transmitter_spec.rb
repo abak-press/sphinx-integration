@@ -82,7 +82,8 @@ describe Sphinx::Integration::Transmitter do
     it "send valid quries to sphinx" do
       expect(client).to receive(:write).with("DELETE FROM model_with_rt_rt0 WHERE id = #{record.sphinx_document_id}")
       expect(client).to receive(:write).
-        with("UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE `id` = #{record.sphinx_document_id} AND `sphinx_deleted` = 0")
+        with("UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE `id` IN (#{record.sphinx_document_id})" \
+             " AND `sphinx_deleted` = 0")
 
       transmitter.delete(record)
     end
