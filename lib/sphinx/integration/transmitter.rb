@@ -19,14 +19,14 @@ module Sphinx::Integration
     def replace(records)
       return false if write_disabled?
 
-      rt_indexes.each { |index| transmit(index, record_ids(records)) }
+      rt_indexes.each { |index| transmit(index, Array(records)) }
 
       true
     end
 
     # Удаляет записи из сфинкса
     #
-    # records - Array of Integer | Array of AR instances
+    # records - Array of Integer
     #
     # Returns boolean
     def delete(records)
@@ -87,15 +87,15 @@ module Sphinx::Integration
     # Запись объектов в rt index
     #
     # index  - ThinkingSphinx::Index
-    # records - Array of Integer
+    # records - Array of Integer | Array of AR instances
     #
     # Returns nothing
-    def transmit(index, record_ids)
-      data = transmitted_data(index, record_ids)
+    def transmit(index, records)
+      data = transmitted_data(index, records)
       return unless data
 
       index.rt.replace(data)
-      index.plain.soft_delete(sphinx_document_ids(record_ids))
+      index.plain.soft_delete(sphinx_document_ids(records))
     end
     alias transmit_all transmit
 
@@ -117,17 +117,19 @@ module Sphinx::Integration
     # Данные, необходимые для записи в индекс сфинкса
     #
     # index  - ThinkingSphinx::Index
-    # records - Array of Integer
+    # records - Array of Integer | Array of AR instances
     #
     # Returns Hash
-    def transmitted_data(index, record_ids)
-      rows = connection.select_all(prepared_sql(index, record_ids))
-      records = klass.where(id: record_ids) if index.mva_sources.present?
+    def transmitted_data(index, records)
+      check_instance_records(records) if need_instance_records?
+
+      rows = connection.select_all(prepared_sql(index, records))
 
       rows.map! do |row|
-        record = records.find { |r| r.id == row['sphinx_internal_id'].to_i }
-
-        row.merge!(mva_attributes(index, record)) if index.mva_sources.present?
+        if need_instance_records?
+          record = records.find { |r| r.id == row['sphinx_internal_id'].to_i }
+          row.merge!(mva_attributes(index, record))
+        end
 
         row.each do |key, value|
           row[key] = case index.attributes_types_map[key]
@@ -143,13 +145,29 @@ module Sphinx::Integration
       end
     end
 
-    def prepared_sql(index, record_ids)
-      sql = index.single_query_sql.gsub(TEMPLATE_ID, record_ids.join(','))
+    def prepared_sql(index, records)
+      sql = index.query_sql.gsub(/LIMIT [0-9]+$/, '')
+      convert_sql_conditions!(sql, record_ids(records))
 
       query_options = index.local_options[:with_sql]
       if query_options && (update_proc = query_options[:update]).respond_to?(:call)
         sql = update_proc.call(sql)
       end
+
+      sql
+    end
+
+    def convert_sql_conditions!(sql, record_ids)
+      ids = if record_ids.length > 1
+              sql.gsub!(/>= \$start.*?\$end/, "= ANY(ARRAY[#{TEMPLATE_ID}])")
+              record_ids.join(',')
+            else
+              sql.gsub!(/>= \$start.*?\$end/, "= #{TEMPLATE_ID}")
+              sql << ' LIMIT 1'
+              record_ids.first
+            end
+
+      sql.gsub!(TEMPLATE_ID, ids.to_s)
 
       sql
     end
@@ -160,7 +178,7 @@ module Sphinx::Integration
     #
     # Returns Hash
     def mva_attributes(index, record)
-      return if index.mva_sources.blank?
+      return {} if index.mva_sources.blank?
 
       index.mva_sources.each_with_object({}) do |(name, mva_proc), attrs|
         attrs[name] = mva_proc.call(record)
@@ -197,14 +215,34 @@ module Sphinx::Integration
       @connection ||= klass.connection
     end
 
-    def sphinx_document_ids(ids)
-      ids.map { |id| id * ::ThinkingSphinx.context.indexed_models.size + klass.sphinx_offset }
+    def sphinx_document_ids(records)
+      records.map do |item|
+        if item.respond_to?(:sphinx_document_id)
+          item.sphinx_document_id
+        else
+          item * ::ThinkingSphinx.context.indexed_models.size + klass.sphinx_offset
+        end
+      end
+    end
+
+    def check_instance_records(records)
+      Array(records).each { |item| raise "instance of #{klass} needed" unless item.is_a?(klass) }
     end
 
     def record_ids(records)
-      Array.wrap(records).map! do |item|
-        item.is_a?(klass) && item.respond_to?(:id) ? item.id : item
-      end
+      Array(records).map { |item| item.respond_to?(:id) ? item.id : item }
+    end
+
+    ##
+    # Если определен mva_sources на индексе, то
+    # требуется массив инстансов модели класса klass, так как proc на mva_sources работает
+    # с инстансем
+    #
+
+    def need_instance_records?
+      return @_need_instance_records if defined?(@_need_instance_records)
+
+      @_need_instance_records = rt_indexes.any? { |index| index.mva_sources.present? }
     end
   end
 end

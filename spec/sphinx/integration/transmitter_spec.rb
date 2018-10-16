@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 describe Sphinx::Integration::Transmitter do
-  let(:transmitter) { described_class.new(ModelWithRt) }
   let(:record) { mock_model ModelWithRt }
+  let(:transmitter) { described_class.new(record.class) }
   let(:client) { ::ThinkingSphinx::Configuration.instance.mysql_client }
 
   before(:all) { ThinkingSphinx.context.define_indexes }
@@ -21,8 +21,6 @@ describe Sphinx::Integration::Transmitter do
   describe '#replace' do
     context 'when single result from db' do
       it "send valid quries to sphinx" do
-        expect(ModelWithRt).to receive(:where).with(id: [record.id]).and_return [record]
-
         expect(record.class.connection).to receive(:select_all).with(/^SELECT/).and_return([
           {"sphinx_internal_id" => 1, "region_id" => "123"}
         ])
@@ -33,7 +31,11 @@ describe Sphinx::Integration::Transmitter do
           with("UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE " \
                "`id` IN (#{record.sphinx_document_id}) AND `sphinx_deleted` = 0")
 
-        transmitter.replace(record.id)
+        transmitter.replace(record)
+      end
+
+      it 'rasises error if need instances' do
+        expect { transmitter.replace(record.id) }.to raise_error(/instance of ModelWithRt needed/)
       end
     end
 
@@ -58,8 +60,6 @@ describe Sphinx::Integration::Transmitter do
       end
 
       it "send valid quries to sphinx" do
-        expect(ModelWithRt).to receive(:where).with(id: [record1.id, record2.id]).and_return [record1, record2]
-
         expect(record.class.connection).to receive(:select_all).with(/^SELECT/).and_return([
           {"sphinx_internal_id" => 1, "region_id" => "123"},
           {"sphinx_internal_id" => 2, "region_id" => "123"}
@@ -73,7 +73,7 @@ describe Sphinx::Integration::Transmitter do
           with("UPDATE model_with_rt_core SET sphinx_deleted = 1" \
                " WHERE `id` IN (#{record1.sphinx_document_id}, #{record2.sphinx_document_id}) AND `sphinx_deleted` = 0")
 
-        transmitter.replace([record1.id, record2.id])
+        transmitter.replace([record1, record2])
       end
     end
   end
