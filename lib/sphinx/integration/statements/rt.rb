@@ -34,10 +34,10 @@ module Sphinx
           end
         end
 
-        def delete(document_id)
+        def delete(document_ids)
           index_names do |index_name|
             sql = ::Riddle::Query::Delete.
-              new(index_name, document_id).
+              new(index_name, Array.wrap(document_ids)).
               to_sql
 
             write(sql)

@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 describe Sphinx::Integration::Transmitter do
-  let(:transmitter) { described_class.new(ModelWithRt) }
   let(:record) { mock_model ModelWithRt }
+  let(:transmitter) { described_class.new(record.class) }
   let(:client) { ::ThinkingSphinx::Configuration.instance.mysql_client }
 
   before(:all) { ThinkingSphinx.context.define_indexes }
@@ -12,7 +12,7 @@ describe Sphinx::Integration::Transmitter do
 
     allow(record).to receive_messages(
       id: 1,
-      sphinx_document_id: 10,
+      sphinx_document_id: (1 * ::ThinkingSphinx.context.indexed_models.size + ModelWithRt.sphinx_offset),
       exists_in_sphinx?: true,
       model_with_rt_rubrics: []
     )
@@ -28,9 +28,14 @@ describe Sphinx::Integration::Transmitter do
           'REPLACE INTO model_with_rt_rt0 (`sphinx_internal_id`, `region_id`, `rubrics`) VALUES (1, 123, ())'
         )
         expect(client).to receive(:write).
-          with('UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE `id` IN (10) AND `sphinx_deleted` = 0')
+          with("UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE " \
+               "`id` IN (#{record.sphinx_document_id}) AND `sphinx_deleted` = 0")
 
         transmitter.replace(record)
+      end
+
+      it 'rasises error if need instances' do
+        expect { transmitter.replace(record.id) }.to raise_error(/instance of ModelWithRt needed/)
       end
     end
 
@@ -41,14 +46,14 @@ describe Sphinx::Integration::Transmitter do
       before do
         allow(record1).to receive_messages(
           id: 1,
-          sphinx_document_id: 10,
+          sphinx_document_id: (1 * ::ThinkingSphinx.context.indexed_models.size + ModelWithRt.sphinx_offset),
           exists_in_sphinx?: true,
           model_with_rt_rubrics: []
         )
 
         allow(record2).to receive_messages(
           id: 2,
-          sphinx_document_id: 20,
+          sphinx_document_id: (2 * ::ThinkingSphinx.context.indexed_models.size + ModelWithRt.sphinx_offset),
           exists_in_sphinx?: true,
           model_with_rt_rubrics: []
         )
@@ -65,7 +70,8 @@ describe Sphinx::Integration::Transmitter do
         )
 
         expect(client).to receive(:write).
-          with('UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE `id` IN (10, 20) AND `sphinx_deleted` = 0')
+          with("UPDATE model_with_rt_core SET sphinx_deleted = 1" \
+               " WHERE `id` IN (#{record1.sphinx_document_id}, #{record2.sphinx_document_id}) AND `sphinx_deleted` = 0")
 
         transmitter.replace([record1, record2])
       end
@@ -74,9 +80,10 @@ describe Sphinx::Integration::Transmitter do
 
   describe '#delete' do
     it "send valid quries to sphinx" do
-      expect(client).to receive(:write).with('DELETE FROM model_with_rt_rt0 WHERE id = 10')
+      expect(client).to receive(:write).with("DELETE FROM model_with_rt_rt0 WHERE id = #{record.sphinx_document_id}")
       expect(client).to receive(:write).
-        with('UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE `id` = 10 AND `sphinx_deleted` = 0')
+        with("UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE `id` IN (#{record.sphinx_document_id})" \
+             " AND `sphinx_deleted` = 0")
 
       transmitter.delete(record)
     end

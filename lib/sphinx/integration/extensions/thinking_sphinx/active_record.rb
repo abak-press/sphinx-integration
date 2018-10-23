@@ -18,10 +18,16 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
       transmitter.update_fields(*args, **options)
     end
 
-    def transmitter_update(batch)
+    def transmitter_update(ids)
       define_indexes
 
-      transmitter.replace(batch)
+      transmitter.replace(ids)
+    end
+
+    def transmitter_delete(ids)
+      define_indexes
+
+      transmitter.delete(ids)
     end
   end
 
