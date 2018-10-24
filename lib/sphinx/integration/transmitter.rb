@@ -212,7 +212,7 @@ module Sphinx::Integration
     #
 
     def connection
-      @connection ||= klass.connection
+      klass.connection
     end
 
     def sphinx_document_ids(records)
