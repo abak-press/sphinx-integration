@@ -11,6 +11,25 @@ module Sphinx::Integration
       @klass = klass
     end
 
+    # Public: Получение буферизированного трансмиттера
+    #
+    # options - Hash опции Sphinx::Integration::BufferedTransmitter
+    #
+    # Returns Sphinx::Integration::BufferedTransmitter
+    def buffered(options = {})
+      BufferedTransmitter.new(self, options)
+    end
+
+    # Public: Выполняет отложенное действие в сфинксе
+    #
+    # action  - Symbol (:replace, :delete supported)
+    # records - Array of Integer | Array of AR instances
+    #
+    # Returns String job meta id
+    def enqueue_action(action, records)
+      TransmitterJob.enqueue(klass.to_s, action, record_ids(records))
+    end
+
     # Обновляет записи в сфинксе
     #
     # records - Array of Integer | Array of AR instances
