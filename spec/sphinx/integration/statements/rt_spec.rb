@@ -6,9 +6,29 @@ describe Sphinx::Integration::Statements::Rt do
   let(:client) { ::ThinkingSphinx::Configuration.instance.mysql_client }
 
   describe "#replace" do
-    it do
-      expect(client).to receive(:write).with("REPLACE INTO model_with_rt_rt0 (`company_id`) VALUES (1)")
-      statements.replace(company_id: 1)
+    context 'when single data' do
+      it do
+        expect(client).to receive(:write).with("REPLACE INTO model_with_rt_rt0 (`company_id`) VALUES (1)")
+        statements.replace(company_id: 1)
+      end
+    end
+
+    context 'when complex data' do
+      it do
+        expect(client).to receive(:write).with(
+          "REPLACE INTO model_with_rt_rt0 (`company_id`) VALUES (1), (2), (3)"
+        )
+
+        statements.replace([{company_id: 1}, {company_id: 2}, {company_id: 3}])
+      end
+
+      context 'when heterogeneous data' do
+        it do
+          expect do
+            statements.replace([{company_id: 1}, {offer_id: 2}, {product_id: 3}])
+          end.to raise_error(/invalid schema of data/)
+        end
+      end
     end
   end
 

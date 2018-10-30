@@ -1,8 +1,8 @@
 require 'spec_helper'
 
 describe Sphinx::Integration::Transmitter do
-  let(:transmitter) { described_class.new(ModelWithRt) }
   let(:record) { mock_model ModelWithRt }
+  let(:transmitter) { described_class.new(record.class) }
   let(:client) { ::ThinkingSphinx::Configuration.instance.mysql_client }
 
   before(:all) { ThinkingSphinx.context.define_indexes }
@@ -11,28 +11,79 @@ describe Sphinx::Integration::Transmitter do
     allow(transmitter).to receive(:write_disabled?).and_return(false)
 
     allow(record).to receive_messages(
-      sphinx_document_id: 1,
+      id: 1,
+      sphinx_document_id: (1 * ::ThinkingSphinx.context.indexed_models.size + ModelWithRt.sphinx_offset),
       exists_in_sphinx?: true,
       model_with_rt_rubrics: []
     )
   end
 
   describe '#replace' do
-    it "send valid quries to sphinx" do
-      expect(record.class.connection).to receive(:execute).with(/^SELECT/).and_return([{"region_id" => "123"}])
-      expect(client).to receive(:write).with('REPLACE INTO model_with_rt_rt0 (`region_id`, `rubrics`) VALUES (123, ())')
-      expect(client).to receive(:write).
-        with('UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE `id` = 1 AND `sphinx_deleted` = 0')
+    context 'when single result from db' do
+      it "send valid quries to sphinx" do
+        expect(record.class.connection).to receive(:select_all).with(/^SELECT/).and_return([
+          {"sphinx_internal_id" => 1, "region_id" => "123"}
+        ])
+        expect(client).to receive(:write).with(
+          'REPLACE INTO model_with_rt_rt0 (`sphinx_internal_id`, `region_id`, `rubrics`) VALUES (1, 123, ())'
+        )
+        expect(client).to receive(:write).
+          with("UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE " \
+               "`id` IN (#{record.sphinx_document_id}) AND `sphinx_deleted` = 0")
 
-      transmitter.replace(record)
+        transmitter.replace(record)
+      end
+
+      it 'rasises error if need instances' do
+        expect { transmitter.replace(record.id) }.to raise_error(/instance of ModelWithRt needed/)
+      end
+    end
+
+    context 'when multi result from db' do
+      let(:record1) { mock_model ModelWithRt }
+      let(:record2) { mock_model ModelWithRt }
+
+      before do
+        allow(record1).to receive_messages(
+          id: 1,
+          sphinx_document_id: (1 * ::ThinkingSphinx.context.indexed_models.size + ModelWithRt.sphinx_offset),
+          exists_in_sphinx?: true,
+          model_with_rt_rubrics: []
+        )
+
+        allow(record2).to receive_messages(
+          id: 2,
+          sphinx_document_id: (2 * ::ThinkingSphinx.context.indexed_models.size + ModelWithRt.sphinx_offset),
+          exists_in_sphinx?: true,
+          model_with_rt_rubrics: []
+        )
+      end
+
+      it "send valid quries to sphinx" do
+        expect(record.class.connection).to receive(:select_all).with(/^SELECT/).and_return([
+          {"sphinx_internal_id" => 1, "region_id" => "123"},
+          {"sphinx_internal_id" => 2, "region_id" => "123"}
+        ])
+
+        expect(client).to receive(:write).with(
+          'REPLACE INTO model_with_rt_rt0 (`sphinx_internal_id`, `region_id`, `rubrics`) VALUES (1, 123, ()), (2, 123, ())'
+        )
+
+        expect(client).to receive(:write).
+          with("UPDATE model_with_rt_core SET sphinx_deleted = 1" \
+               " WHERE `id` IN (#{record1.sphinx_document_id}, #{record2.sphinx_document_id}) AND `sphinx_deleted` = 0")
+
+        transmitter.replace([record1, record2])
+      end
     end
   end
 
   describe '#delete' do
     it "send valid quries to sphinx" do
-      expect(client).to receive(:write).with('DELETE FROM model_with_rt_rt0 WHERE id = 1')
+      expect(client).to receive(:write).with("DELETE FROM model_with_rt_rt0 WHERE id = #{record.sphinx_document_id}")
       expect(client).to receive(:write).
-        with('UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE `id` = 1 AND `sphinx_deleted` = 0')
+        with("UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE `id` IN (#{record.sphinx_document_id})" \
+             " AND `sphinx_deleted` = 0")
 
       transmitter.delete(record)
     end

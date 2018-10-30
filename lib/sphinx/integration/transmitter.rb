@@ -11,32 +11,32 @@ module Sphinx::Integration
       @klass = klass
     end
 
-    # Обновляет запись в сфинксе
+    # Обновляет записи в сфинксе
     #
-    # record - ActiveRecord::Base
+    # records - Array of Integer | Array of AR instances
     #
     # Returns boolean
-    def replace(record)
+    def replace(records)
       return false if write_disabled?
 
-      rt_indexes.each do |index|
-        transmit(index, record)
-      end
+      rt_indexes.each { |index| transmit(index, Array(records)) }
 
       true
     end
 
-    # Удаляет запись из сфинкса
+    # Удаляет записи из сфинкса
     #
-    # record - ActiveRecord::Base
+    # records - Array of Integer
     #
     # Returns boolean
-    def delete(record)
+    def delete(records)
       return false if write_disabled?
 
+      ids = sphinx_document_ids(record_ids(records))
+
       rt_indexes.each do |index|
-        index.rt.delete(record.sphinx_document_id)
-        index.plain.soft_delete(record.sphinx_document_id)
+        index.rt.delete(ids)
+        index.plain.soft_delete(ids)
       end
 
       true
@@ -84,23 +84,20 @@ module Sphinx::Integration
 
     private
 
-    # Запись объекта в rt index
+    # Запись объектов в rt index
     #
     # index  - ThinkingSphinx::Index
-    # record - ActiveRecord::Base
+    # records - Array of Integer | Array of AR instances
     #
     # Returns nothing
-    def transmit(index, record)
-      data = transmitted_data(index, record)
-      return unless data
+    def transmit(index, records)
+      data = transmitted_data(index, records)
+      return if data.blank?
 
       index.rt.replace(data)
-      index.plain.soft_delete(record.sphinx_document_id)
+      index.plain.soft_delete(sphinx_document_ids(records))
     end
-
-    def transmit_all(index, ids)
-      klass.where(id: ids).each { |record| transmit(index, record) }
-    end
+    alias transmit_all transmit
 
     # Перекладывает строчки из core в rt.
     #
@@ -112,7 +109,7 @@ module Sphinx::Integration
     def retransmit(index, matching: nil, where: {})
       index.plain.find_while_exists(PRIMARY_KEY, matching: matching, where: where) do |rows|
         ids = rows.map { |row| row[PRIMARY_KEY].to_i }
-        transmit_all(index, ids)
+        transmit(index, ids)
         sleep 0.1 # empirical throttle number
       end
     end
@@ -120,31 +117,59 @@ module Sphinx::Integration
     # Данные, необходимые для записи в индекс сфинкса
     #
     # index  - ThinkingSphinx::Index
-    # record - ActiveRecord::Base
+    # records - Array of Integer | Array of AR instances
     #
     # Returns Hash
-    def transmitted_data(index, record)
-      sql = index.single_query_sql.gsub(TEMPLATE_ID, record.id.to_s)
+    def transmitted_data(index, records)
+      check_instance_records(records) if need_instance_records?
+
+      rows = connection.select_all(prepared_sql(index, records))
+
+      rows.map! do |row|
+        if need_instance_records?
+          record = records.find { |r| r.id == row['sphinx_internal_id'].to_i }
+          row.merge!(mva_attributes(index, record))
+        end
+
+        row.each do |key, value|
+          row[key] = case index.attributes_types_map[key]
+                     when :integer then value.to_i
+                     when :float then value.to_f
+                     when :multi then type_cast_to_multi(value)
+                     when :boolean then ActiveRecord::ConnectionAdapters::Column.value_to_boolean(value)
+                     else value
+                     end
+        end
+
+        row
+      end
+    end
+
+    def prepared_sql(index, records)
+      sql = index.query_sql.gsub(/LIMIT [0-9]+$/, '')
+      convert_sql_conditions!(sql, record_ids(records))
+
       query_options = index.local_options[:with_sql]
       if query_options && (update_proc = query_options[:update]).respond_to?(:call)
         sql = update_proc.call(sql)
       end
-      row = record.class.connection.execute(sql).first
-      return unless row
 
-      row.merge!(mva_attributes(index, record))
+      sql
+    end
 
-      row.each do |key, value|
-        row[key] = case index.attributes_types_map[key]
-                   when :integer then value.to_i
-                   when :float then value.to_f
-                   when :multi then type_cast_to_multi(value)
-                   when :boolean then ActiveRecord::ConnectionAdapters::Column.value_to_boolean(value)
-                   else value
-                   end
-      end
+    def convert_sql_conditions!(sql, record_ids)
+      ids = if record_ids.length > 1
+              sql.gsub!(/>= \$start.*?\$end/, "= ANY(ARRAY[#{TEMPLATE_ID}])")
+              record_ids.join(',')
+            else
+              sql.gsub!(/>= \$start.*?\$end/, "= #{TEMPLATE_ID}")
+              sql << ' LIMIT 1'
+              record_ids.first
+            end
 
-      row
+      sql.gsub!(TEMPLATE_ID, ids.to_s)
+
+      sql
     end
 
     # MVA data
@@ -153,13 +178,11 @@ module Sphinx::Integration
     #
     # Returns Hash
     def mva_attributes(index, record)
-      attrs = {}
+      return {} if index.mva_sources.blank?
 
-      index.mva_sources.each do |name, mva_proc|
+      index.mva_sources.each_with_object({}) do |(name, mva_proc), attrs|
         attrs[name] = mva_proc.call(record)
-      end if index.mva_sources
-
-      attrs
+      end
     end
 
     # RealTime индексы модели
@@ -182,6 +205,44 @@ module Sphinx::Integration
       else
         value
       end
+    end
+
+    ##
+    # коннекция к бд
+    #
+
+    def connection
+      klass.connection
+    end
+
+    def sphinx_document_ids(records)
+      records.map do |item|
+        if item.respond_to?(:sphinx_document_id)
+          item.sphinx_document_id
+        else
+          item * ::ThinkingSphinx.context.indexed_models.size + klass.sphinx_offset
+        end
+      end
+    end
+
+    def check_instance_records(records)
+      Array(records).each { |item| raise "instance of #{klass} needed" unless item.is_a?(klass) }
+    end
+
+    def record_ids(records)
+      Array(records).map { |item| item.respond_to?(:id) ? item.id : item }
+    end
+
+    ##
+    # Если определен mva_sources на индексе, то
+    # требуется массив инстансов модели класса klass, так как proc на mva_sources работает
+    # с инстансем
+    #
+
+    def need_instance_records?
+      return @_need_instance_records if defined?(@_need_instance_records)
+
+      @_need_instance_records = rt_indexes.any? { |index| index.mva_sources.present? }
     end
   end
 end

@@ -149,12 +149,10 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     @attributes_types_map = attributes.each_with_object({}) { |attr, memo| memo[attr.unique_name.to_s] = attr.type }
   end
 
-  def single_query_sql
-    @single_query_sql ||= sources.
+  def query_sql
+    @query_sql ||= sources.
       first.
-      to_sql(:offset => model.sphinx_offset).
-      gsub(/>= \$start.*?\$end/, "= %{ID}").
-      gsub(/LIMIT [0-9]+$/, '') + ' LIMIT 1'
+      to_sql(offset: model.sphinx_offset)
   end
 
   def mutex(lock_name)
