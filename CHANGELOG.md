@@ -1,6 +1,18 @@
+# v7.2.0
+
+* 2018-10-30 [b8a8e62](../../commit/b8a8e62) - __(Andrew N. Shalaev)__ Release v7.2.0 
+* 2018-10-29 [15db080](../../commit/15db080) - __(Andrew N. Shalaev)__ fix: not transmit if empty array from select query 
+* 2018-10-24 [c0dba2f](../../commit/c0dba2f) - __(Andrew N. Shalaev)__ fix: dont reuse connection 
+* 2018-10-18 [9d440a8](../../commit/9d440a8) - __(Andrew N. Shalaev)__ feature: transmitter job 
+* 2018-10-16 [07dfd99](../../commit/07dfd99) - __(Andrew N. Shalaev)__ fix: use single sql query for single record in transmit 
+* 2018-10-16 [d2d7694](../../commit/d2d7694) - __(Andrew N. Shalaev)__ feature: batched delete 
+* 2018-10-16 [0662a69](../../commit/0662a69) - __(Andrew N. Shalaev)__ feature: replace AR instances in arguments to primitive Integer 
+* 2018-09-28 [d4e1926](../../commit/d4e1926) - __(Andrew N. Shalaev)__ feature: conditional transmitter_update and transmitter_destroy 
+* 2018-09-24 [69a3a95](../../commit/69a3a95) - __(Andrew N. Shalaev)__ feature: allow to replace by batches 
+* 2018-08-08 [bc8f312](../../commit/bc8f312) - __(Andrew N. Shalaev)__ feature: allow to replace method send batches 
+
 # v7.1.2
 
-* 2018-10-11 [69a50e8](../../commit/69a50e8) - __(Andrew N. Shalaev)__ Release v7.1.2 
 * 2018-10-11 [2ae2a3f](../../commit/2ae2a3f) - __(Andrew N. Shalaev)__ fix: not raise any errors in when trying to stop sphinx 
 
 # v7.1.1
