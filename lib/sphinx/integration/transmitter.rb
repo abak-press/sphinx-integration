@@ -111,7 +111,7 @@ module Sphinx::Integration
     # Returns nothing
     def transmit(index, records)
       data = transmitted_data(index, records)
-      return unless data
+      return if data.blank?
 
       index.rt.replace(data)
       index.plain.soft_delete(sphinx_document_ids(records))
