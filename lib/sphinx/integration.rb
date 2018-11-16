@@ -16,6 +16,7 @@ module Sphinx
     autoload :Searchd, 'sphinx/integration/searchd'
     autoload :Decaying, 'sphinx/integration/decaying'
     autoload :Transmitter, 'sphinx/integration/transmitter'
+    autoload :BufferedTransmitter, 'sphinx/integration/buffered_transmitter'
     autoload :FastFacet, 'sphinx/integration/fast_facet'
     autoload :RecentRt, 'sphinx/integration/recent_rt'
     autoload :LastIndexingTime, 'sphinx/integration/last_indexing_time'

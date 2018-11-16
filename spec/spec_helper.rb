@@ -17,6 +17,7 @@ require 'mock_redis'
 
 Redis.current = MockRedis.new
 RedisClassy.redis = Redis.current
+Resque.redis = Redis.current
 
 require "support/helpers/sphinx_conf"
 require "request_store"

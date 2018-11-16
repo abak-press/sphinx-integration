@@ -121,4 +121,34 @@ describe Sphinx::Integration::Transmitter do
       end
     end
   end
+
+  describe '#enqueue_action' do
+    let(:record1) { mock_model ModelWithRt, id: 1 }
+    let(:record2) { mock_model ModelWithRt, id: 2 }
+
+    subject { transmitter.enqueue_action(action, [record1, record2]) }
+
+    shared_examples 'queuing action' do
+      before { subject }
+
+      it do
+        expect(Sphinx::Integration::TransmitterJob).to be_enqueued('ModelWithRt', action, [1, 2])
+      end
+    end
+
+    context 'when action is replace' do
+      let(:action) { :replace }
+      it_behaves_like 'queuing action'
+    end
+
+    context 'when action is delete' do
+      let(:action) { :delete }
+      it_behaves_like 'queuing action'
+    end
+
+    context 'when action is unknown' do
+      let(:action) { :unknown }
+      it { expect { subject }.to raise_error(ArgumentError, "Unknown action 'unknown'") }
+    end
+  end
 end
