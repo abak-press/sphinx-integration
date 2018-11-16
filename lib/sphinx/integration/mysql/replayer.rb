@@ -53,7 +53,7 @@ module Sphinx
         def replay_soft_delete_log
           logger.info "Replay #{soft_delete_log.size} queries for soft delete"
 
-          soft_delete_log.each_batch(batch_size: 5_000) do |payloads|
+          soft_delete_log.each_batch(batch_size: 1_000) do |payloads|
             ids_by_indexes = payloads.each_with_object({}) do |payload, memo|
               index_name = payload.fetch(:index_name)
               ids = (memo[index_name] ||= Set.new)
