@@ -1,6 +1,11 @@
+# v7.3.0
+
+* 2018-11-16 [a8553bc](../../commit/a8553bc) - __(Mikhail Nelaev)__ Release 7.3.0 
+* 2018-10-24 [def6e56](../../commit/def6e56) - __(Korotaev Danil)__ feat: add buffered_transmitter 
+https://jira.railsc.ru/browse/GOODS-1524
+
 # v7.2.0
 
-* 2018-10-30 [b8a8e62](../../commit/b8a8e62) - __(Andrew N. Shalaev)__ Release v7.2.0 
 * 2018-10-29 [15db080](../../commit/15db080) - __(Andrew N. Shalaev)__ fix: not transmit if empty array from select query 
 * 2018-10-24 [c0dba2f](../../commit/c0dba2f) - __(Andrew N. Shalaev)__ fix: dont reuse connection 
 * 2018-10-18 [9d440a8](../../commit/9d440a8) - __(Andrew N. Shalaev)__ feature: transmitter job 
