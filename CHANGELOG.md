@@ -1,6 +1,10 @@
+# v7.3.1
+
+* 2018-11-16 [c9c0690](../../commit/c9c0690) - __(Andrew N. Shalaev)__ Release v7.3.1 
+* 2018-11-16 [d153f52](../../commit/d153f52) - __(Andrew N. Shalaev)__ fix: timeouts of replay of soft delete log 
+
 # v7.3.0
 
-* 2018-11-16 [a8553bc](../../commit/a8553bc) - __(Mikhail Nelaev)__ Release 7.3.0 
 * 2018-10-24 [def6e56](../../commit/def6e56) - __(Korotaev Danil)__ feat: add buffered_transmitter 
 https://jira.railsc.ru/browse/GOODS-1524
 
