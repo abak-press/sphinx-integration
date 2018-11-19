@@ -57,7 +57,7 @@ module Sphinx::Integration
     def index
       log "Index sphinx"
 
-      replayer.reset
+      ::Sphinx::Integration::Mysql::Replayer.new(logger: logger).reset
 
       @indexes.each do |index|
         index.indexing do
@@ -66,7 +66,7 @@ module Sphinx::Integration
 
           if rotate? && index.rt?
             index.switch_rt
-            replayer.replay
+            ::Sphinx::Integration::ReplayerJob.enqueue(index.name)
           end
         end
       end
@@ -99,10 +99,6 @@ module Sphinx::Integration
 
     def config
       @config ||= ThinkingSphinx::Configuration.instance
-    end
-
-    def replayer
-      @replayer ||= ::Sphinx::Integration::Mysql::Replayer.new(logger: logger)
     end
 
     def log(message, severity = ::Logger::INFO)

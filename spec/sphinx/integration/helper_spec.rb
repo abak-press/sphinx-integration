@@ -18,6 +18,7 @@ describe Sphinx::Integration::Helper do
         expect(adapter).to receive(:index).with('model_with_rt_core')
         expect(::ThinkingSphinx::Configuration.instance.mysql_client).
           to receive(:write).with('TRUNCATE RTINDEX model_with_rt_rt0')
+        expect(::Sphinx::Integration::ReplayerJob).to receive(:enqueue).with('model_with_rt')
         helper.index
         expect(ModelWithRt.sphinx_indexes.first.recent_rt.current).to eq 1
       end
@@ -28,6 +29,7 @@ describe Sphinx::Integration::Helper do
         helper = described_class.new(default_options.merge(indexes: 'model_with_rt'))
         expect(adapter).to receive(:index).with('model_with_rt_core')
         expect(::ThinkingSphinx::Configuration.instance.mysql_client).to_not receive(:write)
+        expect(::Sphinx::Integration::ReplayerJob).not_to receive(:enqueue)
         helper.index
         expect(ModelWithRt.sphinx_indexes.first.recent_rt.current).to eq 0
       end
