@@ -1,6 +1,11 @@
+# v7.3.2
+
+* 2018-11-19 [926495c](../../commit/926495c) - __(Andrew N. Shalaev)__ Release  v7.3.2 
+* 2018-11-19 [5df2568](../../commit/5df2568) - __(Andrew N. Shalaev)__ fix: do not merge ids into huge list of soft delete log 
+https://jira.railsc.ru/browse/BPC-13524
+
 # v7.3.1
 
-* 2018-11-16 [c9c0690](../../commit/c9c0690) - __(Andrew N. Shalaev)__ Release v7.3.1 
 * 2018-11-16 [d153f52](../../commit/d153f52) - __(Andrew N. Shalaev)__ fix: timeouts of replay of soft delete log 
 
 # v7.3.0
