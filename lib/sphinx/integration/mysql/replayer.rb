@@ -53,7 +53,9 @@ module Sphinx
         def replay_soft_delete_log
           logger.info "Replay #{soft_delete_log.size} queries for soft delete"
 
-          soft_delete_log.each_batch(batch_size: 1_000) do |payloads|
+          # fetch from redis list by 5_000
+          soft_delete_log.each_batch(batch_size: 5_000) do |payloads|
+            # accumulate ids by index
             ids_by_indexes = payloads.each_with_object({}) do |payload, memo|
               index_name = payload.fetch(:index_name)
               ids = (memo[index_name] ||= Set.new)
@@ -65,9 +67,19 @@ module Sphinx
               end
             end
 
-            ids_by_indexes.each do |index_name, ids|
+            soft_delete(ids_by_indexes)
+          end
+        end
+
+        ##
+        # Deletes +ids_by_indexes+ by 500
+        #
+
+        def soft_delete(ids_by_indexes)
+          ids_by_indexes.each do |index_name, ids|
+            ids.each_slice(500) do |batch|
               sql = ::Sphinx::Integration::Extensions::Riddle::Query::Update.
-                new(index_name, {sphinx_deleted: 1}, {id: ids.to_a, sphinx_deleted: 0}, nil).
+                new(index_name, {sphinx_deleted: 1}, {id: batch, sphinx_deleted: 0}, nil).
                 to_sql
 
               mysql_client.write(sql)
