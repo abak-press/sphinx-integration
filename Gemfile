@@ -6,3 +6,4 @@ gem 'pg', '< 1'
 
 # Specify your gem's dependencies in ts_customizer.gemspec
 gemspec
+gem 'dry-auto_inject', '< 0.6.0'

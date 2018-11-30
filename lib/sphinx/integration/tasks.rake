@@ -43,17 +43,18 @@ namespace :sphinx do
     ).restart
   end
 
-  desc "Index Sphinx. Task args: host (default: ''), rotate (default: true), *indexes (optional)"
-  task :index, %i(host rotate) => :environment do |_, args|
+  desc "Index Sphinx. Task args: host (default: ''), rotate (default: true), log_device (default: index_log), *indexes (optional)"
+  task :index, %i(host rotate log_device) => :environment do |_, args|
     Rails.application.eager_load!
 
     rotate = %w(true yes y 1).include?(args[:rotate].presence || 'true')
+    log_device = args[:log_device].presence || 'index_log'
 
     Sphinx::Integration::Helper.new(
       host: args[:host],
       rotate: rotate,
       indexes: args.extras,
-      logger: ::Sphinx::Integration::Container["logger.index_log"]
+      logger: ::Sphinx::Integration::Container["logger.#{log_device}"]
     ).index
   end
 
