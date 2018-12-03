@@ -59,11 +59,13 @@ namespace :sphinx do
   end
 
   desc 'Rebuild Sphinx'
-  task :rebuild => ['sphinx:set_indexing_mode', :environment] do
+  task :rebuild, %i[log_device] => ['sphinx:set_indexing_mode', :environment] do |_, args|
     Rails.application.eager_load!
 
+    log_device = args[:log_device].presence || 'index_log'
+
     Sphinx::Integration::Helper.new(
-      logger: Sphinx::Integration::Container["logger.index_log"]
+      logger: Sphinx::Integration::Container["logger.#{log_device}"]
     ).rebuild
   end
 
