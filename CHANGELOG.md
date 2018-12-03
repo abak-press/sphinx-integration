@@ -1,6 +1,11 @@
+# v7.4.1
+
+* 2018-12-03 [1210069](../../commit/1210069) - __(Andrew N. Shalaev)__ Release v7.4.1 
+* 2018-12-03 [01026b3](../../commit/01026b3) - __(Andrew N. Shalaev)__ feature: configure log for sphinx:rebuild 
+https://jira.railsc.ru/browse/BPC-13333
+
 # v7.4.0
 
-* 2018-12-03 [c39ec63](../../commit/c39ec63) - __(Andrew N. Shalaev)__ Release v7.4.0 
 * 2018-11-19 [c0f3929](../../commit/c0f3929) - __(Andrew N. Shalaev)__ feature: delayed replay log 
 * 2018-11-30 [84bc7b7](../../commit/84bc7b7) - __(Andrew N. Shalaev)__ fix: dry-auto_inject < 0.6.0 
 * 2018-11-30 [004b44b](../../commit/004b44b) - __(Andrew N. Shalaev)__ feature: configure log device 
