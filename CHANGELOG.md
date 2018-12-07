@@ -1,6 +1,10 @@
+# v7.5.0
+
+* 2018-12-07 [11f8c78](../../commit/11f8c78) - __(Andrew N. Shalaev)__ Release v7.5.0 
+* 2018-12-07 [972e313](../../commit/972e313) - __(Andrew N. Shalaev)__ feature: increase timeout for replayer 
+
 # v7.4.1
 
-* 2018-12-03 [1210069](../../commit/1210069) - __(Andrew N. Shalaev)__ Release v7.4.1 
 * 2018-12-03 [01026b3](../../commit/01026b3) - __(Andrew N. Shalaev)__ feature: configure log for sphinx:rebuild 
 https://jira.railsc.ru/browse/BPC-13333
 
