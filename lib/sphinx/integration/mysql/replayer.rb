@@ -6,7 +6,9 @@ module Sphinx
       class Replayer
         include ::Sphinx::Integration::AutoInject.hash[logger: "logger.stdout"]
 
-        delegate :mysql_client, :update_log, :soft_delete_log, to: '::ThinkingSphinx::Configuration.instance'
+        TIMEOUT = 60.seconds
+
+        delegate :mysql_client, :update_log, :soft_delete_log, to: :sphinx_config
 
         # Проигрывание запросов из QueryLog
         #
@@ -85,6 +87,10 @@ module Sphinx
               mysql_client.write(sql)
             end
           end
+        end
+
+        def sphinx_config
+          @sphinx_config ||= ThinkingSphinx::Configuration.instance.tap { |config| config.mysql_read_timeout = TIMEOUT }
         end
       end
     end
