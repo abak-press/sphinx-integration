@@ -1,6 +1,10 @@
+# v7.5.1
+
+* 2018-12-10 [012a41a](../../commit/012a41a) - __(Andrew N. Shalaev)__ Release v7.5.1 
+* 2018-12-10 [4e98d15](../../commit/4e98d15) - __(Andrew N. Shalaev)__ fix: do not calculate sphinx_offset in cycle 
+
 # v7.5.0
 
-* 2018-12-07 [11f8c78](../../commit/11f8c78) - __(Andrew N. Shalaev)__ Release v7.5.0 
 * 2018-12-07 [972e313](../../commit/972e313) - __(Andrew N. Shalaev)__ feature: increase timeout for replayer 
 
 # v7.4.1
