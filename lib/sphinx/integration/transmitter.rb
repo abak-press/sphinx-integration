@@ -235,11 +235,14 @@ module Sphinx::Integration
     end
 
     def sphinx_document_ids(records)
-      records.map do |item|
+      sphinx_offset = klass.sphinx_offset
+      indexed_models_size = ::ThinkingSphinx.context.indexed_models.size
+
+      records.map! do |item|
         if item.respond_to?(:sphinx_document_id)
           item.sphinx_document_id
         else
-          item * ::ThinkingSphinx.context.indexed_models.size + klass.sphinx_offset
+          item * indexed_models_size + sphinx_offset
         end
       end
     end
