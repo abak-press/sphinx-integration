@@ -4,8 +4,6 @@ module Sphinx
   module Integration
     module HelperAdapters
       class SshProxy
-        include ::Sphinx::Integration::AutoInject.hash[logger: "logger.stdout"]
-
         DEFAULT_SSH_OPTIONS = {
           user: "sphinx",
           port: 22,
@@ -68,6 +66,10 @@ module Sphinx
           end
           raise "Error in executing #{args.inspect}" if has_errors
         end
+      end
+
+      def logger
+        @logger ||= ::Sphinx::Integration.fetch(:di)[:loggers][:stdout].call
       end
 
       class Remote < Base

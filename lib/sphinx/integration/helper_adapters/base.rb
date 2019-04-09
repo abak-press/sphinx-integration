@@ -4,15 +4,15 @@ module Sphinx
       class Base
         CORE_POSTFIX = 'core'.freeze
 
-        include ::Sphinx::Integration::AutoInject.hash[logger: "logger.stdout"]
-
         def initialize(options = {})
-          super
-
           @options = options
         end
 
         private
+
+        def logger
+          @logger ||= ::Sphinx::Integration.fetch(:di)[:loggers][:stdout].call
+        end
 
         def config
           ThinkingSphinx::Configuration.instance

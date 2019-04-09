@@ -39,35 +39,37 @@ module Sphinx::Integration
     end
 
     initializer "sphinx-integration.common", before: :load_config_initializers do |app|
-      ::Sphinx::Integration::Container.namespace("logger") do
-        register "stdout", -> do
-          logger = ::Logger.new(STDOUT)
-          logger.formatter = ::Logger::Formatter.new
-          logger.level = ::Logger.const_get(::ThinkingSphinx::Configuration.instance.log_level.upcase)
-          logger
-        end
-
-        register "sphinx_log", -> do
-          logger = ::Logger.new(::Rails.root.join("log", "sphinx.log"))
-          logger.formatter = ::Logger::Formatter.new
-          logger.level = ::Logger.const_get(::ThinkingSphinx::Configuration.instance.log_level.upcase)
-          logger
-        end
-
-        register "index_log", -> do
-          logger = ::Logger.new(::Rails.root.join("log", "index.log"))
-          logger.formatter = ::Logger::Formatter.new
-          logger.level = ::Logger::INFO
-          logger
-        end
-
-        register "notificator", ->(message) do
-          client = ::Twinkle::Client
-          client.create_message("sadness", "#{message} on #{`hostname`}", hashtags: ["#sphinx"]) if client.config.token
-        end
-      end
-
-      app.config.sphinx_integration = {rebuild: {pass_sphinx_stop: false}}
+      app.config.sphinx_integration = {
+        rebuild: {pass_sphinx_stop: false},
+        # Custom DI container
+        di: {
+          loggers: {
+            stdout: -> {
+              logger = ::Logger.new(STDOUT)
+              logger.formatter = ::Logger::Formatter.new
+              logger.level = ::Logger.const_get(::ThinkingSphinx::Configuration.instance.log_level.upcase)
+              logger
+            },
+            sphinx_file: -> {
+              logger = ::Logger.new(::Rails.root.join("log", "sphinx.log"))
+              logger.formatter = ::Logger::Formatter.new
+              logger.level = ::Logger.const_get(::ThinkingSphinx::Configuration.instance.log_level.upcase)
+              logger
+            },
+            indexer_file: -> {
+              logger = ::Logger.new(::Rails.root.join("log", "index.log"))
+              logger.formatter = ::Logger::Formatter.new
+              logger.level = ::Logger::INFO
+              logger
+            }
+          },
+          error_notificator: ->(message) {
+            client = ::Twinkle::Client
+            client.create_message("sadness", "#{message} on #{`hostname`}", hashtags: ["#sphinx"]) if client.config.token
+            client
+          }
+        }
+      }
     end
 
     initializer 'sphinx_integration.rspec' do
