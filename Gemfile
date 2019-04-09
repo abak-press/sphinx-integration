@@ -6,3 +6,7 @@ gem 'pg', '< 1'
 
 # Specify your gem's dependencies in ts_customizer.gemspec
 gemspec
+
+if RUBY_VERSION < '2.3'
+  gem 'pry-byebug', '< 3.7.0', require: false
+end

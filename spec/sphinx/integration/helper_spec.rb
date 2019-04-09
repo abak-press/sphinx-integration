@@ -41,10 +41,12 @@ describe Sphinx::Integration::Helper do
 
         allow(adapter).to receive(:index).and_raise(StandardError.new("error message"))
 
-        expect_any_instance_of(::Logger).to receive(:error).with("error message")
-        expect(Sphinx::Integration[:di][:error_notificator]).to receive(:call).with("error message")
+        expect do
+          expect_any_instance_of(::Logger).to receive(:error).with("error message")
+          expect(Sphinx::Integration[:di][:error_notificator]).to receive(:call).with("error message")
 
-        helper.index
+          helper.index
+        end.to raise_error(StandardError)
       end
     end
   end

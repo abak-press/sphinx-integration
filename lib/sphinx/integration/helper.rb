@@ -25,6 +25,7 @@ module Sphinx::Integration
 
       @options = options
       @options[:indexes] ||= []
+      @logger = options[:logger]
 
       @indexes = ::ThinkingSphinx.
         indexes.
@@ -68,6 +69,7 @@ module Sphinx::Integration
       end
     rescue StandardError => error
       log_error(error)
+      raise
     end
 
     alias_method :reindex, :index
