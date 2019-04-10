@@ -1,6 +1,11 @@
+# v7.6.0
+
+* 2019-04-09 [e942aa0](../../commit/e942aa0) - __(Andrew N. Shalaev)__ Release v7.6.0 
+* 2019-04-09 [d00e4fc](../../commit/d00e4fc) - __(Andrew N. Shalaev)__ feature: add ruby2.3 support and drop rails3.2 
+* 2019-04-09 [89bec6b](../../commit/89bec6b) - __(Andrew N. Shalaev)__ feature: remove dry-* trash 
+
 # v7.5.1
 
-* 2018-12-10 [012a41a](../../commit/012a41a) - __(Andrew N. Shalaev)__ Release v7.5.1 
 * 2018-12-10 [4e98d15](../../commit/4e98d15) - __(Andrew N. Shalaev)__ fix: do not calculate sphinx_offset in cycle 
 
 # v7.5.0
