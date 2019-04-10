@@ -48,7 +48,7 @@ namespace :sphinx do
     Rails.application.eager_load!
 
     rotate = %w(true yes y 1).include?(args[:rotate].presence || 'true')
-    log_device = args[:log_device].presence.to_sym || :indexer_file
+    log_device = args[:log_device].presence.try(:to_sym) || :indexer_file
 
     Sphinx::Integration::Helper.new(
       host: args[:host],
@@ -62,7 +62,7 @@ namespace :sphinx do
   task :rebuild, %i[log_device] => ['sphinx:set_indexing_mode', :environment] do |_, args|
     Rails.application.eager_load!
 
-    log_device = args[:log_device].presence.to_sym || :indexer_file
+    log_device = args[:log_device].presence.try(:to_sym) || :indexer_file
 
     Sphinx::Integration::Helper.new(
       logger: ::Sphinx::Integration.fetch(:di)[:loggers][log_device].call
