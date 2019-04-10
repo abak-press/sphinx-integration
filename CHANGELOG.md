@@ -1,6 +1,10 @@
+# v7.6.1
+
+* 2019-04-10 [2fbac03](../../commit/2fbac03) - __(Andrew N. Shalaev)__ Release v7.6.1 
+* 2019-04-10 [35b4b3b](../../commit/35b4b3b) - __(Andrew N. Shalaev)__ fix: undefined method to_sym 
+
 # v7.6.0
 
-* 2019-04-09 [e942aa0](../../commit/e942aa0) - __(Andrew N. Shalaev)__ Release v7.6.0 
 * 2019-04-09 [d00e4fc](../../commit/d00e4fc) - __(Andrew N. Shalaev)__ feature: add ruby2.3 support and drop rails3.2 
 * 2019-04-09 [89bec6b](../../commit/89bec6b) - __(Andrew N. Shalaev)__ feature: remove dry-* trash 
 
