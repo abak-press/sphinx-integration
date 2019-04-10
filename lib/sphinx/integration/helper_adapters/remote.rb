@@ -23,8 +23,6 @@ module Sphinx
         #           :user              - String (default: sphinx)
         #           :password          - String (optional)
         def initialize(options = {})
-          super
-
           @servers = Rye::Set.new("servers", parallel: true)
 
           ssh_options = options.slice(:user, :port, :password).select { |_, value| !value.nil? }
@@ -66,10 +64,10 @@ module Sphinx
           end
           raise "Error in executing #{args.inspect}" if has_errors
         end
-      end
 
-      def logger
-        @logger ||= ::Sphinx::Integration.fetch(:di)[:loggers][:stdout].call
+        def logger
+          @logger ||= ::Sphinx::Integration.fetch(:di)[:loggers][:stdout].call
+        end
       end
 
       class Remote < Base
