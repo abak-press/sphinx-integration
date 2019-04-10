@@ -1,6 +1,10 @@
+# v7.6.2
+
+* 2019-04-10 [8e3de7e](../../commit/8e3de7e) - __(Andrew N. Shalaev)__ Release v7.6.2 
+* 2019-04-10 [eb8a9a2](../../commit/eb8a9a2) - __(Andrew N. Shalaev)__ fix: move logger method into class 
+
 # v7.6.1
 
-* 2019-04-10 [2fbac03](../../commit/2fbac03) - __(Andrew N. Shalaev)__ Release v7.6.1 
 * 2019-04-10 [35b4b3b](../../commit/35b4b3b) - __(Andrew N. Shalaev)__ fix: undefined method to_sym 
 
 # v7.6.0
