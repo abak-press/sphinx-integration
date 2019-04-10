@@ -37,14 +37,16 @@ describe Sphinx::Integration::Helper do
 
     context "when raised exception" do
       it "logs a error" do
-        logger = spy(:logger)
-        notificator = spy(:notificator)
-        helper = described_class.new(default_options.merge(logger: logger, notificator: notificator))
+        helper = described_class.new(default_options)
 
-        expect(adapter).to receive(:index).and_raise(StandardError.new("error message"))
-        expect { helper.index }.to raise_error(StandardError)
-        expect(logger).to have_received(:error).with("error message")
-        expect(notificator).to have_received(:call).with("error message")
+        allow(adapter).to receive(:index).and_raise(StandardError.new("error message"))
+
+        expect do
+          expect_any_instance_of(::Logger).to receive(:error).with("error message")
+          expect(Sphinx::Integration[:di][:error_notificator]).to receive(:call).with("error message")
+
+          helper.index
+        end.to raise_error(StandardError)
       end
     end
   end

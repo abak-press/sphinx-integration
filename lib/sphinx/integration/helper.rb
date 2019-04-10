@@ -8,8 +8,6 @@ module Sphinx::Integration
   end
 
   class Helper
-    include ::Sphinx::Integration::AutoInject.hash["logger.notificator", logger: "logger.stdout"]
-
     %i(running? stop start suspend resume restart clean copy_config reload).each do |method_name|
       define_method(method_name) do
         begin
@@ -23,12 +21,11 @@ module Sphinx::Integration
     end
 
     def initialize(options = {})
-      super
-
       ::ThinkingSphinx.context.define_indexes
 
       @options = options
       @options[:indexes] ||= []
+      @logger = options[:logger]
 
       @indexes = ::ThinkingSphinx.
         indexes.
@@ -57,7 +54,7 @@ module Sphinx::Integration
     def index
       log "Index sphinx"
 
-      ::Sphinx::Integration::Mysql::Replayer.new(logger: logger).reset
+      ::Sphinx::Integration::Mysql::Replayer.new.reset
 
       @indexes.each do |index|
         index.indexing do
@@ -109,6 +106,14 @@ module Sphinx::Integration
       logger.error(exception.message)
       logger.debug(exception.backtrace.join("\n")) if exception.backtrace
       notificator.call(exception.message)
+    end
+
+    def logger
+      @logger ||= ::Sphinx::Integration.fetch(:di)[:loggers][:stdout].call
+    end
+
+    def notificator
+      @notificator ||= ::Sphinx::Integration.fetch(:di)[:error_notificator]
     end
   end
 end

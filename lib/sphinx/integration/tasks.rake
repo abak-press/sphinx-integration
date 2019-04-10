@@ -7,7 +7,7 @@ namespace :sphinx do
   task :start, [:host] => :environment do |_, args|
     Sphinx::Integration::Helper.new(
       host: args[:host],
-      logger: Sphinx::Integration::Container["logger.index_log"]
+      logger: ::Sphinx::Integration.fetch(:di)[:loggers][:indexer_file].call
     ).start
   end
 
@@ -15,7 +15,7 @@ namespace :sphinx do
   task :stop, [:host] => :environment do |_, args|
     Sphinx::Integration::Helper.new(
       host: args[:host],
-      logger: Sphinx::Integration::Container["logger.index_log"]
+      logger: ::Sphinx::Integration.fetch(:di)[:loggers][:indexer_file].call
     ).stop
   end
 
@@ -23,7 +23,7 @@ namespace :sphinx do
   task :suspend, [:host] => :environment do |_, args|
     Sphinx::Integration::Helper.new(
       host: args[:host],
-      logger: Sphinx::Integration::Container["logger.index_log"]
+      logger: ::Sphinx::Integration.fetch(:di)[:loggers][:indexer_file].call
     ).suspend
   end
 
@@ -31,7 +31,7 @@ namespace :sphinx do
   task :resume, [:host] => :environment do |_, args|
     Sphinx::Integration::Helper.new(
       host: args[:host],
-      logger: Sphinx::Integration::Container["logger.index_log"]
+      logger: ::Sphinx::Integration.fetch(:di)[:loggers][:indexer_file].call
     ).resume
   end
 
@@ -39,22 +39,22 @@ namespace :sphinx do
   task :restart, [:host] => :environment do |_, args|
     Sphinx::Integration::Helper.new(
       host: args[:host],
-      logger: Sphinx::Integration::Container["logger.index_log"]
+      logger: ::Sphinx::Integration.fetch(:di)[:loggers][:indexer_file].call
     ).restart
   end
 
-  desc "Index Sphinx. Task args: host (default: ''), rotate (default: true), log_device (default: index_log), *indexes (optional)"
+  desc "Index Sphinx. Task args: host (default: ''), rotate (default: true), log_device (default: indexer_file), *indexes (optional)"
   task :index, %i(host rotate log_device) => :environment do |_, args|
     Rails.application.eager_load!
 
     rotate = %w(true yes y 1).include?(args[:rotate].presence || 'true')
-    log_device = args[:log_device].presence || 'index_log'
+    log_device = args[:log_device].presence.to_sym || :indexer_file
 
     Sphinx::Integration::Helper.new(
       host: args[:host],
       rotate: rotate,
       indexes: args.extras,
-      logger: ::Sphinx::Integration::Container["logger.#{log_device}"]
+      logger: ::Sphinx::Integration.fetch(:di)[:loggers][log_device].call
     ).index
   end
 
@@ -62,10 +62,10 @@ namespace :sphinx do
   task :rebuild, %i[log_device] => ['sphinx:set_indexing_mode', :environment] do |_, args|
     Rails.application.eager_load!
 
-    log_device = args[:log_device].presence || 'index_log'
+    log_device = args[:log_device].presence.to_sym || :indexer_file
 
     Sphinx::Integration::Helper.new(
-      logger: Sphinx::Integration::Container["logger.#{log_device}"]
+      logger: ::Sphinx::Integration.fetch(:di)[:loggers][log_device].call
     ).rebuild
   end
 
@@ -87,7 +87,7 @@ namespace :sphinx do
   task :copy_conf, [:host] => :environment do |_, args|
     Sphinx::Integration::Helper.new(
       host: args[:host],
-      logger: ::Sphinx::Integration::Container["logger.index_log"]
+      logger: ::Sphinx::Integration.fetch(:di)[:loggers][:indexer_file].call
     ).copy_config
   end
 
@@ -95,7 +95,7 @@ namespace :sphinx do
   task :clean, [:host] => :environment do |_, args|
     Sphinx::Integration::Helper.new(
       host: args[:host],
-      logger: ::Sphinx::Integration::Container["logger.index_log"]
+      logger: ::Sphinx::Integration.fetch(:di)[:loggers][:indexer_file].call
     ).clean
   end
 
@@ -103,7 +103,7 @@ namespace :sphinx do
   task :reload, [:host] => :environment do |_, args|
     Sphinx::Integration::Helper.new(
       host: args[:host],
-      logger: ::Sphinx::Integration::Container["logger.index_log"]
+      logger: ::Sphinx::Integration.fetch(:di)[:loggers][:indexer_file].call
     ).reload
   end
 end

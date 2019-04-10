@@ -82,7 +82,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx
     alias_method :info, :log
 
     def logger
-      @logger ||= ::Sphinx::Integration::Container["logger.sphinx_log"]
+      @logger ||= ::Sphinx::Integration.fetch(:di)[:loggers][:sphinx_file].call
     end
   end
 end
