@@ -11,7 +11,7 @@ module Sphinx
         private
 
         def logger
-          @logger ||= ::Sphinx::Integration.fetch(:di)[:loggers][:stdout].call
+          @logger = @options[:logger] || ::Sphinx::Integration.fetch(:di)[:loggers][:stdout].call
         end
 
         def config

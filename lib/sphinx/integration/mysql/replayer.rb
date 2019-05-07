@@ -7,6 +7,11 @@ module Sphinx
         TIMEOUT = 60.seconds
 
         delegate :mysql_client, :update_log, :soft_delete_log, to: :sphinx_config
+        attr_reader :logger
+
+        def initialize(options = {})
+          @logger = options[:logger] || ::Sphinx::Integration.fetch(:di)[:loggers][:indexer_file].call
+        end
 
         # Проигрывание запросов из QueryLog
         #
@@ -89,10 +94,6 @@ module Sphinx
 
         def sphinx_config
           @sphinx_config ||= ThinkingSphinx::Configuration.instance.tap { |config| config.mysql_read_timeout = TIMEOUT }
-        end
-
-        def logger
-          @logger ||= ::Sphinx::Integration.fetch(:di)[:loggers][:stdout].call
         end
       end
     end
