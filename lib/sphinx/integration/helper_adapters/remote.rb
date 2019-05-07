@@ -23,6 +23,7 @@ module Sphinx
         #           :user              - String (default: sphinx)
         #           :password          - String (optional)
         def initialize(options = {})
+          @options = options
           @servers = Rye::Set.new("servers", parallel: true)
 
           ssh_options = options.slice(:user, :port, :password).select { |_, value| !value.nil? }
@@ -66,7 +67,7 @@ module Sphinx
         end
 
         def logger
-          @logger ||= ::Sphinx::Integration.fetch(:di)[:loggers][:stdout].call
+          @logger = @options[:logger] || ::Sphinx::Integration.fetch(:di)[:loggers][:stdout].call
         end
       end
 

@@ -31,7 +31,7 @@ module Sphinx::Integration
         indexes.
         select { |index| @options[:indexes].empty? || @options[:indexes].include?(index.name) }
 
-      adapter_options = {logger: logger, rotate: @options[:rotate]}
+      adapter_options = {logger: @logger, rotate: @options[:rotate]}
 
       @sphinx = options.fetch(:sphinx_adapter) do
         if config.remote?
