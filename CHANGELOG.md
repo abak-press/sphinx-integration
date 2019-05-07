@@ -1,6 +1,10 @@
+# v7.6.3
+
+* 2019-05-07 [e16bc68](../../commit/e16bc68) - __(Andrew N. Shalaev)__ Release v7.6.3 
+* 2019-05-07 [7c4b90f](../../commit/7c4b90f) - __(Andrew N. Shalaev)__ fix: wrong log initialization 
+
 # v7.6.2
 
-* 2019-04-10 [8e3de7e](../../commit/8e3de7e) - __(Andrew N. Shalaev)__ Release v7.6.2 
 * 2019-04-10 [eb8a9a2](../../commit/eb8a9a2) - __(Andrew N. Shalaev)__ fix: move logger method into class 
 
 # v7.6.1
