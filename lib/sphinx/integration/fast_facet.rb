@@ -1,15 +1,15 @@
-# coding: utf-8
 module Sphinx::Integration::FastFacet
   extend ActiveSupport::Concern
 
   module ClassMethods
-
     def fast_facet_ts_args(facet, ts_args = {})
-      ts_args.merge(:group => facet,
-                    :limit => ts_args[:limit] || max_matches,
-                    :page => 1,
-                    :rank_mode => :none,
-                    :match_mode => ThinkingSphinx::DEFAULT_MATCH)
+      {
+        group: facet,
+        limit: max_matches,
+        page: 1,
+        rank_mode: :none,
+        match_mode: ThinkingSphinx::DEFAULT_MATCH
+      }.merge(ts_args)
     end
 
     def fast_facet_compute_result(sph_data, ts_args = {})
@@ -37,6 +37,5 @@ module Sphinx::Integration::FastFacet
       ts_result = self.search_for_ids(query, new_ts_args)
       fast_facet_compute_result(ts_result, new_ts_args)
     end
-
   end
 end
