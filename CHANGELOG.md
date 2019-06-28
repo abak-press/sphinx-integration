@@ -1,6 +1,10 @@
+# v7.6.4
+
+* 2019-06-28 [f397787](../../commit/f397787) - __(Andrew N. Shalaev)__ Release v7.6.4 
+* 2019-06-28 [2447bb1](../../commit/2447bb1) - __(Andrew N. Shalaev)__ fix: dont override ts_args in fast_facet 
+
 # v7.6.3
 
-* 2019-05-07 [e16bc68](../../commit/e16bc68) - __(Andrew N. Shalaev)__ Release v7.6.3 
 * 2019-05-07 [7c4b90f](../../commit/7c4b90f) - __(Andrew N. Shalaev)__ fix: wrong log initialization 
 
 # v7.6.2
