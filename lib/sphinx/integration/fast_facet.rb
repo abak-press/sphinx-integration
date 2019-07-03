@@ -3,13 +3,14 @@ module Sphinx::Integration::FastFacet
 
   module ClassMethods
     def fast_facet_ts_args(facet, ts_args = {})
-      {
-        group: facet,
-        limit: max_matches,
-        page: 1,
-        rank_mode: :none,
-        match_mode: ThinkingSphinx::DEFAULT_MATCH
-      }.merge(ts_args)
+      ts_args[:page] = 1
+
+      ts_args[:group] ||= facet
+      ts_args[:limit] ||= max_matches
+      ts_args[:rank_mode] ||= :none
+      ts_args[:match_mode] ||= ThinkingSphinx::DEFAULT_MATCH
+
+      ts_args
     end
 
     def fast_facet_compute_result(sph_data, ts_args = {})
