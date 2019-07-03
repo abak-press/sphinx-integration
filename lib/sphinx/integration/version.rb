@@ -1,5 +1,5 @@
 module Sphinx
   module Integration
-    VERSION = '7.6.4'.freeze
+    VERSION = '7.6.5'.freeze
   end
 end
