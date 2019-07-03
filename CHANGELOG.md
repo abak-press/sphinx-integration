@@ -1,6 +1,11 @@
+# v7.6.5
+
+* 2019-07-03 [0990772](../../commit/0990772) - __(Andrew N. Shalaev)__ fix: constraint version of gems for ruby < v2.3 
+* 2019-07-03 [3a5b1e9](../../commit/3a5b1e9) - __(Andrew N. Shalaev)__ Release v7.6.5 
+* 2019-07-03 [e8ca015](../../commit/e8ca015) - __(Andrew N. Shalaev)__ fix: set default values in #fast_facet_ts_args 
+
 # v7.6.4
 
-* 2019-06-28 [f397787](../../commit/f397787) - __(Andrew N. Shalaev)__ Release v7.6.4 
 * 2019-06-28 [2447bb1](../../commit/2447bb1) - __(Andrew N. Shalaev)__ fix: dont override ts_args in fast_facet 
 
 # v7.6.3
