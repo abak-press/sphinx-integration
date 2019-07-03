@@ -9,4 +9,9 @@ gemspec
 
 if RUBY_VERSION < '2.3'
   gem 'pry-byebug', '< 3.7.0', require: false
+  gem 'redis', '< 4.1.2', require: false
+end
+
+if RUBY_VERSION < '2.4'
+  gem 'mock_redis', '< 0.21', require: false
 end
