@@ -10,10 +10,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
     alias_method_chain :reset, :integration
     alias_method_chain :parse_config, :integration
     alias_method_chain :enforce_common_attribute_types, :rt
-
-    def initial_model_directories
-      []
-    end
+    alias_method_chain :initial_model_directories, :integration
   end
 
   def mysql_client
@@ -34,6 +31,10 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
 
   def shuffled_addresses_with_integration
     Array.wrap(address)
+  end
+
+  def initial_model_directories_with_integration
+    []
   end
 
   # Находится ли sphinx на другой машине
