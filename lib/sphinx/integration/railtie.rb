@@ -5,13 +5,11 @@ require 'sphinx-integration'
 
 module Sphinx::Integration
   class Railtie < Rails::Railtie
-    initializer "sphinx_integration.sphinx", before: "thinking_sphinx.sphinx" do
-      ThinkingSphinx::AutoVersion.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::AutoVersion
-    end
-
-    initializer 'sphinx_integration.configuration', :before => 'thinking_sphinx.set_app_root' do
-      ThinkingSphinx::Configuration.send :include, Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
+    initializer 'sphinx_integration.configuration', before: 'thinking_sphinx.sphinx' do
+      ThinkingSphinx::Configuration.include Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
       ThinkingSphinx.database_adapter = :postgresql
+
+      ThinkingSphinx::AutoVersion.include Sphinx::Integration::Extensions::ThinkingSphinx::AutoVersion
     end
 
     initializer 'sphinx_integration.extensions', :after => 'thinking_sphinx.set_app_root' do
