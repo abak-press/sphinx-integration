@@ -1,7 +1,11 @@
+# v7.6.6
+
+* 2019-08-30 [f9501d5](../../commit/f9501d5) - __(TamarinEA)__ Release 7.6.6 
+* 2019-07-23 [e0b660b](../../commit/e0b660b) - __(Andrew N. Shalaev)__ feature: rails4.1-4.2 support 
+
 # v7.6.5
 
 * 2019-07-03 [0990772](../../commit/0990772) - __(Andrew N. Shalaev)__ fix: constraint version of gems for ruby < v2.3 
-* 2019-07-03 [3a5b1e9](../../commit/3a5b1e9) - __(Andrew N. Shalaev)__ Release v7.6.5 
 * 2019-07-03 [e8ca015](../../commit/e8ca015) - __(Andrew N. Shalaev)__ fix: set default values in #fast_facet_ts_args 
 
 # v7.6.4
