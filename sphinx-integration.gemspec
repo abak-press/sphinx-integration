@@ -32,6 +32,7 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency 'request_store', '>= 1.2.1'
   gem.add_runtime_dependency 'twinkle-client', '>= 0.2.0'
   gem.add_runtime_dependency 'resque-integration', '>= 3.5.0'
+  gem.add_runtime_dependency 'string_tools', '>= 0.9.0'
 
   gem.add_development_dependency 'rake', '>= 10.1.0'
   gem.add_development_dependency 'bundler', '>= 1.6'

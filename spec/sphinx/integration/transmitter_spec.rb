@@ -22,10 +22,11 @@ describe Sphinx::Integration::Transmitter do
     context 'when single result from db' do
       it "send valid quries to sphinx" do
         expect(record.class.connection).to receive(:select_all).with(/^SELECT/).and_return([
-          {"sphinx_internal_id" => 1, "region_id" => "123"}
+          {'sphinx_internal_id' => 1, 'region_id' => '123', 'has_region' => 't'}
         ])
         expect(client).to receive(:write).with(
-          'REPLACE INTO model_with_rt_rt0 (`sphinx_internal_id`, `region_id`, `rubrics`) VALUES (1, 123, ())'
+          'REPLACE INTO model_with_rt_rt0 (`sphinx_internal_id`, `region_id`, `has_region`, `rubrics`)' \
+            ' VALUES (1, 123, 1, ())'
         )
         expect(client).to receive(:write).
           with("UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE " \
@@ -61,12 +62,13 @@ describe Sphinx::Integration::Transmitter do
 
       it "send valid quries to sphinx" do
         expect(record.class.connection).to receive(:select_all).with(/^SELECT/).and_return([
-          {"sphinx_internal_id" => 1, "region_id" => "123"},
-          {"sphinx_internal_id" => 2, "region_id" => "123"}
+          {'sphinx_internal_id' => 1, 'region_id' => '123', 'has_region' => 't'},
+          {'sphinx_internal_id' => 2, 'region_id' => '123', 'has_region' => 'f'}
         ])
 
         expect(client).to receive(:write).with(
-          'REPLACE INTO model_with_rt_rt0 (`sphinx_internal_id`, `region_id`, `rubrics`) VALUES (1, 123, ()), (2, 123, ())'
+          'REPLACE INTO model_with_rt_rt0 (`sphinx_internal_id`, `region_id`, `has_region`, `rubrics`)' \
+            ' VALUES (1, 123, 1, ()), (2, 123, 0, ())'
         )
 
         expect(client).to receive(:write).
