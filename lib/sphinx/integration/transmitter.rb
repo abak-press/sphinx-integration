@@ -155,7 +155,7 @@ module Sphinx::Integration
                      when :integer then value.to_i
                      when :float then value.to_f
                      when :multi then type_cast_to_multi(value)
-                     when :boolean then ActiveRecord::ConnectionAdapters::Column.value_to_boolean(value)
+                     when :boolean then ::StringTools::String.new(value).to_b
                      else value
                      end
         end

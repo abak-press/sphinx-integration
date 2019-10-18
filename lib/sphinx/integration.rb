@@ -2,6 +2,7 @@ require 'active_support/all'
 require 'redis'
 require 'redis-mutex'
 require 'resque-integration'
+require 'string_tools'
 
 module Sphinx
   module Integration
