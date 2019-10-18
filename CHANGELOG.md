@@ -1,6 +1,10 @@
+# v7.6.7
+
+* 2019-10-18 [30c3e5d](../../commit/30c3e5d) - __(TamarinEA)__ Release 7.6.7 
+* 2019-10-18 [c645654](../../commit/c645654) - __(TamarinEA)__ fix: do not use value to boolean from rails 
+
 # v7.6.6
 
-* 2019-08-30 [f9501d5](../../commit/f9501d5) - __(TamarinEA)__ Release 7.6.6 
 * 2019-07-23 [e0b660b](../../commit/e0b660b) - __(Andrew N. Shalaev)__ feature: rails4.1-4.2 support 
 
 # v7.6.5
