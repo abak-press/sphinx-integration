@@ -24,7 +24,6 @@ module Sphinx
     autoload :Server, 'sphinx/integration/server'
     autoload :ServerStatus, 'sphinx/integration/server_status'
     autoload :TransmitterJob, 'sphinx/integration/transmitter_job'
-    autoload :ReplayerJob, 'sphinx/integration/replayer_job'
   end
 end
 
