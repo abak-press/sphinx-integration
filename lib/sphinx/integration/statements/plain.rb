@@ -5,14 +5,14 @@ module Sphinx
         delegate :update_log, :soft_delete_log, to: '::ThinkingSphinx::Configuration.instance'
 
         def update(*)
-          super do |_index_name, sql|
-            update_log.add(query: sql) if @index.indexing?
+          super do |index_name, sql|
+            update_log.add(index_name, query: sql) if @index.indexing?
           end
         end
 
         def soft_delete(document_id)
           super do |index_name, _sql|
-            soft_delete_log.add(index_name: index_name, document_id: document_id) if @index.indexing?
+            soft_delete_log.add(index_name, document_id: document_id) if @index.indexing?
           end
         end
 

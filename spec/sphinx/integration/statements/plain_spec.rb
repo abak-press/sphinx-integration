@@ -15,7 +15,7 @@ describe Sphinx::Integration::Statements::Plain do
           statements.update({company_id: 1}, where: {id: 1})
         end
 
-        expect(::ThinkingSphinx::Configuration.instance.update_log.size).to eq 1
+        expect(::ThinkingSphinx::Configuration.instance.update_log.size(index.core_name)).to eq 1
       end
     end
 
@@ -26,7 +26,7 @@ describe Sphinx::Integration::Statements::Plain do
 
         statements.update({company_id: 1}, where: {id: 1})
 
-        expect(::ThinkingSphinx::Configuration.instance.update_log.size).to eq 0
+        expect(::ThinkingSphinx::Configuration.instance.update_log.size(index.core_name)).to eq 0
       end
     end
   end
@@ -41,7 +41,7 @@ describe Sphinx::Integration::Statements::Plain do
           statements.soft_delete(1)
         end
 
-        expect(::ThinkingSphinx::Configuration.instance.soft_delete_log.size).to eq 1
+        expect(::ThinkingSphinx::Configuration.instance.soft_delete_log.size(index.core_name)).to eq 1
       end
     end
 
@@ -52,7 +52,7 @@ describe Sphinx::Integration::Statements::Plain do
 
         statements.soft_delete(1)
 
-        expect(::ThinkingSphinx::Configuration.instance.soft_delete_log.size).to eq 0
+        expect(::ThinkingSphinx::Configuration.instance.soft_delete_log.size(index.core_name)).to eq 0
       end
     end
   end

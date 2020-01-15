@@ -13,12 +13,12 @@ module Sphinx
           raise ArgumentError if @namespace.empty?
         end
 
-        def add(payload)
-          redis_client.rpush(redis_key, encode(payload))
+        def add(index_name, payload)
+          redis_client.rpush(redis_key(index_name), encode(payload))
         end
 
-        def each_batch(batch_size:)
-          key = redis_key
+        def each_batch(index_name, batch_size:)
+          key = redis_key(index_name)
           redis = redis_client
           range_stop = batch_size - 1
 
@@ -29,12 +29,12 @@ module Sphinx
           end
         end
 
-        def reset
-          redis_client.del(redis_key)
+        def reset(index_name)
+          redis_client.del(redis_key(index_name))
         end
 
-        def size
-          redis_client.llen(redis_key)
+        def size(index_name)
+          redis_client.llen(redis_key(index_name))
         end
 
         private
@@ -43,8 +43,8 @@ module Sphinx
           @redis_client ||= Redis.current
         end
 
-        def redis_key
-          @redis_key ||= "#{ROOT_REDIS_KEY}:#{@namespace}"
+        def redis_key(index_name)
+          "#{ROOT_REDIS_KEY}:#{@namespace}:#{index_name}"
         end
 
         def encode(payload)
