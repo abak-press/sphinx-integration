@@ -7,11 +7,7 @@ module Sphinx
       unique
 
       def self.execute(index_name)
-        replayer = ::Sphinx::Integration::Mysql::Replayer.new(
-          logger: ::Sphinx::Integration.fetch(:di)[:loggers][:indexer_file].call
-        )
-
-        replayer.replay
+        ::Sphinx::Integration::Mysql::Replayer.new(index_name).replay
       end
     end
   end

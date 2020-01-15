@@ -16,8 +16,8 @@ describe Sphinx::Integration::Mysql::Replayer do
         index.plain.soft_delete(20)
       end
 
-      expect(config.update_log.size).to eq 1
-      expect(config.soft_delete_log.size).to eq 1
+      expect(config.update_log.size(index.core_name)).to eq 1
+      expect(config.soft_delete_log.size(index.core_name)).to eq 1
 
       expect(mysql_client).to receive(:batch_write) do |queries|
         expect(queries.size).to eq 1
@@ -26,10 +26,10 @@ describe Sphinx::Integration::Mysql::Replayer do
 
       expect(mysql_client).to receive(:execute).with(/UPDATE model_with_rt_core SET sphinx_deleted/, any_args)
 
-      ::Sphinx::Integration::Mysql::Replayer.new.replay
+      ::Sphinx::Integration::Mysql::Replayer.new(index.core_name).replay
 
-      expect(config.update_log.size).to eq 0
-      expect(config.soft_delete_log.size).to eq 0
+      expect(config.update_log.size(index.core_name)).to eq 0
+      expect(config.soft_delete_log.size(index.core_name)).to eq 0
     end
   end
 end
