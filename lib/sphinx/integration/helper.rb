@@ -61,9 +61,10 @@ module Sphinx::Integration
           @sphinx.index(index.core_name)
           index.last_indexing_time.write
 
-          index.switch_rt if rotate? && index.rt?
-
-          ::Sphinx::Integration::Mysql::Replayer.new.replay if index.rt?
+          if rotate? && index.rt?
+            index.switch_rt
+            ::Sphinx::Integration::ReplayerJob.enqueue(index.name)
+          end
         end
       end
     rescue StandardError => error
