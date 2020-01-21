@@ -1,6 +1,14 @@
+# v7.7.0
+
+* 2020-01-21 [dc1b1ca](../../commit/dc1b1ca) - __(TamarinEA)__ Release 7.7.0 
+* 2020-01-15 [36b6b6c](../../commit/36b6b6c) - __(TamarinEA)__ fix: split replayer by index name 
+https://jira.railsc.ru/browse/GOODS-2176
+
+* 2020-01-15 [8d20570](../../commit/8d20570) - __(TamarinEA)__ chore: lock public_suffix 
+* 2020-01-13 [f9a93f7](../../commit/f9a93f7) - __(TamarinEA)__ chore: lock redis-namespace 
+
 # v7.6.7
 
-* 2019-10-18 [30c3e5d](../../commit/30c3e5d) - __(TamarinEA)__ Release 7.6.7 
 * 2019-10-18 [c645654](../../commit/c645654) - __(TamarinEA)__ fix: do not use value to boolean from rails 
 
 # v7.6.6
