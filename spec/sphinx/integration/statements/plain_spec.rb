@@ -6,54 +6,20 @@ describe Sphinx::Integration::Statements::Plain do
   let(:client) { ::ThinkingSphinx::Configuration.instance.mysql_client }
 
   describe "#update" do
-    context 'when indexing' do
-      it do
-        expect(client).to receive(:write).
-          with("UPDATE model_with_rt_core SET company_id = 1 WHERE `id` = 1 AND `sphinx_deleted` = 0")
+    it do
+      expect(client).to_not receive(:write)
 
-        index.indexing do
-          statements.update({company_id: 1}, where: {id: 1})
-        end
-
-        expect(::ThinkingSphinx::Configuration.instance.update_log.size(index.core_name)).to eq 1
-      end
-    end
-
-    context 'when not indexing' do
-      it do
-        expect(client).to receive(:write).
-          with("UPDATE model_with_rt_core SET company_id = 1 WHERE `id` = 1 AND `sphinx_deleted` = 0")
-
-        statements.update({company_id: 1}, where: {id: 1})
-
-        expect(::ThinkingSphinx::Configuration.instance.update_log.size(index.core_name)).to eq 0
-      end
+      expect { statements.update({company_id: 1}, where: {id: 1}) }.
+        to change { ::ThinkingSphinx::Configuration.instance.update_log.size(index.core_name) }.by(1)
     end
   end
 
   describe "#soft_delete" do
-    context 'when indexing' do
-      it do
-        expect(client).to receive(:write).
-          with("UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE `id` = 1 AND `sphinx_deleted` = 0")
+    it do
+      expect(client).to_not receive(:write)
 
-        index.indexing do
-          statements.soft_delete(1)
-        end
-
-        expect(::ThinkingSphinx::Configuration.instance.soft_delete_log.size(index.core_name)).to eq 1
-      end
-    end
-
-    context 'when not indexing' do
-      it do
-        expect(client).to receive(:write).
-          with("UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE `id` = 1 AND `sphinx_deleted` = 0")
-
-        statements.soft_delete(1)
-
-        expect(::ThinkingSphinx::Configuration.instance.soft_delete_log.size(index.core_name)).to eq 0
-      end
+      expect { statements.soft_delete(1) }.
+        to change { ::ThinkingSphinx::Configuration.instance.soft_delete_log.size(index.core_name) }.by(1)
     end
   end
 end

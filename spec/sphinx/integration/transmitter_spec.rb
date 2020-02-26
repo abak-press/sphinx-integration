@@ -4,6 +4,7 @@ describe Sphinx::Integration::Transmitter do
   let(:record) { mock_model ModelWithRt }
   let(:transmitter) { described_class.new(record.class) }
   let(:client) { ::ThinkingSphinx::Configuration.instance.mysql_client }
+  let(:plain_index) { record.class.sphinx_indexes.find(&:rt?).plain }
 
   before(:all) { ThinkingSphinx.context.define_indexes }
 
@@ -89,6 +90,21 @@ describe Sphinx::Integration::Transmitter do
 
       transmitter.delete(record)
     end
+
+    context 'when indexing' do
+      it do
+        expect(client).to receive(:write).with("DELETE FROM model_with_rt_rt0 WHERE id = #{record.sphinx_document_id}")
+        expect(client).to receive(:write).with("DELETE FROM model_with_rt_rt1 WHERE id = #{record.sphinx_document_id}")
+        expect(client).to receive(:write).
+          with("UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE `id` IN (#{record.sphinx_document_id})" \
+               " AND `sphinx_deleted` = 0")
+        expect(plain_index).to receive(:soft_delete).with([record.sphinx_document_id]).ordered
+
+        ModelWithRt.sphinx_indexes.first.indexing do
+          transmitter.delete(record)
+        end
+      end
+    end
   end
 
   describe '#update' do
@@ -102,11 +118,9 @@ describe Sphinx::Integration::Transmitter do
     context 'when indexing' do
       it do
         expect(client).to receive(:write).
-          with("UPDATE model_with_rt_rt0 SET field = 2 WHERE MATCH('@id_idx 1') AND `id` = 1 AND `sphinx_deleted` = 0")
-        expect(client).to receive(:write).
-          with("UPDATE model_with_rt_rt1 SET field = 2 WHERE MATCH('@id_idx 1') AND `id` = 1 AND `sphinx_deleted` = 0")
-        expect(client).to receive(:write).
-          with("UPDATE model_with_rt_core SET field = 2 WHERE MATCH('@id_idx 1') AND `id` = 1 AND `sphinx_deleted` = 0")
+          with("UPDATE model_with_rt SET field = 2 WHERE MATCH('@id_idx 1') AND `id` = 1 AND `sphinx_deleted` = 0")
+        expect(plain_index).
+          to receive(:update).with({field: 2}, matching: "@id_idx 1", where: {id: 1, sphinx_deleted: 0})
 
         ModelWithRt.sphinx_indexes.first.indexing do
           transmitter.update_fields({field: 2}, matching: "@id_idx 1", id: 1)

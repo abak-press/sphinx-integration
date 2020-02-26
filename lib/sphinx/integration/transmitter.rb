@@ -55,7 +55,8 @@ module Sphinx::Integration
 
       rt_indexes.each do |index|
         index.rt.delete(ids)
-        index.plain.soft_delete(ids)
+        index.core.soft_delete(ids)
+        index.plain.soft_delete(ids) if index.indexing?
       end
 
       true
@@ -90,14 +91,8 @@ module Sphinx::Integration
       return if write_disabled?
 
       rt_indexes.each do |index|
-        if index.indexing?
-          # Вначале обновим все что уже есть в rt.
-          index.rt.update(data, matching: matching, where: where)
-          # Обновим всё в core и этот запрос запишется в query log, который потом повторится после ротации.
-          index.plain.update(data, matching: matching, where: where)
-        else
-          index.distributed.update(data, matching: matching, where: where)
-        end
+        index.distributed.update(data, matching: matching, where: where)
+        index.plain.update(data, matching: matching, where: where) if index.indexing?
       end
     end
 
@@ -114,7 +109,7 @@ module Sphinx::Integration
       return if data.blank?
 
       index.rt.replace(data)
-      index.plain.soft_delete(sphinx_document_ids(records))
+      index.core.soft_delete(sphinx_document_ids(records))
     end
     alias transmit_all transmit
 

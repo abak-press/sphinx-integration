@@ -188,6 +188,10 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     @plain ||= ::Sphinx::Integration::Statements::Plain.new(self)
   end
 
+  def core
+    @core ||= ::Sphinx::Integration::Statements::Core.new(self)
+  end
+
   def rt
     @rt ||= ::Sphinx::Integration::Statements::Rt.new(self)
   end
