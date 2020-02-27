@@ -56,7 +56,11 @@ module Sphinx::Integration
       rt_indexes.each do |index|
         index.rt.delete(ids)
         index.core.soft_delete(ids)
-        index.plain.soft_delete(ids) if index.indexing?
+
+        if index.indexing?
+          index.plain.soft_delete(ids)
+          prev_rt_delete(index, ids)
+        end
       end
 
       true
@@ -108,8 +112,12 @@ module Sphinx::Integration
       data = transmitted_data(index, records)
       return if data.blank?
 
+      ids = sphinx_document_ids(records)
+
       index.rt.replace(data)
-      index.core.soft_delete(sphinx_document_ids(records))
+      index.core.soft_delete(ids)
+
+      prev_rt_delete(index, ids) if index.indexing?
     end
     alias transmit_all transmit
 
@@ -260,6 +268,10 @@ module Sphinx::Integration
       return @_need_instance_records if defined?(@_need_instance_records)
 
       @_need_instance_records = rt_indexes.any? { |index| index.mva_sources.present? }
+    end
+
+    def prev_rt_delete(index, ids)
+      index.rt.within_partition(index.recent_rt.prev) { |prev_index| prev_index.delete(ids) }
     end
   end
 end

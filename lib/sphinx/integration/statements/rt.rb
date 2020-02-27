@@ -22,51 +22,38 @@ module Sphinx
           raise ArgumentError.new('invalid schema of data') unless query_data.all? { |item| item.keys == query_keys }
           query_values = query_data.map!(&:values)
 
-          index_names do |index_name|
-            sql = ::Riddle::Query::Insert.
-              new(index_name, query_keys, query_values).
-              replace!.
-              to_sql
+          sql = ::Riddle::Query::Insert.
+            new(index_name, query_keys, query_values).
+            replace!.
+            to_sql
 
-            write(sql)
+          write(sql)
 
-            yield(index_name, sql) if block_given?
-          end
+          yield(sql) if block_given?
         end
 
         def delete(document_ids)
-          index_names do |index_name|
-            sql = ::Riddle::Query::Delete.
-              new(index_name, Array.wrap(document_ids)).
-              to_sql
+          sql = ::Riddle::Query::Delete.
+            new(index_name, Array.wrap(document_ids)).
+            to_sql
 
-            write(sql)
+          write(sql)
 
-            yield(index_name, sql) if block_given?
-          end
+          yield(index_name, sql) if block_given?
         end
 
         def truncate
-          index_names do |index_name|
-            write("TRUNCATE RTINDEX #{index_name}")
-          end
+          write("TRUNCATE RTINDEX #{index_name}")
         end
 
         private
 
-        def index_names
+        def index_name
           if @partition
-            yield @index.rt_name(@partition)
-          elsif @index.indexing?
-            yield @index.rt_name(0)
-            yield @index.rt_name(1)
+            @index.rt_name(@partition)
           else
-            yield first_index_name
+            @index.rt_name
           end
-        end
-
-        def first_index_name
-          @index.rt_name
         end
       end
     end

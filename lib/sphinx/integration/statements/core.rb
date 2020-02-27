@@ -4,11 +4,7 @@ module Sphinx
       class Core < Distributed
         private
 
-        def index_names
-          yield first_index_name
-        end
-
-        def first_index_name
+        def index_name
           @index.core_name
         end
       end

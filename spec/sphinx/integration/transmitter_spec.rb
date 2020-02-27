@@ -36,6 +36,27 @@ describe Sphinx::Integration::Transmitter do
         transmitter.replace(record)
       end
 
+      context 'when indexing' do
+        it do
+          expect(record.class.connection).to receive(:select_all).with(/^SELECT/).and_return([
+            {'sphinx_internal_id' => 1, 'region_id' => '123', 'has_region' => 't'}
+           ])
+          expect(client).to receive(:write).with(
+            'REPLACE INTO model_with_rt_rt0 (`sphinx_internal_id`, `region_id`, `has_region`, `rubrics`)' \
+              ' VALUES (1, 123, 1, ())'
+          )
+          expect(client).to receive(:write).
+            with("UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE " \
+               "`id` IN (#{record.sphinx_document_id}) AND `sphinx_deleted` = 0")
+          expect(client).
+            to receive(:write).with("DELETE FROM model_with_rt_rt1 WHERE id = #{record.sphinx_document_id}")
+
+          ModelWithRt.sphinx_indexes.first.indexing do
+            transmitter.replace(record)
+          end
+        end
+      end
+
       it 'rasises error if need instances' do
         expect { transmitter.replace(record.id) }.to raise_error(/instance of ModelWithRt needed/)
       end
