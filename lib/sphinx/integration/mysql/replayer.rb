@@ -5,6 +5,8 @@ module Sphinx
     module Mysql
       class Replayer
         TIMEOUT = 60.seconds
+        UPDATE_BATCH_SIZE = 50
+        SOFT_DELETE_BATCH_SIZE = 500
 
         delegate :mysql_client, :update_log, :soft_delete_log, to: :sphinx_config
         attr_reader :logger
@@ -31,12 +33,13 @@ module Sphinx
         #    но это не страшно, так как это уже не имеет никакого значения.
         def replay
           replay_soft_delete_log
+          replay_soft_delete_from_rt
           replay_update_log
-          logger.info "Replaying was finished"
+          logger.info "Replaying of #{@index_name} was finished"
         end
 
         def reset
-          logger.info "Reset query logs"
+          logger.info "Reset #{@index_name} query logs"
           update_log.reset(@index_name)
           soft_delete_log.reset(@index_name)
         end
@@ -44,23 +47,26 @@ module Sphinx
         private
 
         def replay_update_log
-          logger.info "Replay #{update_log.size(@index_name)} queries for update"
+          logger.info "Replay #{update_log.size(@index_name)} #{@index_name} queries for update"
 
           count = 0
-          update_log.each_batch(@index_name, batch_size: 50) do |payloads|
+
+          update_log.each_batch(@index_name, batch_size: UPDATE_BATCH_SIZE) do |payloads|
             queries = payloads.map { |payload| payload.fetch(:query) }
             mysql_client.batch_write(queries)
+
             count += queries.size
           end
 
-          logger.info "Replayed total #{count} queries for update"
+          logger.info "Replayed total #{count} #{@index_name} queries for update"
         end
 
         def replay_soft_delete_log
-          logger.info "Replay #{soft_delete_log.size(@index_name)} queries for soft delete"
+          logger.info "Replay #{soft_delete_log.size(@index_name)} #{@index_name} queries for soft delete"
 
-          # fetch from redis list by 5_000
-          soft_delete_log.each_batch(@index_name, batch_size: 5_000) do |payloads|
+          count = 0
+
+          soft_delete_log.each_batch(@index_name, batch_size: SOFT_DELETE_BATCH_SIZE) do |payloads|
             ids = Set.new
 
             payloads.each do |payload|
@@ -71,22 +77,36 @@ module Sphinx
               end
             end
 
-            soft_delete(ids)
+            ids.each_slice(SOFT_DELETE_BATCH_SIZE) { |batch| soft_delete(batch) }
+
+            count += ids.size
           end
+
+          logger.info "Replayed total #{count} #{@index_name} queries for soft delete"
         end
 
-        ##
-        # Deletes +ids_by_indexes+ by 500
-        #
+        def replay_soft_delete_from_rt
+          rt_index = ThinkingSphinx.indexes.find { |index| index.core_name == @index_name }.rt
+
+          logger.info "Replay #{@index_name} soft delete from rt"
+
+          count = 0
+
+          rt_index.find_in_batches(primary_key: 'id', batch_size: SOFT_DELETE_BATCH_SIZE) do |ids|
+            soft_delete(ids.map { |id| id['id'] })
+
+            count += ids.size
+          end
+
+          logger.info "Replayed total #{count} #{@index_name} soft delete from rt"
+        end
 
         def soft_delete(ids)
-          ids.each_slice(500) do |batch|
-            sql = ::Sphinx::Integration::Extensions::Riddle::Query::Update.
-              new(@index_name, {sphinx_deleted: 1}, {id: batch, sphinx_deleted: 0}, nil).
-              to_sql
+          sql = ::Sphinx::Integration::Extensions::Riddle::Query::Update.
+            new(@index_name, {sphinx_deleted: 1}, {id: ids, sphinx_deleted: 0}, nil).
+            to_sql
 
-            mysql_client.write(sql)
-          end
+          mysql_client.write(sql)
         end
 
         def sphinx_config
