@@ -75,12 +75,20 @@ describe ThinkingSphinx::Index do
   describe '#switch_rt' do
     it 'flips current partition' do
       expect(index.rt_name).to eq 'model_with_disk_rt0'
-      expect(::ThinkingSphinx::Configuration.instance.mysql_client).
-        to receive(:write).with('TRUNCATE RTINDEX model_with_disk_rt0')
 
       index.switch_rt
 
       expect(index.rt_name).to eq 'model_with_disk_rt1'
+    end
+  end
+
+  describe '#truncate_prev_rt' do
+    it do
+      expect(index.rt_name).to eq 'model_with_disk_rt0'
+      expect(::ThinkingSphinx::Configuration.instance.mysql_client).
+        to receive(:write).with('TRUNCATE RTINDEX model_with_disk_rt1')
+
+      index.truncate_prev_rt
     end
   end
 end

@@ -55,15 +55,20 @@ module Sphinx::Integration
       log "Index sphinx"
 
       @indexes.each do |index|
-        ::Sphinx::Integration::Mysql::Replayer.new(index.core_name).reset
+        rotate_index = rotate? && index.rt?
 
-        index.indexing do
+        ::Sphinx::Integration::Mysql::Replayer.new(index.core_name).reset if rotate_index
+
+        index.indexing(need_lock: rotate_index) do
+          index.switch_rt if rotate_index
+
           @sphinx.index(index.core_name)
           index.last_indexing_time.write
+        end
 
-          index.switch_rt if rotate? && index.rt?
-
-          ::Sphinx::Integration::ReplayerJob.enqueue(index.core_name) if index.rt?
+        if rotate_index
+          index.truncate_prev_rt
+          ::Sphinx::Integration::ReplayerJob.enqueue(index.core_name)
         end
       end
     rescue StandardError => error

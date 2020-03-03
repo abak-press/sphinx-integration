@@ -17,6 +17,7 @@ end
 if RUBY_VERSION < '2.4'
   gem 'mock_redis', '< 0.20', require: false
   gem 'redis-namespace', '< 1.7.0', require: false
+  gem 'simplecov-html', '< 0.11.0', require: false
 end
 
 if RUBY_VERSION < '2.5'
