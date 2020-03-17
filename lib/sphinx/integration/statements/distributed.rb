@@ -9,27 +9,23 @@ module Sphinx
         end
 
         def update(data, matching: nil, where: {})
-          index_names do |index_name|
-            sql = ::Sphinx::Integration::Extensions::Riddle::Query::Update.
-              new(index_name, data, where.merge!(sphinx_deleted: 0), prepare_matching(matching)).
-              to_sql
+          sql = ::Sphinx::Integration::Extensions::Riddle::Query::Update.
+            new(index_name, data, where.merge!(sphinx_deleted: 0), prepare_matching(matching)).
+            to_sql
 
-            write(sql)
+          write(sql)
 
-            yield(index_name, sql) if block_given?
-          end
+          yield(sql) if block_given?
         end
 
         def soft_delete(document_id)
-          index_names do |index_name|
-            sql = ::Sphinx::Integration::Extensions::Riddle::Query::Update.
-              new(index_name, {sphinx_deleted: 1}, {id: document_id, sphinx_deleted: 0}, nil).
-              to_sql
+          sql = ::Sphinx::Integration::Extensions::Riddle::Query::Update.
+            new(index_name, {sphinx_deleted: 1}, {id: document_id, sphinx_deleted: 0}, nil).
+            to_sql
 
-            write(sql)
+          write(sql)
 
-            yield(index_name, sql) if block_given?
-          end
+          yield(sql) if block_given?
         end
 
         def select(values, matching: nil, where: {}, where_not: {}, order_by: nil, limit: nil)
@@ -38,7 +34,7 @@ module Sphinx
 
           query = ::Riddle::Query::Select.new.reset_values.
             values(values).
-            from(first_index_name).
+            from(index_name).
             matching(prepare_matching(matching)).
             where(where).
             where_not(where_not).
@@ -81,11 +77,7 @@ module Sphinx
 
         private
 
-        def index_names
-          yield first_index_name
-        end
-
-        def first_index_name
+        def index_name
           @index.name
         end
 

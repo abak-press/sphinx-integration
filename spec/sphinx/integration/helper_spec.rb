@@ -15,6 +15,8 @@ describe Sphinx::Integration::Helper do
     context "when online indexing" do
       it do
         helper = described_class.new(default_options.merge(rotate: true, indexes: 'model_with_rt'))
+        expect_any_instance_of(Sphinx::Integration::Mysql::Replayer).to receive(:reset)
+        expect_any_instance_of(RedisMutex).to receive(:with_lock).and_yield
         expect(adapter).to receive(:index).with('model_with_rt_core')
         expect(::ThinkingSphinx::Configuration.instance.mysql_client).
           to receive(:write).with('TRUNCATE RTINDEX model_with_rt_rt0')
@@ -27,9 +29,11 @@ describe Sphinx::Integration::Helper do
     context "when offline indexing" do
       it do
         helper = described_class.new(default_options.merge(indexes: 'model_with_rt'))
+        expect_any_instance_of(Sphinx::Integration::Mysql::Replayer).to_not receive(:reset)
+        expect_any_instance_of(RedisMutex).to_not receive(:with_lock)
         expect(adapter).to receive(:index).with('model_with_rt_core')
         expect(::ThinkingSphinx::Configuration.instance.mysql_client).to_not receive(:write)
-        expect(::Sphinx::Integration::ReplayerJob).to receive(:enqueue).with('model_with_rt_core')
+        expect(::Sphinx::Integration::ReplayerJob).to_not receive(:enqueue)
         helper.index
         expect(ModelWithRt.sphinx_indexes.first.recent_rt.current).to eq 0
       end

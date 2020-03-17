@@ -118,6 +118,9 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
 
   def switch_rt
     recent_rt.switch
+  end
+
+  def truncate_prev_rt
     rt.within_partition(recent_rt.prev, &:truncate)
   end
 
@@ -168,8 +171,12 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     mutex(:indexing).locked?
   end
 
-  def indexing
-    mutex(:indexing).with_lock { yield }
+  def indexing(need_lock: true)
+    if need_lock
+      mutex(:indexing).with_lock { yield }
+    else
+      yield
+    end
   end
 
   def recent_rt
@@ -186,6 +193,10 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
 
   def plain
     @plain ||= ::Sphinx::Integration::Statements::Plain.new(self)
+  end
+
+  def core
+    @core ||= ::Sphinx::Integration::Statements::Core.new(self)
   end
 
   def rt
