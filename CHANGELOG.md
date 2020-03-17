@@ -1,6 +1,16 @@
+# v7.8.0
+
+* 2020-03-17 [dd53a22](../../commit/dd53a22) - __(TamarinEA)__ Release 7.8.0 
+* 2020-03-02 [8c32696](../../commit/8c32696) - __(TamarinEA)__ chore: use next drone 
+* 2020-03-02 [e1a333d](../../commit/e1a333d) - __(TamarinEA)__ chore: lock simplecov-html 
+* 2020-02-27 [e469419](../../commit/e469419) - __(TamarinEA)__ feature: delete prev rt rows when indexing 
+https://jira.railsc.ru/browse/GOODS-2250
+
+* 2020-02-26 [63ebe98](../../commit/63ebe98) - __(TamarinEA)__ feature: replay transmitter update from rt index 
+https://jira.railsc.ru/browse/GOODS-2250
+
 # v7.7.0
 
-* 2020-01-21 [dc1b1ca](../../commit/dc1b1ca) - __(TamarinEA)__ Release 7.7.0 
 * 2020-01-15 [36b6b6c](../../commit/36b6b6c) - __(TamarinEA)__ fix: split replayer by index name 
 https://jira.railsc.ru/browse/GOODS-2176
 
