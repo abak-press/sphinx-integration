@@ -1,6 +1,10 @@
+# v7.8.1
+
+* 2020-04-08 [0f7dcad](../../commit/0f7dcad) - __(Mikhail Nelaev)__ Release 7.8.1 
+* 2020-04-08 [1055404](../../commit/1055404) - __(Mikhail Nelaev)__ fix: do not modify transmitted records 
+
 # v7.8.0
 
-* 2020-03-17 [dd53a22](../../commit/dd53a22) - __(TamarinEA)__ Release 7.8.0 
 * 2020-03-02 [8c32696](../../commit/8c32696) - __(TamarinEA)__ chore: use next drone 
 * 2020-03-02 [e1a333d](../../commit/e1a333d) - __(TamarinEA)__ chore: lock simplecov-html 
 * 2020-02-27 [e469419](../../commit/e469419) - __(TamarinEA)__ feature: delete prev rt rows when indexing 
