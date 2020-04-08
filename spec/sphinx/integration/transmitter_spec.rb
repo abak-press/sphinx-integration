@@ -2,6 +2,7 @@ require 'spec_helper'
 
 describe Sphinx::Integration::Transmitter do
   let(:record) { mock_model ModelWithRt }
+  let(:records) { [record] }
   let(:transmitter) { described_class.new(record.class) }
   let(:client) { ::ThinkingSphinx::Configuration.instance.mysql_client }
   let(:plain_index) { record.class.sphinx_indexes.find(&:rt?).plain }
@@ -32,8 +33,8 @@ describe Sphinx::Integration::Transmitter do
         expect(client).to receive(:write).
           with("UPDATE model_with_rt_core SET sphinx_deleted = 1 WHERE " \
                "`id` IN (#{record.sphinx_document_id}) AND `sphinx_deleted` = 0")
-
-        transmitter.replace(record)
+        transmitter.replace(records)
+        expect(records.first).to eq record
       end
 
       context 'when indexing' do

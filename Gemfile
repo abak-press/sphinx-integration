@@ -18,8 +18,12 @@ if RUBY_VERSION < '2.4'
   gem 'mock_redis', '< 0.20', require: false
   gem 'redis-namespace', '< 1.7.0', require: false
   gem 'simplecov-html', '< 0.11.0', require: false
+  gem 'byebug', '< 11.1.0', require: false
 end
 
 if RUBY_VERSION < '2.5'
   gem 'sprockets', '< 4.0.0', require: false
 end
+
+gem 'pry', '< 0.13.0', require: false
+gem 'rspec-rails', '< 4.0.0', require: false
