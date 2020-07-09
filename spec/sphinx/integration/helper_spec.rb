@@ -18,6 +18,7 @@ describe Sphinx::Integration::Helper do
         expect_any_instance_of(Sphinx::Integration::Mysql::Replayer).to receive(:reset)
         expect_any_instance_of(RedisMutex).to receive(:with_lock).and_yield
         expect(adapter).to receive(:index).with('model_with_rt_core')
+        expect(helper).to receive(:sleep).with(60)
         expect(::ThinkingSphinx::Configuration.instance.mysql_client).
           to receive(:write).with('TRUNCATE RTINDEX model_with_rt_rt0')
         expect(::Sphinx::Integration::ReplayerJob).to receive(:enqueue).with('model_with_rt_core')
