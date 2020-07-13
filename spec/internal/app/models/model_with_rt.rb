@@ -12,6 +12,7 @@ class ModelWithRt < ActiveRecord::Base
 
     set_property :rt => true
     set_property :source_no_grouping => true
+    set_property :rotation_time => 1.minute
 
     mva_attribute :rubrics do |record|
       record.model_with_rt_rubrics.map(&:rubric_id)
