@@ -1,6 +1,11 @@
+# v7.9.0
+
+* 2020-07-29 [57a52b4](../../commit/57a52b4) - __(TamarinEA)__ Release 7.9.0 
+* 2020-07-09 [07ad2c9](../../commit/07ad2c9) - __(TamarinEA)__ feature: wait index rotation 
+https://jira.railsc.ru/browse/GOODS-2439
+
 # v7.8.1
 
-* 2020-04-08 [0f7dcad](../../commit/0f7dcad) - __(Mikhail Nelaev)__ Release 7.8.1 
 * 2020-04-08 [1055404](../../commit/1055404) - __(Mikhail Nelaev)__ fix: do not modify transmitted records 
 
 # v7.8.0
