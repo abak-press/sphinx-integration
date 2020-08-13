@@ -95,8 +95,7 @@ module Sphinx::Integration
       return if write_disabled?
 
       rt_indexes.each do |index|
-        index.distributed.update(data, matching: matching, where: where)
-        index.plain.update(data, matching: matching, where: where) if index.indexing?
+        retransmit(index, matching: matching, where: where)
       end
     end
 
@@ -121,7 +120,7 @@ module Sphinx::Integration
     end
     alias transmit_all transmit
 
-    # Перекладывает строчки из core в rt.
+    # Запись объектов в rt index по условию
     #
     # index     - ThinkingSphinx::Index
     # :matching - String
@@ -129,10 +128,9 @@ module Sphinx::Integration
     #
     # Returns nothing
     def retransmit(index, matching: nil, where: {})
-      index.plain.find_while_exists(PRIMARY_KEY, matching: matching, where: where) do |rows|
+      index.distributed.find_in_batches(primary_key: PRIMARY_KEY, matching: matching, where: where) do |rows|
         ids = rows.map { |row| row[PRIMARY_KEY].to_i }
         transmit(index, ids)
-        sleep 0.1 # empirical throttle number
       end
     end
 
