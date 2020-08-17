@@ -10,7 +10,7 @@ Gem::Specification.new do |gem|
   gem.email         = ["merkushin.m.s@gmail.com"]
   gem.description   = %q{Sphinx Integration}
   gem.summary       = %{sphinx-integration-#{Sphinx::Integration::VERSION}}
-  gem.homepage      = ''
+  gem.homepage      = 'https://github.com/abak-press/sphinx-integration'
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
