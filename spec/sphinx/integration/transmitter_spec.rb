@@ -6,6 +6,7 @@ describe Sphinx::Integration::Transmitter do
   let(:transmitter) { described_class.new(record.class) }
   let(:client) { ::ThinkingSphinx::Configuration.instance.mysql_client }
   let(:plain_index) { record.class.sphinx_indexes.find(&:rt?).plain }
+  let(:model_with_rt_index) { ModelWithRt.sphinx_indexes.first }
 
   before(:all) { ThinkingSphinx.context.define_indexes }
 
@@ -52,7 +53,7 @@ describe Sphinx::Integration::Transmitter do
           expect(client).
             to receive(:write).with("DELETE FROM model_with_rt_rt1 WHERE id = #{record.sphinx_document_id}")
 
-          ModelWithRt.sphinx_indexes.first.indexing do
+          model_with_rt_index.indexing do
             transmitter.replace(record)
           end
         end
@@ -122,7 +123,7 @@ describe Sphinx::Integration::Transmitter do
                " AND `sphinx_deleted` = 0")
         expect(plain_index).to receive(:soft_delete).with([record.sphinx_document_id]).ordered
 
-        ModelWithRt.sphinx_indexes.first.indexing do
+        model_with_rt_index.indexing do
           transmitter.delete(record)
         end
       end
@@ -137,26 +138,16 @@ describe Sphinx::Integration::Transmitter do
   end
 
   describe '#update_fields' do
-    context 'when indexing' do
-      it do
-        expect(client).to receive(:write).
-          with("UPDATE model_with_rt SET field = 2 WHERE MATCH('@id_idx 1') AND `id` = 1 AND `sphinx_deleted` = 0")
-        expect(plain_index).
-          to receive(:update).with({field: 2}, matching: "@id_idx 1", where: {id: 1, sphinx_deleted: 0})
+    it do
+      expect(client).to receive(:read).with(
+        "SELECT sphinx_internal_id FROM model_with_rt WHERE MATCH('@id_idx 1') AND `id` = 1" \
+          " AND `sphinx_internal_id` > 0 AND `sphinx_deleted` = 0" \
+          " ORDER BY `sphinx_internal_id` ASC LIMIT 1000 OPTION max_matches=5000"
+      ).once.ordered.and_return([{'sphinx_internal_id' => 11}, {'sphinx_internal_id' => 12}])
 
-        ModelWithRt.sphinx_indexes.first.indexing do
-          transmitter.update_fields({field: 2}, matching: "@id_idx 1", id: 1)
-        end
-      end
-    end
+      expect(transmitter).to receive(:transmit).with(model_with_rt_index, [11, 12])
 
-    context 'when not indexing' do
-      it do
-        expect(client).to receive(:write).
-          with("UPDATE model_with_rt SET field = 2 WHERE MATCH('@id_idx 1') AND `id` = 1 AND `sphinx_deleted` = 0")
-
-        transmitter.update_fields({field: 2}, matching: "@id_idx 1", id: 1)
-      end
+      transmitter.update_fields({field: 2}, matching: "@id_idx 1", id: 1)
     end
   end
 

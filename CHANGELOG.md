@@ -1,6 +1,12 @@
+# v7.10.0
+
+* 2020-08-16 [40006f2](../../commit/40006f2) - __(TamarinEA)__ chore: add homepage 
+* 2020-08-16 [cfce063](../../commit/cfce063) - __(TamarinEA)__ Release 7.10.0 
+* 2020-08-12 [6711e33](../../commit/6711e33) - __(TamarinEA)__ feature: use retransmit instead of update 
+https://jira.railsc.ru/browse/GOODS-2445
+
 # v7.9.0
 
-* 2020-07-29 [57a52b4](../../commit/57a52b4) - __(TamarinEA)__ Release 7.9.0 
 * 2020-07-09 [07ad2c9](../../commit/07ad2c9) - __(TamarinEA)__ feature: wait index rotation 
 https://jira.railsc.ru/browse/GOODS-2439
 
