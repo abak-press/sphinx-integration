@@ -133,7 +133,9 @@ describe Sphinx::Integration::Transmitter do
   describe '#update' do
     it "send valid quries to sphinx" do
       expect(transmitter).to receive(:update_fields)
-      transmitter.update(record, field: 123)
+      ActiveSupport::Deprecation.silence do
+        transmitter.update(record, field: 123)
+      end
     end
   end
 
@@ -147,7 +149,42 @@ describe Sphinx::Integration::Transmitter do
 
       expect(transmitter).to receive(:transmit).with(model_with_rt_index, [11, 12])
 
-      transmitter.update_fields({field: 2}, matching: "@id_idx 1", id: 1)
+      ActiveSupport::Deprecation.silence do
+        transmitter.update_fields({field: 2}, matching: "@id_idx 1", id: 1)
+      end
+    end
+
+    context 'when primary key conditions' do
+      it do
+        expect(client).to_not receive(:read)
+
+        expect(transmitter).to receive(:transmit).with(model_with_rt_index, [11])
+
+        ActiveSupport::Deprecation.silence do
+          transmitter.update_fields({field: 2}, matching: "@id_idx 1", sphinx_internal_id: 11)
+        end
+      end
+    end
+  end
+
+  describe '#replace_all' do
+    it do
+      expect(client).to receive(:read).with(
+        "SELECT sphinx_internal_id FROM model_with_rt WHERE MATCH('@id_idx 1') AND `id` = 1" \
+          " AND `sphinx_internal_id` > 0 AND `sphinx_deleted` = 0" \
+          " ORDER BY `sphinx_internal_id` ASC LIMIT 1000 OPTION max_matches=5000"
+      ).once.ordered.and_return([{'sphinx_internal_id' => 11}, {'sphinx_internal_id' => 12}])
+
+      expect(transmitter).to receive(:transmit).with(model_with_rt_index, [11, 12])
+
+      transmitter.replace_all(matching: "@id_idx 1", where: {id: 1})
+    end
+
+    context 'when primary key conditions' do
+      it do
+        expect { transmitter.replace_all(matching: "@id_idx 1", where: {sphinx_internal_id: 11}) }.
+          to raise_error(ArgumentError)
+      end
     end
   end
 

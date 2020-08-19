@@ -97,4 +97,13 @@ describe ActiveRecord::Base do
       ModelWithRt.transmitter_update([model1, model2])
     end
   end
+
+  describe '.transmitter_update_all' do
+    it do
+      expect_any_instance_of(Sphinx::Integration::Transmitter).
+        to receive(:replace_all).with(matching: '@id_idx 1', where: {id: 1})
+
+      ModelWithRt.transmitter_update_all(matching: '@id_idx 1', where: {id: 1})
+    end
+  end
 end
