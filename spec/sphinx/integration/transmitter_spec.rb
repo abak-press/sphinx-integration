@@ -144,7 +144,7 @@ describe Sphinx::Integration::Transmitter do
       expect(client).to receive(:read).with(
         "SELECT sphinx_internal_id FROM model_with_rt WHERE MATCH('@id_idx 1') AND `id` = 1" \
           " AND `sphinx_internal_id` > 0 AND `sphinx_deleted` = 0" \
-          " ORDER BY `sphinx_internal_id` ASC LIMIT 1000 OPTION max_matches=5000"
+          " ORDER BY `sphinx_internal_id` ASC LIMIT 100 OPTION max_matches=5000"
       ).once.ordered.and_return([{'sphinx_internal_id' => 11}, {'sphinx_internal_id' => 12}])
 
       expect(transmitter).to receive(:transmit).with(model_with_rt_index, [11, 12])
@@ -172,7 +172,7 @@ describe Sphinx::Integration::Transmitter do
       expect(client).to receive(:read).with(
         "SELECT sphinx_internal_id FROM model_with_rt WHERE MATCH('@id_idx 1') AND `id` = 1" \
           " AND `sphinx_internal_id` > 0 AND `sphinx_deleted` = 0" \
-          " ORDER BY `sphinx_internal_id` ASC LIMIT 1000 OPTION max_matches=5000"
+          " ORDER BY `sphinx_internal_id` ASC LIMIT 100 OPTION max_matches=5000"
       ).once.ordered.and_return([{'sphinx_internal_id' => 11}, {'sphinx_internal_id' => 12}])
 
       expect(transmitter).to receive(:transmit).with(model_with_rt_index, [11, 12])

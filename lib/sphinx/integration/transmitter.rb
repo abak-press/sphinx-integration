@@ -1,6 +1,7 @@
 module Sphinx::Integration
   class Transmitter
     PRIMARY_KEY = "sphinx_internal_id".freeze
+    TRANSMIT_BATCH_SIZE = 100
     TEMPLATE_ID = '%{ID}'.freeze
 
     attr_reader :klass
@@ -102,7 +103,12 @@ module Sphinx::Integration
       raise ArgumentError.new('Use replace with primary keys') if where.with_indifferent_access[PRIMARY_KEY]
 
       rt_indexes.each do |index|
-        index.distributed.find_in_batches(primary_key: PRIMARY_KEY, matching: matching, where: where) do |rows|
+        index.distributed.find_in_batches(
+          primary_key: PRIMARY_KEY,
+          batch_size: TRANSMIT_BATCH_SIZE,
+          matching: matching,
+          where: where
+        ) do |rows|
           ids = rows.map { |row| row[PRIMARY_KEY].to_i }
           transmit(index, ids)
         end
