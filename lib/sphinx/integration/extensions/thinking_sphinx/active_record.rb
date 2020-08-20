@@ -10,12 +10,19 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
       @transmitter ||= Sphinx::Integration::Transmitter.new(self)
     end
 
-    # Обновление отдельных атрибутов индекса по условию
-    #
-    # @see Sphinx::Integration::Transmitter#update_fields
+    # TODO: удалить
     def update_sphinx_fields(*args, **options)
       define_indexes
       transmitter.update_fields(*args, **options)
+    end
+    deprecate :update_sphinx_fields
+
+    # Обновление всех записей индекса по условию
+    #
+    # @see Sphinx::Integration::Transmitter#retransmit
+    def transmitter_update_all(matching: nil, where: {})
+      define_indexes
+      transmitter.replace_all(matching: matching, where: where)
     end
 
     def transmitter_update(ids)

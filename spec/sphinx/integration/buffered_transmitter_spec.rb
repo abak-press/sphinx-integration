@@ -146,29 +146,10 @@ describe Sphinx::Integration::BufferedTransmitter do
     end
   end
 
-  describe '#update' do
-    let(:calling) { ->(args) { buffered_transmitter.update(*args) } }
-
-    let(:calling_args) do
-      ->(index) { [mock_model(ModelWithRt, id: index), {"key_#{index}" => "value_#{index}"}] }
-    end
-
-    let(:transmitter_method) { :update }
-
-    context 'when asynchronous option is false (by default)' do
-      it_behaves_like 'not buffered calling'
-    end
-
-    context 'when asynchronous option is true' do
-      let(:buffered_transmitter_options) { {buffer_size: buffer_size, asynchronous: true} }
-      it_behaves_like 'not buffered calling'
-    end
-  end
-
-  describe '#update_fields' do
-    let(:calling) { ->(args) { buffered_transmitter.update_fields(*args) } }
-    let(:calling_args) { ->(index) { [{"key_#{index}" => "value_#{index}"}] } }
-    let(:transmitter_method) { :update_fields }
+  describe '#replace_all' do
+    let(:calling) { ->(args) { buffered_transmitter.replace_all(*args) } }
+    let(:calling_args) { ->(index) { [where: {"key_#{index}" => "value_#{index}"}] } }
+    let(:transmitter_method) { :replace_all }
 
     context 'when asynchronous option is false (by default)' do
       it_behaves_like 'not buffered calling'

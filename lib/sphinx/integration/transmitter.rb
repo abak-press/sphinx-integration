@@ -1,6 +1,7 @@
 module Sphinx::Integration
   class Transmitter
     PRIMARY_KEY = "sphinx_internal_id".freeze
+    TRANSMIT_BATCH_SIZE = 100
     TEMPLATE_ID = '%{ID}'.freeze
 
     attr_reader :klass
@@ -66,36 +67,51 @@ module Sphinx::Integration
       true
     end
 
-    # Обновление отдельных атрибутов записи
-    #
-    # record  - ActiveRecord::Base
-    # data    - Hash (:field => :value)
-    #
-    # Returns nothing
+    # TODO: удалить
     def update(record, data)
       return if write_disabled?
 
       update_fields(data, id: record.sphinx_document_id)
     end
+    deprecate :update
 
-    # Обновление отдельных атрибутов индекса по условию
-    #
-    # Массовое обновление колонок, при работающей полной переиндексации работает по следующей схеме.
-    # Во время индексации запросы записываются в лог. После переиндексации
-    # все эти обновления выполнятся вновь. То есть возможна временная недоуступность
-    # новых данных (максимум пару минут). Это связано с тем, что indexer ротирует core индексы,
-    # тем самым в core могут быть старые значения, а в rt обновляемых строк и вовсе не было.
-    #
-    # data      - Hash
-    # :matching - NilClass or String or Hash of [Symbol, String]
-    # where     - Hash
-    #
-    # Returns nothing
+    # TODO: удалить
     def update_fields(data, matching: nil, **where)
       return if write_disabled?
 
+      primary_keys = Array.wrap(where.with_indifferent_access[PRIMARY_KEY])
+
+      if primary_keys.present?
+        rt_indexes.each do |index|
+          transmit(index, primary_keys)
+        end
+      else
+        replace_all(matching: matching, where: where)
+      end
+    end
+    deprecate :update_fields
+
+    # Запись объектов в rt index по условию
+    #
+    # :matching - String
+    # where     - Hash
+    #
+    # Returns nothing
+    def replace_all(matching: nil, where: {})
+      return if write_disabled?
+
+      raise ArgumentError.new('Use replace with primary keys') if where.with_indifferent_access[PRIMARY_KEY]
+
       rt_indexes.each do |index|
-        retransmit(index, matching: matching, where: where)
+        index.distributed.find_in_batches(
+          primary_key: PRIMARY_KEY,
+          batch_size: TRANSMIT_BATCH_SIZE,
+          matching: matching,
+          where: where
+        ) do |rows|
+          ids = rows.map { |row| row[PRIMARY_KEY].to_i }
+          transmit(index, ids)
+        end
       end
     end
 
