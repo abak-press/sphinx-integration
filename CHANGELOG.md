@@ -1,7 +1,13 @@
+# v7.10.1
+
+* 2020-08-24 [1f06d38](../../commit/1f06d38) - __(TamarinEA)__ Release 7.10.1 
+* 2020-08-20 [ce0f1af](../../commit/ce0f1af) - __(TamarinEA)__ chore: use custom batch size when replace all 
+* 2020-08-19 [70fc928](../../commit/70fc928) - __(TamarinEA)__ fix: do not use find in batches when id present 
+https://jira.railsc.ru/browse/GOODS-2512
+
 # v7.10.0
 
 * 2020-08-16 [40006f2](../../commit/40006f2) - __(TamarinEA)__ chore: add homepage 
-* 2020-08-16 [cfce063](../../commit/cfce063) - __(TamarinEA)__ Release 7.10.0 
 * 2020-08-12 [6711e33](../../commit/6711e33) - __(TamarinEA)__ feature: use retransmit instead of update 
 https://jira.railsc.ru/browse/GOODS-2445
 
