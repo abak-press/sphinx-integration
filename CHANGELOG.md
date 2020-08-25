@@ -1,6 +1,10 @@
+# v7.10.2
+
+* 2020-08-25 [0416a61](../../commit/0416a61) - __(Andrew N. Shalaev)__ Release v7.10.2 
+* 2020-07-22 [083278d](../../commit/083278d) - __(Ilya Zhidkov)__ feature: decrease compress level for indexes copying https://jira.railsc.ru/browse/PC4-25477 
+
 # v7.10.1
 
-* 2020-08-24 [1f06d38](../../commit/1f06d38) - __(TamarinEA)__ Release 7.10.1 
 * 2020-08-20 [ce0f1af](../../commit/ce0f1af) - __(TamarinEA)__ chore: use custom batch size when replace all 
 * 2020-08-19 [70fc928](../../commit/70fc928) - __(TamarinEA)__ fix: do not use find in batches when id present 
 https://jira.railsc.ru/browse/GOODS-2512
