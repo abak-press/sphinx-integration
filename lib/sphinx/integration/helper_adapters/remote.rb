@@ -72,6 +72,10 @@ module Sphinx
       end
 
       class Remote < Base
+        AVG_ROTATION_TIME = 10
+        AVG_CLOSE_CONNECTIONS_TIME = 10
+        private_constant :AVG_ROTATION_TIME, :AVG_CLOSE_CONNECTIONS_TIME
+
         def initialize(*)
           super
 
@@ -98,11 +102,11 @@ module Sphinx
         end
 
         def suspend
-          set_servers_availability(false)
+          hosts.each { |host| disable_host(host) }
         end
 
         def resume
-          set_servers_availability(true)
+          hosts.each { |host| enable_host(host) }
         end
 
         def restart
@@ -117,6 +121,7 @@ module Sphinx
         def clean
           remove_files("#{config.searchd_file_path}/*")
           return unless config.configuration.searchd.binlog_path.present?
+
           remove_files("#{config.configuration.searchd.binlog_path}/*")
         end
 
@@ -126,17 +131,45 @@ module Sphinx
           @ssh.file_upload(sql_file.to_s, config.configuration.searchd.sphinxql_state) if sql_file.exist?
         end
 
-        def index(index_name)
-          exec_indexer(index_name)
+        def index(idx)
+          exec_indexer(idx.core_name)
           copy_indexes if hosts.many?
-          reload if rotate?
+
+          reload(idx) if rotate?
         end
 
-        def reload
-          @ssh.execute("kill", "-SIGHUP `cat #{config.configuration.searchd.pid_file}`")
+        # Public: gentle rotation indexes
+        #
+        # Returns nil
+        def reload(idx)
+          logger.info "Rotation #{idx.core_name}"
+          local_rotatition_time = idx.local_options[:rotation_time]
+
+          # behaviour by default
+          return sighup if local_rotatition_time.blank? || hosts.size == 1
+
+          hosts.each do |host|
+            begin
+              disable_host(host)
+
+              @ssh.within(host) { sighup }
+
+              sleep(local_rotatition_time)
+            ensure
+              enable_host(host)
+            end
+          end
         end
 
         private
+
+        def sighup
+          logger.info 'Sending SIGHUP to process. Waiting rotation...'
+
+          @ssh.execute('kill', "-SIGHUP `cat #{config.configuration.searchd.pid_file}`")
+
+          sleep(AVG_ROTATION_TIME)
+        end
 
         def indexer_args
           args = ["--config #{config.config_file}"]
@@ -166,6 +199,7 @@ module Sphinx
 
         def hosts
           return @hosts if @hosts
+
           @hosts = Array.wrap(config.address)
           @hosts = @hosts.select { |host| @options[:host] == host } if @options[:host].presence
           @hosts
@@ -179,11 +213,20 @@ module Sphinx
           @reindex_host ||= hosts.first
         end
 
-        def set_servers_availability(value)
-          hosts.each do |host|
-            config.client.class.server_pool.find_server(host).server_status.available = value
-            config.mysql_client.server_pool.find_server(host).server_status.available = value
-          end
+        def disable_host(host)
+          logger.info "Disable host #{host}"
+
+          config.client.class.server_pool.find_server(host).server_status.available = false
+          config.mysql_client.server_pool.find_server(host).server_status.available = false
+
+          sleep(AVG_CLOSE_CONNECTIONS_TIME)
+        end
+
+        def enable_host(host)
+          logger.info "Enable host #{host}"
+
+          config.client.class.server_pool.find_server(host).server_status.available = true
+          config.mysql_client.server_pool.find_server(host).server_status.available = true
         end
       end
     end

@@ -26,7 +26,7 @@ module Sphinx
           end
 
           def remote?
-           ::ThinkingSphinx::Configuration.instance.remote?
+            ::ThinkingSphinx::Configuration.instance.remote?
           end
         end
       end

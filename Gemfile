@@ -26,4 +26,4 @@ if RUBY_VERSION < '2.5'
 end
 
 gem 'pry', '< 0.13.0', require: false
-gem 'rspec-rails', '< 4.0.0', require: false
+gem 'rspec-rails', '~> 3.9.1', require: false
