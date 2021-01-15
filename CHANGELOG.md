@@ -1,6 +1,10 @@
+# v7.11.0
+
+* 2021-01-15 [35e46e8](../../commit/35e46e8) - __(Andrew N. Shalaev)__ Release v7.11.0 
+* 2020-12-30 [7a32189](../../commit/7a32189) - __(Andrew N. Shalaev)__ feature: gracefull rotation 
+
 # v7.10.2
 
-* 2020-08-25 [0416a61](../../commit/0416a61) - __(Andrew N. Shalaev)__ Release v7.10.2 
 * 2020-07-22 [083278d](../../commit/083278d) - __(Ilya Zhidkov)__ feature: decrease compress level for indexes copying https://jira.railsc.ru/browse/PC4-25477 
 
 # v7.10.1
