@@ -40,14 +40,14 @@ describe Sphinx::Integration::HelperAdapters::Local do
 
       it do
         expect(rye).to receive(:shell).with(:indexer, /--config/, "--rotate", 'index_name')
-        adapter.index('index_name')
+        adapter.index(double('Index', core_name: 'index_name'))
       end
     end
 
     context "when is offline" do
       it do
         expect(rye).to receive(:shell).with(:indexer, /--config/, 'index_name')
-        adapter.index('index_name')
+        adapter.index(double('Index', core_name: 'index_name'))
       end
     end
   end

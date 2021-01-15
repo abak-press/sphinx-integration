@@ -32,22 +32,24 @@ module Sphinx
         def clean
           remove_files("#{config.searchd_file_path}/*")
           return unless config.configuration.searchd.binlog_path.present?
+
           remove_files("#{config.configuration.searchd.binlog_path}/*")
         end
 
         def copy_config
           return if config.config_file == config.generated_config_file
+
           FileUtils.mkdir_p(File.dirname(config.config_file))
           FileUtils.cp(config.generated_config_file, config.config_file)
         end
 
-        def index(index_name)
+        def index(idx)
           FileUtils.mkdir_p(config.searchd_file_path)
 
           if rotate?
-            indexer("--rotate", index_name)
+            indexer('--rotate', idx.core_name)
           else
-            indexer(index_name)
+            indexer(idx.core_name)
           end
         end
 
