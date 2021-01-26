@@ -57,6 +57,20 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index::Builder
     end
   end
 
+  # Переименовывает CTE
+  #
+  # old_name - String, название сохранённого CTE
+  # new_name - String, новое название CTE
+  #
+  # При перемещении новое CTE (если оно не было сохранено заранее) попадёт в конец списка CTE.
+  # Можно указать то же название CTE, что переместит блок в конец списка CTE.
+  #
+  # Returns nothing
+  def rename_with(old_name, new_name)
+    with_block = @index.local_options[:source_cte].delete(old_name)
+    @index.local_options[:source_cte][new_name] = with_block
+  end
+
   # Формирует LEFT JOIN
   #
   # name - Symbol or Hash

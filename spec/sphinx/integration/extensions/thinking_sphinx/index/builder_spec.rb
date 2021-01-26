@@ -144,6 +144,42 @@ describe ThinkingSphinx::Index::Builder do
     it { expect(index.local_options[:source_cte][:_rubrics2]).to eq "select id from rubrics2" }
   end
 
+  describe 'rename with' do
+    context 'when different new name' do
+      let(:index) do
+        ThinkingSphinx::Index::Builder.generate(ModelWithDisk) do
+          with(:_rubrics1) { "select id from rubrics1" }
+          with(:_rubrics2) { "select id from rubrics2" }
+
+          rename_with(:_rubrics1, :_rubrics3)
+        end
+      end
+
+      it do
+        expect(index.local_options[:source_cte].size).to eq 2
+        expect(index.local_options[:source_cte][:_rubrics3]).to eq "select id from rubrics1"
+        expect(index.local_options[:source_cte].keys).to eq [:_rubrics2, :_rubrics3]
+      end
+    end
+
+    context 'when same new name' do
+      let(:index) do
+        ThinkingSphinx::Index::Builder.generate(ModelWithDisk) do
+          with(:_rubrics1) { "select id from rubrics1" }
+          with(:_rubrics2) { "select id from rubrics2" }
+
+          rename_with(:_rubrics1, :_rubrics1)
+        end
+      end
+
+      it do
+        expect(index.local_options[:source_cte].size).to eq 2
+        expect(index.local_options[:source_cte][:_rubrics1]).to eq "select id from rubrics1"
+        expect(index.local_options[:source_cte].keys).to eq [:_rubrics2, :_rubrics1]
+      end
+    end
+  end
+
   describe 'composite_index' do
     let(:index) do
       ThinkingSphinx::Index::Builder.generate(ModelWithDisk, nil) do
