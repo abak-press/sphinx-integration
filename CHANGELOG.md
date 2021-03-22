@@ -1,6 +1,12 @@
+# v7.12.0
+
+* 2021-03-22 [242e5b6](../../commit/242e5b6) - __(TamarinEA)__ Release 7.12.0 
+* 2021-02-25 [c23a527](../../commit/c23a527) - __(TamarinEA)__ chore: decrease buffer size 
+* 2021-01-26 [6cd4bec](../../commit/6cd4bec) - __(TamarinEA)__ feature: ability to rename cte 
+https://jira.railsc.ru/browse/GOODS-2607
+
 # v7.11.0
 
-* 2021-01-15 [35e46e8](../../commit/35e46e8) - __(Andrew N. Shalaev)__ Release v7.11.0 
 * 2020-12-30 [7a32189](../../commit/7a32189) - __(Andrew N. Shalaev)__ feature: gracefull rotation 
 
 # v7.10.2
