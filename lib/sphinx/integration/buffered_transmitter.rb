@@ -1,7 +1,7 @@
 module Sphinx
   module Integration
     class BufferedTransmitter < SimpleDelegator
-      DEFAULT_SIZE = 500
+      DEFAULT_SIZE = 100
       attr_reader :buffer_size
       alias transmitter __getobj__
 
