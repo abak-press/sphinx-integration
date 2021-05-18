@@ -29,6 +29,7 @@ module Sphinx
 end
 
 require 'sphinx/integration/version'
+require 'sphinx/integration/constants'
 require 'sphinx/integration/extensions'
 require 'sphinx/integration/errors'
 require 'sphinx/integration/railtie'
