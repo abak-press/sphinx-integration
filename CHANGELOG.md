@@ -1,6 +1,10 @@
+# v7.12.1
+
+* 2021-05-18 [8fd7f5c](../../commit/8fd7f5c) - __(Andrew N. Shalaev)__ Release v7.12.1 
+* 2021-05-18 [fbf729e](../../commit/fbf729e) - __(Andrew N. Shalaev)__ feature: add INT_INFINITY_VAL default constant 
+
 # v7.12.0
 
-* 2021-03-22 [242e5b6](../../commit/242e5b6) - __(TamarinEA)__ Release 7.12.0 
 * 2021-02-25 [c23a527](../../commit/c23a527) - __(TamarinEA)__ chore: decrease buffer size 
 * 2021-01-26 [6cd4bec](../../commit/6cd4bec) - __(TamarinEA)__ feature: ability to rename cte 
 https://jira.railsc.ru/browse/GOODS-2607
