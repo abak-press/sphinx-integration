@@ -85,7 +85,10 @@ describe Sphinx::Integration::HelperAdapters::Remote do
             with('for NAME in /path/data/*_core.tmp.*; do mv -f "${NAME}" "${NAME/\.tmp\./.new.}"; done')
           server = double("server", opts: {port: 22}, user: "sphinx", host: "s1.dev")
           expect(ssh).to receive(:without).with("s1.dev").and_yield(server)
-          expect(ssh).to receive(:execute).with("rsync", "-ptzv", "--bwlimit=70M", "--compress-level=1", any_args)
+          expect(ssh).to receive(:execute).with(
+            "ionice -c3 rsync", "-ptzv", "--bwlimit=70M", "--compress-level=1", '--rsync-path="ionice -c3 rsync"',
+            any_args
+          )
 
           expect(ssh).to receive(:execute).with("kill", /SIGHUP/).twice
 
@@ -114,7 +117,7 @@ describe Sphinx::Integration::HelperAdapters::Remote do
           expect(ssh).to receive(:execute).
             with('for NAME in /path/data/*_core.tmp.*; do mv -f "${NAME}" "${NAME/\.tmp\./.new.}"; done')
           expect(ssh).to_not receive(:without)
-          expect(ssh).to_not receive(:execute).with("rsync", any_args)
+          expect(ssh).to_not receive(:execute).with("ionice -c3 rsync", any_args)
           expect(ssh).to receive(:execute).with("kill", /SIGHUP/)
 
           adapter.index(double('Index', core_name: 'index_name', local_options: {rotation_time: 5 * 60}))
@@ -137,7 +140,10 @@ describe Sphinx::Integration::HelperAdapters::Remote do
           expect(ssh).to_not receive(:execute).with(/for NAME/)
           server = double("server", opts: {port: 22}, user: "sphinx", host: "s1.dev")
           expect(ssh).to receive(:without).with("s1.dev").and_yield(server)
-          expect(ssh).to receive(:execute).with("rsync", "-ptzv", "--bwlimit=70M", "--compress-level=1", any_args)
+          expect(ssh).to receive(:execute).with(
+            "ionice -c3 rsync", "-ptzv", "--bwlimit=70M", "--compress-level=1", '--rsync-path="ionice -c3 rsync"',
+            any_args
+          )
           expect(ssh).to_not receive(:execute).with("kill", /SIGHUP/)
 
           adapter.index(double('Index', core_name: 'index_name', local_options: {rotation_time: 5 * 60}))
@@ -157,7 +163,7 @@ describe Sphinx::Integration::HelperAdapters::Remote do
             with("indexer", "--config /path/sphinx.conf", 'index_name', exit_status: [0, 2])
           expect(ssh).to_not receive(:execute).with(/for NAME/)
           expect(ssh).to_not receive(:without)
-          expect(ssh).to_not receive(:execute).with("rsync", any_args)
+          expect(ssh).to_not receive(:execute).with("ionice -c3 rsync", any_args)
           expect(ssh).to_not receive(:execute).with("kill", /SIGHUP/)
 
           adapter.index(double('Index', core_name: 'index_name', local_options: {rotation_time: 5 * 60}))
