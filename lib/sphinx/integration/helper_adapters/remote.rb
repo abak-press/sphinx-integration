@@ -192,8 +192,15 @@ module Sphinx
           files = "#{config.searchd_file_path}/*_#{CORE_POSTFIX}#{'.new' if rotate?}.*"
 
           @ssh.without(reindex_host) do |server|
-            @ssh.execute("rsync", "-ptzv", "--bwlimit=70M", "--compress-level=1", "-e 'ssh -p #{server.opts[:port]}'",
-                         "#{server.user}@#{server.host}:#{files} #{config.searchd_file_path}")
+            @ssh.execute(
+              'ionice -c3 rsync',
+              '-ptzv',
+              '--bwlimit=70M',
+              '--compress-level=1',
+              '--rsync-path="ionice -c3 rsync"',
+              "-e 'ssh -p #{server.opts[:port]}'",
+              "#{server.user}@#{server.host}:#{files} #{config.searchd_file_path}"
+            )
           end
         end
 
