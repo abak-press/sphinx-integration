@@ -100,9 +100,11 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
     # добавлено выставление опции listen по на нашим правилам
     listen_ip = "0.0.0.0"
     mysql_port = @configuration.searchd.mysql41.is_a?(TrueClass) ? "9306" : @configuration.searchd.mysql41
+    mysql_port_vip = @configuration.searchd.mysql41_vip.presence || "9307"
     @configuration.searchd.listen = [
       "#{listen_ip}:#{@configuration.searchd.port}",
-      "#{listen_ip}:#{mysql_port}:mysql41"
+      "#{listen_ip}:#{mysql_port}:mysql41",
+      "#{listen_ip}:#{mysql_port_vip}:mysql41_vip"
     ]
   end
 
