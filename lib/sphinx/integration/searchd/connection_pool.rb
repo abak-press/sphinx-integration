@@ -5,7 +5,7 @@ module Sphinx
   module Integration
     module Searchd
       class ConnectionPool
-        MAXIMUM_RETRIES = 3
+        MAXIMUM_RETRIES = 2
 
         def initialize(server)
           @server = server
