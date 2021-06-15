@@ -38,15 +38,12 @@ module Sphinx
             end
           end
 
-          # Пришлось скопировать почти полносью
-          # Ну и метод красотой и не блещит, поэтому как то так
-          # Вся суть заклучается в тои, что в connect обернуть весь метод
           def request_with_pooling(command, messages)
-            response = ""
+            response = ''.dup
             status   = -1
             version  = 0
             length   = 0
-            message  = ::Riddle.encode(Array(messages).join(""), 'ASCII-8BIT')
+            message  = ::Riddle.encode(Array(messages).join(''), 'ASCII-8BIT')
 
             connect do |socket|
               case command
@@ -67,6 +64,7 @@ module Sphinx
               header = socket.recv(8)
               status, version, length = header.unpack('n2N')
 
+              # FIXME: use IO.select with timeout!!!
               while response.length < (length || 0)
                 part = socket.recv(length - response.length)
 
@@ -78,6 +76,13 @@ module Sphinx
 
               if response.empty? || response.length != length
                 raise ::Riddle::ResponseError, "No response from searchd (status: #{status}, version: #{version})"
+              end
+
+              # Если вернулся ответ Retry, то нужно попробовать
+              # отправить запрос на другую ноду, если имеется таковая
+              if ::Riddle::Client::Statuses[:retry] == status
+                message = response[4, response.length - 4]
+                raise ::Riddle::ResponseError, "searchd error (status: #{status}): #{message}"
               end
             end
 
@@ -93,7 +98,7 @@ module Sphinx
               length = response[0, 4].unpack('N*').first
               puts response[4, length]
               response[4 + length, response.length - 4 - length]
-            when ::Riddle::Client::Statuses[:error], ::Riddle::Client::Statuses[:retry]
+            when ::Riddle::Client::Statuses[:error]
               message = response[4, response.length - 4]
               klass = message[/out of bounds/] ? ::Riddle::OutOfBoundsError : ::Riddle::ResponseError
               raise klass, "searchd error (status: #{status}): #{message}"
