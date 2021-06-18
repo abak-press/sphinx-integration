@@ -5,6 +5,8 @@ module Sphinx
       module Riddle
         module Client
           MAXIMUM_RETRIES = 2
+          HEADER_LENGTH = 8
+          READ_TIMEOUT = 5
 
           extend ActiveSupport::Concern
 
@@ -39,7 +41,6 @@ module Sphinx
           end
 
           def request_with_pooling(command, messages)
-            response = ''.dup
             status   = -1
             version  = 0
             length   = 0
@@ -61,28 +62,22 @@ module Sphinx
                 socket.send request_header(command, message.length) + message, 0
               end
 
-              header = socket.recv(8)
+              header = ''.dup
+              read_with_timeout(socket, HEADER_LENGTH, header)
               status, version, length = header.unpack('n2N')
-
-              # FIXME: use IO.select with timeout!!!
-              while response.length < (length || 0)
-                part = socket.recv(length - response.length)
-
-                # will return 0 bytes if remote side closed TCP connection, e.g, searchd segfaulted.
-                break if part.length == 0 && socket.is_a?(TCPSocket)
-
-                response << part if part
-              end
-
-              if response.empty? || response.length != length
-                raise ::Riddle::ResponseError, "No response from searchd (status: #{status}, version: #{version})"
-              end
 
               # Если вернулся ответ Retry, то нужно попробовать
               # отправить запрос на другую ноду, если имеется таковая
+              # дальнейшее чтение из сокета ненужно, закроем его выше
               if ::Riddle::Client::Statuses[:retry] == status
-                message = response[4, response.length - 4]
-                raise ::Riddle::ResponseError, "searchd error (status: #{status}): #{message}"
+                raise ::Riddle::ResponseError, 'Searchd responded with retry error'
+              end
+
+              response = ''.dup
+              read_with_timeout(socket, lenght, response)
+
+              if response.empty? || response.bytesize != length
+                raise ::Riddle::ResponseError, "No response from searchd (status: #{status}, version: #{version})"
               end
             end
 
@@ -105,6 +100,28 @@ module Sphinx
             else
               raise ::Riddle::ResponseError, "Unknown searchd error (status: #{status})"
             end
+          end
+
+          # Private: читает из sock maxlength байт в outbuf используя read(2) syscall и select(2)
+          # после выставления флага на сокет O_NONBLOCK, с таймаутом timeout секунд
+          def read_with_timeout(sock, maxlength, outbuf, timeout: READ_TIMEOUT)
+            return '' if timeout == 0
+
+            sock_ready = IO.select(_read_fds = [sock], _write_fds = [], _exception_fds = [], 1)
+            if sock_ready.nil?
+              # Timeout
+              read_with_timeout(sock, maxlength, outbuf, timeout: timeout-1)
+            end
+
+            begin
+              outbuf << sock.read_nonblock(maxlength)
+            rescue IO::WaitReadable
+            end
+
+            # Read it all?
+            return outbuf if maxlength == outbuf.bytesize
+
+            read_with_timeout(sock, maxlength, outbuf, timeout: timeout-1)
           end
         end
       end
