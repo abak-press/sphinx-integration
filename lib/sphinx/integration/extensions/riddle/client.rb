@@ -1,4 +1,4 @@
-# coding: utf-8
+# frozen_string_literal: true
 module Sphinx
   module Integration
     module Extensions
@@ -6,7 +6,7 @@ module Sphinx
         module Client
           MAXIMUM_RETRIES = 2
           HEADER_LENGTH = 8
-          READ_TIMEOUT = 5
+          READ_TIMEOUT = 3
 
           extend ActiveSupport::Concern
 
@@ -41,6 +41,7 @@ module Sphinx
           end
 
           def request_with_pooling(command, messages)
+            response = ''.dup
             status   = -1
             version  = 0
             length   = 0
@@ -63,7 +64,7 @@ module Sphinx
               end
 
               header = ''.dup
-              read_with_timeout(socket, HEADER_LENGTH, header)
+              read_with_timeout!(socket, HEADER_LENGTH, header)
               status, version, length = header.unpack('n2N')
 
               # Если вернулся ответ Retry, то нужно попробовать
@@ -73,8 +74,7 @@ module Sphinx
                 raise ::Riddle::ResponseError, 'Searchd responded with retry error'
               end
 
-              response = ''.dup
-              read_with_timeout(socket, lenght, response)
+              read_with_timeout!(socket, length, response)
 
               if response.empty? || response.bytesize != length
                 raise ::Riddle::ResponseError, "No response from searchd (status: #{status}, version: #{version})"
@@ -104,14 +104,12 @@ module Sphinx
 
           # Private: читает из sock maxlength байт в outbuf используя read(2) syscall и select(2)
           # после выставления флага на сокет O_NONBLOCK, с таймаутом timeout секунд
-          def read_with_timeout(sock, maxlength, outbuf, timeout: READ_TIMEOUT)
-            return '' if timeout == 0
+          def read_with_timeout!(sock, maxlength, outbuf, timeout: READ_TIMEOUT)
+            raise ::Riddle::ResponseError, 'Timeout reading from socket' if timeout == 0
 
             sock_ready = IO.select(_read_fds = [sock], _write_fds = [], _exception_fds = [], 1)
-            if sock_ready.nil?
-              # Timeout
-              read_with_timeout(sock, maxlength, outbuf, timeout: timeout-1)
-            end
+            # Timeout
+            return read_with_timeout!(sock, maxlength, outbuf, timeout: timeout-1) if sock_ready.nil?
 
             begin
               outbuf << sock.read_nonblock(maxlength)
@@ -121,7 +119,7 @@ module Sphinx
             # Read it all?
             return outbuf if maxlength == outbuf.bytesize
 
-            read_with_timeout(sock, maxlength, outbuf, timeout: timeout-1)
+            read_with_timeout!(sock, maxlength, outbuf, timeout: timeout-1)
           end
         end
       end
