@@ -6,7 +6,6 @@ module Sphinx
         module Client
           MAXIMUM_RETRIES = 2
           HEADER_LENGTH = 8
-          READ_TIMEOUT = 3
 
           extend ActiveSupport::Concern
 
@@ -46,6 +45,7 @@ module Sphinx
             version  = 0
             length   = 0
             message  = ::Riddle.encode(Array(messages).join(''), 'ASCII-8BIT')
+            read_timeout = Integer(::Sphinx::Integration.fetch(:socket_read_timeout_sec))
 
             connect do |socket|
               case command
@@ -64,7 +64,7 @@ module Sphinx
               end
 
               header = ''.dup
-              read_with_timeout!(socket, HEADER_LENGTH, header)
+              read_with_timeout!(socket, HEADER_LENGTH, header, read_timeout)
               status, version, length = header.unpack('n2N')
 
               # Если вернулся ответ Retry, то нужно попробовать
@@ -74,7 +74,7 @@ module Sphinx
                 raise ::Riddle::ResponseError, 'Searchd responded with retry error'
               end
 
-              read_with_timeout!(socket, length, response)
+              read_with_timeout!(socket, length, response, read_timeout)
 
               if response.empty? || response.bytesize != length
                 raise ::Riddle::ResponseError, "No response from searchd (status: #{status}, version: #{version})"
@@ -104,7 +104,7 @@ module Sphinx
 
           # Private: читает из sock maxlength байт в outbuf используя read(2) syscall и select(2)
           # после выставления флага на сокет O_NONBLOCK, с таймаутом timeout секунд
-          def read_with_timeout!(sock, maxlength, outbuf, timeout: READ_TIMEOUT)
+          def read_with_timeout!(sock, maxlength, outbuf, timeout)
             raise ::Riddle::ResponseError, 'Timeout reading from socket' if timeout == 0
 
             sock_ready = IO.select(_read_fds = [sock], _write_fds = [], _exception_fds = [], 1)
