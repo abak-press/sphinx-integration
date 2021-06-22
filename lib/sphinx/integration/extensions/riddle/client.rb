@@ -109,7 +109,7 @@ module Sphinx
 
             sock_ready = IO.select(_read_fds = [sock], _write_fds = [], _exception_fds = [], 1)
             # Timeout
-            return read_with_timeout!(sock, maxlength, outbuf, timeout: timeout-1) if sock_ready.nil?
+            return read_with_timeout!(sock, maxlength, outbuf, timeout-1) if sock_ready.nil?
 
             begin
               outbuf << sock.read_nonblock(maxlength)
@@ -119,7 +119,7 @@ module Sphinx
             # Read it all?
             return outbuf if maxlength == outbuf.bytesize
 
-            read_with_timeout!(sock, maxlength, outbuf, timeout: timeout-1)
+            read_with_timeout!(sock, maxlength, outbuf, timeout-1)
           end
         end
       end
