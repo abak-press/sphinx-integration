@@ -49,7 +49,7 @@ module Sphinx
               raise
             else
               ::ThinkingSphinx.info("Error on server #{server}")
-              ::ThinkingSphinx.debug(e.backtrace.join("\n"))
+              ::ThinkingSphinx.debug("#{e.message}\n#{e.backtrace.join("\n")}")
             end
           end
         end
@@ -61,7 +61,7 @@ module Sphinx
         servers = if skip_servers.empty?
                     @servers
                   else
-                    @servers.select { |server| !skip_servers.include?(server) }
+                    @servers.reject { |server| skip_servers.include?(server) }
                   end
 
         best_servers = servers.select(&:fine?)
