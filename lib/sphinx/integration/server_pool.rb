@@ -20,12 +20,14 @@ module Sphinx
 
           if skip_servers.size >= @servers.size
             ::ThinkingSphinx.fatal("Error on servers: #{skip_servers.map(&:to_s).join(', ')}")
-            ::ThinkingSphinx.fatal("#{e.message}\n#{e.backtrace.join("\n")}")
+            ::ThinkingSphinx.debug("#{e.message}\n#{e.backtrace.join("\n")}")
             raise
           else
+            server_was = server
             server = choose(skip_servers)
-            ::ThinkingSphinx.info("Retrying with next server #{server}")
-            ::ThinkingSphinx.info("#{e.message}\n#{e.backtrace.join("\n")}")
+            ::ThinkingSphinx.error("#{server_was}: #{e.message}")
+            ::ThinkingSphinx.info("Retrying with next server #{server}, was #{server_was}")
+            ::ThinkingSphinx.debug(e.backtrace.join("\n"))
             retry
           end
         end
@@ -43,11 +45,11 @@ module Sphinx
 
             if skip_servers.size >= servers.size
               ::ThinkingSphinx.fatal("Error on servers: #{skip_servers.map(&:to_s).join(', ')}")
-              ::ThinkingSphinx.fatal("#{e.message}\n#{e.backtrace.join("\n")}")
+              ::ThinkingSphinx.debug("#{e.message}\n#{e.backtrace.join("\n")}")
               raise
             else
               ::ThinkingSphinx.info("Error on server #{server}")
-              ::ThinkingSphinx.info("#{e.message}\n#{e.backtrace.join("\n")}")
+              ::ThinkingSphinx.debug(e.backtrace.join("\n"))
             end
           end
         end
@@ -56,11 +58,11 @@ module Sphinx
       private
 
       def choose(skip_servers)
-        if skip_servers.any?
-          servers =  @servers.select { |server| !skip_servers.include?(server) }
-        else
-          servers = @servers
-        end
+        servers = if skip_servers.empty?
+                    @servers
+                  else
+                    @servers.select { |server| !skip_servers.include?(server) }
+                  end
 
         best_servers = servers.select(&:fine?)
 

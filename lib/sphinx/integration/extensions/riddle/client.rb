@@ -4,7 +4,6 @@ module Sphinx
     module Extensions
       module Riddle
         module Client
-          MAXIMUM_RETRIES = 2
           HEADER_LENGTH = 8
 
           extend ActiveSupport::Concern
