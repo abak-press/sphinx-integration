@@ -4,7 +4,6 @@ module Sphinx
     module Extensions
       module Riddle
         module Client
-          MAXIMUM_RETRIES = 2
           HEADER_LENGTH = 8
 
           extend ActiveSupport::Concern
@@ -45,7 +44,6 @@ module Sphinx
             version  = 0
             length   = 0
             message  = ::Riddle.encode(Array(messages).join(''), 'ASCII-8BIT')
-            read_timeout = Integer(::Sphinx::Integration.fetch(:socket_read_timeout_sec))
 
             connect do |socket|
               case command
@@ -63,8 +61,13 @@ module Sphinx
                 socket.send request_header(command, message.length) + message, 0
               end
 
+              # Receive header
               header = ''.dup
-              read_with_timeout!(socket, HEADER_LENGTH, header, read_timeout)
+              if read_timeout.nil?
+                header = socket.recv(HEADER_LENGTH)
+              else
+                nonblock_read!(socket, HEADER_LENGTH, header, read_timeout)
+              end
               status, version, length = header.unpack('n2N')
 
               # Если вернулся ответ Retry, то нужно попробовать
@@ -74,7 +77,12 @@ module Sphinx
                 raise ::Riddle::ResponseError, 'Searchd responded with retry error'
               end
 
-              read_with_timeout!(socket, length, response, read_timeout)
+              # Receive body
+              if read_timeout.nil?
+                block_read(socket, length, response)
+              else
+                nonblock_read!(socket, length, response, read_timeout)
+              end
 
               if response.empty? || response.bytesize != length
                 raise ::Riddle::ResponseError, "No response from searchd (status: #{status}, version: #{version})"
@@ -102,14 +110,32 @@ module Sphinx
             end
           end
 
+          def read_timeout
+            return @read_timeout if defined?(@read_timeout)
+
+            cfg_timeout = ::Sphinx::Integration[:socket_read_timeout_sec]
+            @read_timeout = cfg_timeout && Integer(cfg_timeout)
+          end
+
+          def block_read(socket, maxlength, response)
+            while response.length < (maxlength || 0)
+              part = socket.recv(maxlength - response.length)
+
+              # will return 0 bytes if remote side closed TCP connection, e.g, searchd segfaulted.
+              break if part.length == 0 && socket.is_a?(TCPSocket)
+
+              response << part if part
+            end
+          end
+
           # Private: читает из sock maxlength байт в outbuf используя read(2) syscall и select(2)
           # после выставления флага на сокет O_NONBLOCK, с таймаутом timeout секунд
-          def read_with_timeout!(sock, maxlength, outbuf, timeout)
+          def nonblock_read!(sock, maxlength, outbuf, timeout)
             raise ::Riddle::ResponseError, 'Timeout reading from socket' if timeout == 0
 
             sock_ready = IO.select(_read_fds = [sock], _write_fds = [], _exception_fds = [], 1)
             # Timeout
-            return read_with_timeout!(sock, maxlength, outbuf, timeout-1) if sock_ready.nil?
+            return nonblock_read!(sock, maxlength, outbuf, timeout - 1) if sock_ready.nil?
 
             begin
               outbuf << sock.read_nonblock(maxlength)
@@ -119,7 +145,7 @@ module Sphinx
             # Read it all?
             return outbuf if maxlength == outbuf.bytesize
 
-            read_with_timeout!(sock, maxlength, outbuf, timeout-1)
+            nonblock_read!(sock, maxlength, outbuf, timeout - 1)
           end
         end
       end
