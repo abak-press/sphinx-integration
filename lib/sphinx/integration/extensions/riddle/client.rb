@@ -40,52 +40,60 @@ module Sphinx
 
           def request_with_pooling(command, messages)
             response = ''.dup
+            header = ''.dup
+
             status   = -1
             version  = 0
             length   = 0
             message  = ::Riddle.encode(Array(messages).join(''), 'ASCII-8BIT')
 
             connect do |socket|
-              case command
-              when :search
-                if ::Riddle::Client::Versions[command] >= 0x118
-                  socket.send request_header(command, message.length) +
-                    [0, messages.length].pack('NN') + message, 0
+              begin
+                case command
+                when :search
+                  if ::Riddle::Client::Versions[command] >= 0x118
+                    socket.send request_header(command, message.length) +
+                      [0, messages.length].pack('NN') + message, 0
+                  else
+                    socket.send request_header(command, message.length) +
+                      [messages.length].pack('N') + message, 0
+                  end
+                when :status
+                  socket.send request_header(command, message.length), 0
                 else
-                  socket.send request_header(command, message.length) +
-                    [messages.length].pack('N') + message, 0
+                  socket.send request_header(command, message.length) + message, 0
                 end
-              when :status
-                socket.send request_header(command, message.length), 0
-              else
-                socket.send request_header(command, message.length) + message, 0
-              end
 
-              # Receive header
-              header = ''.dup
-              if read_timeout.nil?
-                header = socket.recv(HEADER_LENGTH)
-              else
-                nonblock_read!(socket, HEADER_LENGTH, header, read_timeout)
-              end
-              status, version, length = header.unpack('n2N')
+                # Receive header
+                if read_timeout.nil?
+                  header = socket.recv(HEADER_LENGTH)
+                else
+                  nonblock_read!(socket, HEADER_LENGTH, header, read_timeout)
+                end
+                status, version, length = header.unpack('n2N')
+                length = length.to_i
 
-              # Если вернулся ответ Retry, то нужно попробовать
-              # отправить запрос на другую ноду, если имеется таковая
-              # дальнейшее чтение из сокета ненужно, закроем его выше
-              if ::Riddle::Client::Statuses[:retry] == status
-                raise ::Riddle::ResponseError, 'Searchd responded with retry error'
-              end
+                # Если вернулся ответ Retry, то нужно попробовать
+                # отправить запрос на другую ноду, если имеется таковая
+                # дальнейшее чтение из сокета ненужно, закроем его выше
+                if ::Riddle::Client::Statuses[:retry] == status
+                  raise ::Riddle::ResponseError, 'Searchd responded with retry error'
+                end
 
-              # Receive body
-              if read_timeout.nil?
-                block_read(socket, length, response)
-              else
-                nonblock_read!(socket, length, response, read_timeout)
-              end
+                # Receive body
+                if read_timeout.nil?
+                  block_read(socket, length, response)
+                else
+                  nonblock_read!(socket, length, response, read_timeout)
+                end
 
-              if response.empty? || response.bytesize != length
-                raise ::Riddle::ResponseError, "No response from searchd (status: #{status}, version: #{version})"
+                if response.empty? || response.bytesize != length
+                  raise ::Riddle::ResponseError, "No response from searchd (status: #{status}, version: #{version})"
+                end
+              rescue Exception
+                response = ''.dup
+                header = ''.dup
+                raise
               end
             end
 
@@ -117,12 +125,12 @@ module Sphinx
             @read_timeout = cfg_timeout && Integer(cfg_timeout)
           end
 
-          def block_read(socket, maxlength, response)
-            while response.length < (maxlength || 0)
-              part = socket.recv(maxlength - response.length)
+          def block_read(sock, maxlength, response)
+            while response.bytesize < maxlength
+              part = sock.recv(maxlength - response.bytesize)
 
               # will return 0 bytes if remote side closed TCP connection, e.g, searchd segfaulted.
-              break if part.length == 0 && socket.is_a?(TCPSocket)
+              break if sock.is_a?(TCPSocket) && part.bytesize.zero?
 
               response << part if part
             end
@@ -130,22 +138,34 @@ module Sphinx
 
           # Private: читает из sock maxlength байт в outbuf используя read(2) syscall и select(2)
           # после выставления флага на сокет O_NONBLOCK, с таймаутом timeout секунд
+          #
+          # sock - BasicSocket
+          # maxlength - Integer
+          # outbuf - String
+          # timeout - Integer
+          #
+          # Returns String, возвращает заполненный outbuf
+          # Raises ::Riddle::ResponseError в случае таймаута
           def nonblock_read!(sock, maxlength, outbuf, timeout)
-            raise ::Riddle::ResponseError, 'Timeout reading from socket' if timeout == 0
+            raise ::Riddle::ResponseError, 'Timeout reading from socket' if timeout.zero?
 
             sock_ready = IO.select(_read_fds = [sock], _write_fds = [], _exception_fds = [], 1)
-            # Timeout
-            return nonblock_read!(sock, maxlength, outbuf, timeout - 1) if sock_ready.nil?
-
-            begin
-              outbuf << sock.read_nonblock(maxlength)
-            rescue IO::WaitReadable
+            if sock_ready.nil?
+              ::ThinkingSphinx.debug ['Timed out', sock, maxlength, outbuf, timeout].inspect
+              return nonblock_read!(sock, maxlength, outbuf, timeout - 1)
             end
 
-            # Read it all?
-            return outbuf if maxlength == outbuf.bytesize
+            while outbuf.bytesize < maxlength
+              begin
+                outbuf << sock.read_nonblock(maxlength - outbuf.bytesize)
+              rescue IO::WaitReadable => e
+                ::ThinkingSphinx.debug [e.class, e.message, sock, maxlength, outbuf, timeout].inspect
+                # No data in socket, go await
+                return nonblock_read!(sock, maxlength, outbuf, timeout - 1)
+              end
+            end
 
-            nonblock_read!(sock, maxlength, outbuf, timeout - 1)
+            outbuf
           end
         end
       end
