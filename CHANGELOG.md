@@ -1,6 +1,10 @@
+# v7.14.1
+
+* 2021-07-05 [723e611](../../commit/723e611) - __(Andrew N. Shalaev)__ Release v7.14.1 
+* 2021-07-05 [94fae41](../../commit/94fae41) - __(Andrew N. Shalaev)__ fix: add mysql_vip port only if present in cfg 
+
 # v7.14.0
 
-* 2021-07-05 [278ab68](../../commit/278ab68) - __(Andrew N. Shalaev)__ Release v7.14.0 
 * 2021-07-05 [7f294eb](../../commit/7f294eb) - __(Andrew N. Shalaev)__ feature: remove disable/enable host before rotation 
 https://jira.railsc.ru/browse/BPC-19000
 
