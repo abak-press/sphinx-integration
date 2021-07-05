@@ -6,7 +6,7 @@ describe Sphinx::Integration::HelperAdapters::Remote do
   let(:adapter) { described_class.new }
 
   before do
-    allow_any_instance_of(Sphinx::Integration::HelperAdapters::Remote).to receive(:sleep)
+    allow_any_instance_of(described_class).to receive(:sleep)
     class_double("Sphinx::Integration::HelperAdapters::SshProxy", new: ssh).as_stubbed_const
   end
 
@@ -39,6 +39,7 @@ describe Sphinx::Integration::HelperAdapters::Remote do
 
   describe "#suspend" do
     it do
+      expect(adapter).to receive(:sleep)
       adapter.suspend
       server_status = Sphinx::Integration::ServerStatus.new(ThinkingSphinx::Configuration.instance.address)
       expect(server_status.available?).to be false
@@ -92,12 +93,8 @@ describe Sphinx::Integration::HelperAdapters::Remote do
 
           expect(ssh).to receive(:execute).with("kill", /SIGHUP/).twice
 
-          expect(adapter).to receive(:disable_host) do |args|
-            expect(args).to match(/s\d\.dev/)
-          end.at_least(:twice)
-          expect(adapter).to receive(:enable_host) do |args|
-            expect(args).to match(/s\d\.dev/)
-          end.at_least(:twice)
+          expect(adapter).not_to receive(:disable_host)
+          expect(adapter).not_to receive(:enable_host)
 
           adapter.index(double('Index', core_name: 'index_name', local_options: {rotation_time: 5 * 60}))
         end
@@ -111,7 +108,7 @@ describe Sphinx::Integration::HelperAdapters::Remote do
         end
 
         it do
-          expect(ssh).to receive(:within).with('s1.dev').and_yield
+          expect(ssh).to receive(:within).with('s1.dev').twice.and_yield
           expect(ssh).to receive(:execute).
             with("indexer", "--config /path/sphinx.conf", "--rotate", "--nohup", 'index_name', exit_status: [0, 2])
           expect(ssh).to receive(:execute).

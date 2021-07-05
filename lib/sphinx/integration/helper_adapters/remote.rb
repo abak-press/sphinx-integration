@@ -72,9 +72,8 @@ module Sphinx
       end
 
       class Remote < Base
-        AVG_ROTATION_TIME = 10
-        AVG_CLOSE_CONNECTIONS_TIME = 10
-        private_constant :AVG_ROTATION_TIME, :AVG_CLOSE_CONNECTIONS_TIME
+        AVG_CLOSE_CONNECTIONS_TIME = 10.seconds
+        private_constant :AVG_CLOSE_CONNECTIONS_TIME
 
         def initialize(*)
           super
@@ -143,32 +142,15 @@ module Sphinx
         # Returns nil
         def reload(idx)
           logger.info "Rotation #{idx.core_name}"
-          local_rotatition_time = idx.local_options[:rotation_time]
 
-          # behaviour by default
-          return sighup if local_rotatition_time.blank? || hosts.size == 1
-
-          hosts.each do |host|
-            begin
-              disable_host(host)
-
-              @ssh.within(host) { sighup }
-
-              sleep(local_rotatition_time)
-            ensure
-              enable_host(host)
-            end
-          end
+          hosts.each { |host| @ssh.within(host) { sighup } }
         end
 
         private
 
         def sighup
-          logger.info 'Sending SIGHUP to process. Waiting rotation...'
-
           @ssh.execute('kill', "-SIGHUP `cat #{config.configuration.searchd.pid_file}`")
-
-          sleep(AVG_ROTATION_TIME)
+          logger.info 'SIGHUP sent'
         end
 
         def indexer_args
