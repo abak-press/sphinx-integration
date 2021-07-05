@@ -1,6 +1,11 @@
+# v7.14.0
+
+* 2021-07-05 [278ab68](../../commit/278ab68) - __(Andrew N. Shalaev)__ Release v7.14.0 
+* 2021-07-05 [7f294eb](../../commit/7f294eb) - __(Andrew N. Shalaev)__ feature: remove disable/enable host before rotation 
+https://jira.railsc.ru/browse/BPC-19000
+
 # v7.13.0
 
-* 2021-07-05 [5328c95](../../commit/5328c95) - __(Andrew N. Shalaev)__ Release v7.13.0 
 * 2021-06-25 [e519592](../../commit/e519592) - __(Andrew N. Shalaev)__ fix: partial nonblock reading + test coverage 
 * 2021-06-24 [8af7fde](../../commit/8af7fde) - __(Andrew N. Shalaev)__ feature: allow to use old fationed method for read from sock 
 * 2021-06-24 [4b1191c](../../commit/4b1191c) - __(Andrew N. Shalaev)__ feature: refactoring logging 
