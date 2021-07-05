@@ -20,6 +20,8 @@ module Sphinx::Integration
       end
     end
 
+    DEFAULT_ROTATION_TIME = 10.seconds
+
     def initialize(options = {})
       ::ThinkingSphinx.context.define_indexes
 
@@ -63,6 +65,7 @@ module Sphinx::Integration
           index.switch_rt if rotate_index
 
           @sphinx.index(index)
+          sleep(Integer(index.local_options[:rotation_time] || DEFAULT_ROTATION_TIME)) if rotate_index
 
           index.last_indexing_time.write
         end
