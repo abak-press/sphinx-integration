@@ -1,6 +1,37 @@
+# v7.13.0
+
+* 2021-07-05 [5328c95](../../commit/5328c95) - __(Andrew N. Shalaev)__ Release v7.13.0 
+* 2021-06-25 [e519592](../../commit/e519592) - __(Andrew N. Shalaev)__ fix: partial nonblock reading + test coverage 
+* 2021-06-24 [8af7fde](../../commit/8af7fde) - __(Andrew N. Shalaev)__ feature: allow to use old fationed method for read from sock 
+* 2021-06-24 [4b1191c](../../commit/4b1191c) - __(Andrew N. Shalaev)__ feature: refactoring logging 
+* Throw bactrace in debug mode only
+* Log previous server name
+
+https://jira.railsc.ru/browse/BPC-18844
+
+* 2021-06-22 [65f0f30](../../commit/65f0f30) - __(Andrew N. Shalaev)__ fix: wrong types of args 
+* 2021-06-21 [50c02ce](../../commit/50c02ce) - __(Andrew N. Shalaev)__ fix: configure read_timeout 
+* 2021-06-18 [4b0f420](../../commit/4b0f420) - __(Andrew N. Shalaev)__ fix: decrease timeout, freeze strings and fix some misspells 
+https://jira.railsc.ru/browse/BPC-18936
+
+* 2021-06-16 [4f9a737](../../commit/4f9a737) - __(Andrew N. Shalaev)__ fix: add timeout for reading from socket 
+https://jira.railsc.ru/browse/BPC-18936
+
+* 2021-06-14 [31c85c7](../../commit/31c85c7) - __(Andrew N. Shalaev)__ fix: query to another server if sphinx responded with retry error 
+https://jira.railsc.ru/browse/BPC-18802
+
+* 2021-06-12 [71873e2](../../commit/71873e2) - __(Andrew N. Shalaev)__ feature: add more configuration options 
+https://jira.railsc.ru/browse/BPC-18802
+
+* 2021-06-12 [6dfe983](../../commit/6dfe983) - __(Andrew N. Shalaev)__ feature: allow to configure _vip connections 
+https://jira.railsc.ru/browse/BPC-18802
+
+* 2021-06-03 [f5a2342](../../commit/f5a2342) - __(Andrew N. Shalaev)__ fix: do not pull docker images 
+* 2021-06-03 [a9a0697](../../commit/a9a0697) - __(Andrew N. Shalaev)__ feature: add ionice for rsync command 
+https://jira.railsc.ru/browse/BPC-18868
+
 # v7.12.1
 
-* 2021-05-18 [8fd7f5c](../../commit/8fd7f5c) - __(Andrew N. Shalaev)__ Release v7.12.1 
 * 2021-05-18 [fbf729e](../../commit/fbf729e) - __(Andrew N. Shalaev)__ feature: add INT_INFINITY_VAL default constant 
 
 # v7.12.0
