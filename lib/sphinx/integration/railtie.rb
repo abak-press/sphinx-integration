@@ -7,6 +7,8 @@ module Sphinx::Integration
   class Railtie < Rails::Railtie
     initializer 'sphinx_integration.configuration', before: 'thinking_sphinx.sphinx' do
       ThinkingSphinx::Configuration.include Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
+      Riddle::Configuration::Searchd.include Sphinx::Integration::Extensions::Riddle::Configuration::Searchd
+
       ThinkingSphinx.database_adapter = :postgresql
 
       ThinkingSphinx::AutoVersion.include Sphinx::Integration::Extensions::ThinkingSphinx::AutoVersion
@@ -28,7 +30,7 @@ module Sphinx::Integration
         ThinkingSphinx::Index,
         ThinkingSphinx::PostgreSQLAdapter
       ].each do |klass|
-        klass.send :include, "Sphinx::Integration::Extensions::#{klass.name}".constantize
+        klass.include "Sphinx::Integration::Extensions::#{klass.name}".constantize
       end
 
       ActiveSupport.on_load :active_record do
@@ -38,6 +40,7 @@ module Sphinx::Integration
 
     initializer "sphinx-integration.common", before: :load_config_initializers do |app|
       app.config.sphinx_integration = {
+        socket_read_timeout_sec: nil, # not constrained by default
         rebuild: {pass_sphinx_stop: false},
         # Custom DI container
         di: {

@@ -3,5 +3,6 @@ module Sphinx::Integration::Extensions
   module Riddle
     autoload :Query, 'sphinx/integration/extensions/riddle/query'
     autoload :Client, 'sphinx/integration/extensions/riddle/client'
+    autoload :Configuration, 'sphinx/integration/extensions/riddle/configuration'
   end
 end
