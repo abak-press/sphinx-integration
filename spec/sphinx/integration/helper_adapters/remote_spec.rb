@@ -75,9 +75,8 @@ describe Sphinx::Integration::HelperAdapters::Remote do
         end
 
         it do
-          expect(ssh).to receive(:within) do |args|
-            expect(args).to match(/s\d\.dev/)
-          end.at_least(:twice).and_yield
+          expect(ssh).to receive(:within).ordered.with('s1.dev').twice.and_yield
+          expect(ssh).to receive(:within).ordered.with('s2.dev').and_yield
 
           expect(ssh).to receive(:execute).
             with("indexer", "--config /path/sphinx.conf", "--rotate", "--nohup", 'index_name', exit_status: [0, 2])
@@ -95,6 +94,8 @@ describe Sphinx::Integration::HelperAdapters::Remote do
 
           expect(adapter).not_to receive(:disable_host)
           expect(adapter).not_to receive(:enable_host)
+
+          expect(adapter).to receive(:sleep).with(300).twice
 
           adapter.index(double('Index', core_name: 'index_name', local_options: {rotation_time: 5 * 60}))
         end
@@ -116,6 +117,8 @@ describe Sphinx::Integration::HelperAdapters::Remote do
           expect(ssh).to_not receive(:without)
           expect(ssh).to_not receive(:execute).with("ionice -c3 rsync", any_args)
           expect(ssh).to receive(:execute).with("kill", /SIGHUP/)
+
+          expect(adapter).to receive(:sleep).with(5 * 60)
 
           adapter.index(double('Index', core_name: 'index_name', local_options: {rotation_time: 5 * 60}))
         end
@@ -142,6 +145,7 @@ describe Sphinx::Integration::HelperAdapters::Remote do
             any_args
           )
           expect(ssh).to_not receive(:execute).with("kill", /SIGHUP/)
+          expect(adapter).not_to receive(:sleep)
 
           adapter.index(double('Index', core_name: 'index_name', local_options: {rotation_time: 5 * 60}))
         end
@@ -162,6 +166,7 @@ describe Sphinx::Integration::HelperAdapters::Remote do
           expect(ssh).to_not receive(:without)
           expect(ssh).to_not receive(:execute).with("ionice -c3 rsync", any_args)
           expect(ssh).to_not receive(:execute).with("kill", /SIGHUP/)
+          expect(adapter).not_to receive(:sleep)
 
           adapter.index(double('Index', core_name: 'index_name', local_options: {rotation_time: 5 * 60}))
         end

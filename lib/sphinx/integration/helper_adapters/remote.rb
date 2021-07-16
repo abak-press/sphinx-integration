@@ -73,7 +73,8 @@ module Sphinx
 
       class Remote < Base
         AVG_CLOSE_CONNECTIONS_TIME = 10.seconds
-        private_constant :AVG_CLOSE_CONNECTIONS_TIME
+        DEFAULT_ROTATION_TIME = 10.seconds
+        private_constant :AVG_CLOSE_CONNECTIONS_TIME, :DEFAULT_ROTATION_TIME
 
         def initialize(*)
           super
@@ -143,7 +144,13 @@ module Sphinx
         def reload(idx)
           logger.info "Rotation #{idx.core_name}"
 
-          hosts.each { |host| @ssh.within(host) { sighup } }
+          waiting_duration = idx.local_options[:rotation_time] || DEFAULT_ROTATION_TIME
+
+          hosts.each do |host|
+            @ssh.within(host) { sighup }
+
+            sleep(waiting_duration)
+          end
         end
 
         private

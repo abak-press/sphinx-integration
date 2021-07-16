@@ -4,8 +4,6 @@ describe Sphinx::Integration::Helper do
   let(:adapter) { instance_double("Sphinx::Integration::HelperAdapters::Local") }
   let(:default_options) { {sphinx_adapter: adapter} }
 
-  before { allow_any_instance_of(described_class).to receive(:sleep) }
-
   describe "#configure" do
     it do
       expect(ThinkingSphinx::Configuration.instance).to receive(:build).with(/test\.sphinx\.conf/)
@@ -19,7 +17,6 @@ describe Sphinx::Integration::Helper do
         helper = described_class.new(default_options.merge(rotate: true, indexes: 'model_with_rt'))
         expect_any_instance_of(Sphinx::Integration::Mysql::Replayer).to receive(:reset)
         expect_any_instance_of(RedisMutex).to receive(:with_lock).and_yield
-        expect(helper).to receive(:sleep).with(60)
         expect(adapter).to receive(:index) do |args|
           expect(args.core_name).to eq('model_with_rt_core')
         end
