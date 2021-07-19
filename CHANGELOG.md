@@ -1,6 +1,13 @@
+# v7.14.2
+
+* 2021-07-16 [f929aa7](../../commit/f929aa7) - __(Andrew N. Shalaev)__ Release v7.14.2 
+* 2021-07-16 [87af0f9](../../commit/87af0f9) - __(Andrew N. Shalaev)__ fix: wait before the previous node has rotated 
+https://jira.railsc.ru/browse/BPC-19000
+
+* 2021-07-19 [852a516](../../commit/852a516) - __(Andrew N. Shalaev)__ feature: add ruby 2.4 support 
+
 # v7.14.1
 
-* 2021-07-05 [723e611](../../commit/723e611) - __(Andrew N. Shalaev)__ Release v7.14.1 
 * 2021-07-05 [94fae41](../../commit/94fae41) - __(Andrew N. Shalaev)__ fix: add mysql_vip port only if present in cfg 
 
 # v7.14.0
