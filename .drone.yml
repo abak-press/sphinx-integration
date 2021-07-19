@@ -61,6 +61,17 @@ steps:
       RAILS_ENV: test
     <<: *spec_step_common
 
+  - name: Tests Ruby 2.4
+    environment:
+      COMPOSE_FILE_EXT: drone
+      DOCKER_RUBY_VERSION: 2.4
+      RUBY_IMAGE_TAG: 2.4-latest
+      POSTGRES_IMAGE_TAG: 9.6-latest
+      SPHINX_IMAGE_TAG: 2.2-latest
+      DATABASE_RESET: true
+      RAILS_ENV: test
+    <<: *spec_step_common
+
   - name: release
     image: abakpress/gem-publication:latest
     pull: if-not-exists
