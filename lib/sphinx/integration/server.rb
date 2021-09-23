@@ -24,6 +24,10 @@ module Sphinx
         error_rate.satisfy? && server_status.available?
       end
 
+      def busy?
+        server_status.busy?
+      end
+
       def to_s
         "<Server #{@host}:#{@port}>"
       end

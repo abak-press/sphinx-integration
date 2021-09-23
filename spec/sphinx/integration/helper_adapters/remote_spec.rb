@@ -72,9 +72,13 @@ describe Sphinx::Integration::HelperAdapters::Remote do
           stub_sphinx_conf(config_file: "/path/sphinx.conf",
                            searchd_file_path: "/path/data",
                            address: %w(s1.dev s2.dev))
+
+          allow(adapter).to receive(:with_busy_host).and_yield
         end
 
         it do
+          expect(adapter).to receive(:with_busy_host)
+
           expect(ssh).to receive(:within).ordered.with('s1.dev').twice.and_yield
           expect(ssh).to receive(:within).ordered.with('s2.dev').and_yield
 

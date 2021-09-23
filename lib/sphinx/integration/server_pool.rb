@@ -9,9 +9,9 @@ module Sphinx
         @servers.find { |server| server.host == host }
       end
 
-      def take
+      def take(take_into_account_busyness: false)
         skip_servers = Set.new
-        server = choose(skip_servers)
+        server = choose(skip_servers, take_into_account_busyness)
 
         begin
           yield server
@@ -24,7 +24,7 @@ module Sphinx
             raise
           else
             server_was = server
-            server = choose(skip_servers)
+            server = choose(skip_servers, take_into_account_busyness)
             ::ThinkingSphinx.error("#{server_was}: #{e.message}")
             ::ThinkingSphinx.info("Retrying with next server #{server}, was #{server_was}")
             ::ThinkingSphinx.debug(e.backtrace.join("\n"))
@@ -57,14 +57,16 @@ module Sphinx
 
       private
 
-      def choose(skip_servers)
+      def choose(skip_servers, take_into_account_busyness)
         servers = if skip_servers.empty?
                     @servers
                   else
                     @servers.reject { |server| skip_servers.include?(server) }
                   end
 
-        best_servers = servers.select(&:fine?)
+        best_servers = servers.select do |s|
+          (!take_into_account_busyness || !s.busy?) && s.fine?
+        end
 
         if best_servers.empty?
           @servers.min_by { |server| server.error_rate.value }
