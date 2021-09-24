@@ -147,9 +147,13 @@ module Sphinx
           waiting_duration = idx.local_options[:rotation_time] || DEFAULT_ROTATION_TIME
 
           hosts.each do |host|
-            @ssh.within(host) { sighup }
+            # 1. Снимаем _читающую_ нагрузку, если у нас несколько хостов
+            # 2. Посылаем сигнал чтобы сротировался индекс
+            with_busy_host(host) do
+              @ssh.within(host) { sighup }
 
-            sleep(waiting_duration)
+              sleep(waiting_duration)
+            end
           end
         end
 
@@ -210,7 +214,7 @@ module Sphinx
         end
 
         def disable_host(host)
-          logger.info "Disable host #{host}"
+          logger.info "Disable #{host}"
 
           config.client.class.server_pool.find_server(host).server_status.available = false
           config.mysql_client.server_pool.find_server(host).server_status.available = false
@@ -219,10 +223,26 @@ module Sphinx
         end
 
         def enable_host(host)
-          logger.info "Enable host #{host}"
+          logger.info "Enable #{host}"
 
           config.client.class.server_pool.find_server(host).server_status.available = true
           config.mysql_client.server_pool.find_server(host).server_status.available = true
+        end
+
+        def with_busy_host(host, &block)
+          return yield if hosts.size == 1
+
+          logger.info "Set #{host} as busy"
+          config.client.class.server_pool.find_server(host).server_status.busy = true
+          config.mysql_client.server_pool.find_server(host).server_status.busy = true
+          sleep(AVG_CLOSE_CONNECTIONS_TIME)
+
+          yield
+
+          logger.info "Reset #{host} busy status"
+
+          config.client.class.server_pool.find_server(host).server_status.busy = false
+          config.mysql_client.server_pool.find_server(host).server_status.busy = false
         end
       end
     end

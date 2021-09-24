@@ -1,8 +1,10 @@
 # frozen_string_literal: true
+
 module Sphinx
   module Integration
     module Extensions
       module Riddle
+        # Расширение для клиента бинарного протокола searchd
         module Client
           HEADER_LENGTH = 8
 
@@ -31,7 +33,7 @@ module Sphinx
           end
 
           def connect_with_pooling
-            self.class.server_pool.take do |server|
+            self.class.server_pool.take(take_into_account_busyness: true) do |server|
               server.take do |connection|
                 yield connection.socket
               end
