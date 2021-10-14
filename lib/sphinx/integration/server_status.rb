@@ -25,13 +25,13 @@ module Sphinx
 
       def busy?
         ::RequestStore.fetch(store_busyness_key) do
-          !(::Redis.current.hget(store_busyness_key, BUSY_FIELD) || 1).to_i.zero?
+          !::Redis.current.hget(store_busyness_key, BUSY_FIELD).to_i.zero?
         end
       end
 
       def busy=(bool)
         ::RequestStore.delete(store_busyness_key)
-        ::Redis.current.hset(redis_key, BUSY_FIELD, bool ? 1 : 0)
+        ::Redis.current.hset(store_busyness_key, BUSY_FIELD, bool ? 1 : 0)
       end
 
       private
