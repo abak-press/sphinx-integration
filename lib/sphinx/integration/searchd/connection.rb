@@ -1,7 +1,12 @@
+require 'socket'
+
 module Sphinx
   module Integration
     module Searchd
       class Connection
+        TIMEOUT = 5
+        private_constant :TIMEOUT
+
         def initialize(host, port)
           @host = host
           @port = port
@@ -10,7 +15,7 @@ module Sphinx
         def socket
           return @socket if @socket
 
-          @socket = TCPSocket.new(@host, @port)
+          @socket = ::Socket.tcp(@host, @port, connect_timeout: TIMEOUT)
           check_version
           @socket.send [1].pack('N'), 0
           core_header = [::Riddle::Client::Commands[:persist], 0, 4].pack("nnN")
