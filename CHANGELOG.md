@@ -1,6 +1,15 @@
+# v7.15.0
+
+* 2021-10-15 [8b6f09e](../../commit/8b6f09e) - __(Andrew N. Shalaev)__ Release v7.15.0 
+* 2021-10-14 [9831ccc](../../commit/9831ccc) - __(Andrew N. Shalaev)__ fix: set busy status properly 
+* 2021-09-23 [b2a93ca](../../commit/b2a93ca) - __(Andrew N. Shalaev)__ feature: add busy status for server, search consider busyness 
+https://jira.railsc.ru/browse/BPC-19494
+
+* 2021-09-20 [9ef8107](../../commit/9ef8107) - __(Andrew N. Shalaev)__ fix: use nonblock version of Socket connect 
+https://jira.railsc.ru/browse/BPC-19478
+
 # v7.14.2
 
-* 2021-07-16 [f929aa7](../../commit/f929aa7) - __(Andrew N. Shalaev)__ Release v7.14.2 
 * 2021-07-16 [87af0f9](../../commit/87af0f9) - __(Andrew N. Shalaev)__ fix: wait before the previous node has rotated 
 https://jira.railsc.ru/browse/BPC-19000
 
