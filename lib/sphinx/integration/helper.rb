@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require "logger"
 
 module Sphinx::Integration
@@ -8,6 +9,10 @@ module Sphinx::Integration
   end
 
   class Helper
+    SUCCESS = 'success'
+    FAILURE = 'failure'
+    private_constant :SUCCESS, :FAILURE
+
     %i(running? stop start suspend resume restart clean copy_config reload).each do |method_name|
       define_method(method_name) do
         begin
@@ -72,7 +77,17 @@ module Sphinx::Integration
           ::Sphinx::Integration::ReplayerJob.enqueue(index.core_name)
         end
       end
+      begin
+        Rails.application.config.sphinx_integration.fetch(:send_index_notification).try(:call, SUCCESS)
+      rescue StandardError => e
+        log("Error while sending success notification. Error: #{e}")
+      end
     rescue StandardError => error
+      begin
+        Rails.application.config.sphinx_integration.fetch(:send_index_notification).try(:call, FAILURE)
+      rescue StandardError => e
+        log("Error while sending failure notification. Error: #{e}")
+      end
       log_error(error)
       raise
     end
