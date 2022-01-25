@@ -71,6 +71,9 @@ module Sphinx::Integration
           }
         }
       }
+
+      app.config.sphinx_integration[:send_index_notification] = ->(subject) do
+      end
     end
 
     initializer 'sphinx_integration.rspec' do
