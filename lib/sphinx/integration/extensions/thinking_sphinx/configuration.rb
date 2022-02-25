@@ -1,6 +1,9 @@
 module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
   extend ActiveSupport::Concern
 
+  DEFAULT_MYSQL_PORT = 9306
+  private_constant :DEFAULT_MYSQL_PORT
+
   included do
     attr_accessor :remote, :user, :password, :exclude, :ssh_port, :ssh_password,
                   :log_level, :mysql_read_timeout, :mysql_connect_timeout,
@@ -16,9 +19,13 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
   def mysql_client
     return @mysql_client if @mysql_client
 
-    port = configuration.searchd.mysql41
-    port = 9306 if port.is_a?(TrueClass)
-    @mysql_client = Sphinx::Integration::Mysql::Client.new(shuffled_addresses, port)
+    @mysql_client = build_mysql_client(privileged: false)
+  end
+
+  def mysql_vip_client
+    return @mysql_vip_client if @mysql_vip_client
+
+    @mysql_vip_client = build_mysql_client(privileged: true)
   end
 
   def update_log
@@ -133,5 +140,15 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
         source.sql_attr_uint.delete :sphinx_internal_id
       }
     }
+  end
+
+  private
+
+  def build_mysql_client(privileged: false)
+    port = configuration.searchd.mysql41.presence
+    port = DEFAULT_MYSQL_PORT if port.nil? || port.is_a?(TrueClass)
+    vip_port = configuration.searchd.mysql41_vip.presence || port
+
+    ::Sphinx::Integration::Mysql::Client.new(shuffled_addresses, privileged ? vip_port : port)
   end
 end
