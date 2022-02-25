@@ -2,6 +2,9 @@ module Sphinx
   module Integration
     module Statements
       class Distributed
+        MATCHING_STMT_RE = /\@([^ ]+) ([^@]+)/.freeze
+        private_constant :MATCHING_STMT_RE
+
         delegate :read, :write, to: '::ThinkingSphinx::Configuration.instance.mysql_client'
 
         def initialize(index)
@@ -75,6 +78,11 @@ module Sphinx
           end
         end
 
+        # Public: отправит запрос в привилегированный порт
+        def write_to_vip_port(query)
+          ::ThinkingSphinx::Configuration.instance.mysql_vip_client.write(query)
+        end
+
         private
 
         def index_name
@@ -94,7 +102,7 @@ module Sphinx
             when Hash
               matching.map { |field, match| [composite_indexes_map[field] || field, match] }
             when String
-              matching.scan(/\@([^ ]+) ([^@]+)/).map do |field, match|
+              matching.scan(MATCHING_STMT_RE).map do |field, match|
                 field = field.to_sym
                 [composite_indexes_map[field] || field, match.strip]
               end

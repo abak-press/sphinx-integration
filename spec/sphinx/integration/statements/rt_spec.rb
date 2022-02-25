@@ -4,6 +4,7 @@ describe Sphinx::Integration::Statements::Rt do
   subject(:statements) { index.rt }
   let(:index) { ModelWithRt.sphinx_indexes.first }
   let(:client) { ::ThinkingSphinx::Configuration.instance.mysql_client }
+  let(:vip_client) { ::ThinkingSphinx::Configuration.instance.mysql_vip_client }
 
   describe "#replace" do
     context 'when single data' do
@@ -41,7 +42,9 @@ describe Sphinx::Integration::Statements::Rt do
 
   describe "#truncate" do
     it do
-      expect(client).to receive(:write).with("TRUNCATE RTINDEX model_with_rt_rt0")
+      expect(client).not_to receive(:write).with("TRUNCATE RTINDEX model_with_rt_rt0")
+      expect(vip_client).to receive(:write).with("TRUNCATE RTINDEX model_with_rt_rt0")
+
       statements.truncate
     end
   end

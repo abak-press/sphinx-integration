@@ -86,6 +86,9 @@ describe ThinkingSphinx::Index do
     it do
       expect(index.rt_name).to eq 'model_with_disk_rt0'
       expect(::ThinkingSphinx::Configuration.instance.mysql_client).
+        not_to receive(:write).with('TRUNCATE RTINDEX model_with_disk_rt1')
+
+      expect(::ThinkingSphinx::Configuration.instance.mysql_vip_client).
         to receive(:write).with('TRUNCATE RTINDEX model_with_disk_rt1')
 
       index.truncate_prev_rt
