@@ -42,8 +42,15 @@ module Sphinx
           yield(index_name, sql) if block_given?
         end
 
+        # Public: очищает real-time индекс
+        # Это привилегированная процедура, и запрос отправляется через vip-порт, что позволяет выполнить запрос
+        # в сфинксе в отдельном воркере вне общего пула потоков. Это даст гарантию того, что индексация завершится
+        # корректно.
+        # https://manual.manticoresearch.com/Connecting_to_the_server/MySQL_protocol#VIP-connection
+        #
+        # Returns nothing
         def truncate
-          write("TRUNCATE RTINDEX #{index_name}")
+          write_to_vip_port("TRUNCATE RTINDEX #{index_name}")
         end
 
         private
