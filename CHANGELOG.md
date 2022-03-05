@@ -1,6 +1,11 @@
+# v7.16.1
+
+* 2022-03-04 [76736f4](../../commit/76736f4) - __(git1-railsc)__ Release 7.16.1 
+* 2022-02-25 [ff9742f](../../commit/ff9742f) - __(Andrew N. Shalaev)__ fix: send TRUNCATE RTINDEX to privileged port 
+https://jira.railsc.ru/browse/BPC-20220
+
 # v7.16.0
 
-* 2022-01-25 [be55e7f](../../commit/be55e7f) - __(git2-railsc)__ Release 7.16.0 
 * 2022-01-13 [35b90c1](../../commit/35b90c1) - __(Gelani Geliskhanov)__ feat(index): added email notification after index 
 https://jira.railsc.ru/browse/PC4-27616
 
