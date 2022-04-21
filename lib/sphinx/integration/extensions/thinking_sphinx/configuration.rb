@@ -16,16 +16,31 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
     alias_method_chain :initial_model_directories, :integration
   end
 
+  def with_custom_read_timeout(timeout)
+    return yield unless timeout
+
+    old_timeout = mysql_read_timeout
+
+    begin
+      self.mysql_read_timeout = timeout
+      yield
+    ensure
+      self.mysql_read_timeout = old_timeout
+    end
+  end
+
   def mysql_client
     return @mysql_client if @mysql_client
 
     @mysql_client = build_mysql_client(privileged: false)
   end
 
-  def mysql_vip_client
-    return @mysql_vip_client if @mysql_vip_client
+  def mysql_vip_client(host = nil)
+    @mysql_vip_client ||= {}
 
-    @mysql_vip_client = build_mysql_client(privileged: true)
+    return @mysql_vip_client[host] if @mysql_vip_client[host]
+
+    @mysql_vip_client[host] = build_mysql_client(privileged: true, host: host)
   end
 
   def update_log
@@ -144,11 +159,11 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
 
   private
 
-  def build_mysql_client(privileged: false)
+  def build_mysql_client(privileged: false, host: nil)
     port = configuration.searchd.mysql41.presence
     port = DEFAULT_MYSQL_PORT if port.nil? || port.is_a?(TrueClass)
     vip_port = configuration.searchd.mysql41_vip.presence || port
 
-    ::Sphinx::Integration::Mysql::Client.new(shuffled_addresses, privileged ? vip_port : port)
+    ::Sphinx::Integration::Mysql::Client.new(host ? [host] : shuffled_addresses, privileged ? vip_port : port)
   end
 end

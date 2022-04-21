@@ -49,8 +49,8 @@ module Sphinx
         # https://manual.manticoresearch.com/Connecting_to_the_server/MySQL_protocol#VIP-connection
         #
         # Returns nothing
-        def truncate
-          write_to_vip_port("TRUNCATE RTINDEX #{index_name}")
+        def truncate(host = nil)
+          write_to_vip_port("TRUNCATE RTINDEX #{index_name}", host)
         end
 
         private
