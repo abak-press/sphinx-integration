@@ -79,11 +79,17 @@ module Sphinx
         end
 
         # Public: отправит запрос в привилегированный порт
-        def write_to_vip_port(query)
-          ::ThinkingSphinx::Configuration.instance.mysql_vip_client.write(query)
+        def write_to_vip_port(query, host = nil)
+          config.with_custom_read_timeout(Rails.application.config.sphinx_integration[:vip_client_read_timeout]) do
+            config.mysql_vip_client(host).write(query)
+          end
         end
 
         private
+
+        def config
+          ::ThinkingSphinx::Configuration.instance
+        end
 
         def index_name
           @index.name

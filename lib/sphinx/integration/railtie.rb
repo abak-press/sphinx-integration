@@ -41,6 +41,7 @@ module Sphinx::Integration
     initializer "sphinx-integration.common", before: :load_config_initializers do |app|
       app.config.sphinx_integration = {
         socket_read_timeout_sec: nil, # not constrained by default
+        vip_client_read_timeout: nil,
         rebuild: {pass_sphinx_stop: false},
         # Custom DI container
         di: {

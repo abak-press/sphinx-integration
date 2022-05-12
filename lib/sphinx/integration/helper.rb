@@ -73,7 +73,6 @@ module Sphinx::Integration
         end
 
         if rotate_index
-          index.truncate_prev_rt
           ::Sphinx::Integration::ReplayerJob.enqueue(index.core_name)
         end
       end
