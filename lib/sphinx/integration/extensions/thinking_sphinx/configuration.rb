@@ -40,7 +40,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
 
     return @mysql_vip_client[host] if @mysql_vip_client[host]
 
-    @mysql_vip_client[host] = build_mysql_client(privileged: true, host: host)
+    @mysql_vip_client[host] = build_mysql_client(privileged: true, address: host)
   end
 
   def update_log
@@ -157,13 +157,20 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
     }
   end
 
+  def build_mysql_client(privileged: false, address: shuffled_addresses)
+    ::Sphinx::Integration::Mysql::Client.new(address, privileged ? vip_port : port)
+  end
+
   private
 
-  def build_mysql_client(privileged: false, host: nil)
-    port = configuration.searchd.mysql41.presence
-    port = DEFAULT_MYSQL_PORT if port.nil? || port.is_a?(TrueClass)
-    vip_port = configuration.searchd.mysql41_vip.presence || port
+  def vip_port
+    configuration.searchd.mysql41_vip.presence || port
+  end
 
-    ::Sphinx::Integration::Mysql::Client.new(host ? [host] : shuffled_addresses, privileged ? vip_port : port)
+  def port
+    return @port if defined?(@port)
+
+    @port = configuration.searchd.mysql41.presence
+    @port.nil? || @port.is_a?(TrueClass) ? @port = DEFAULT_MYSQL_PORT : @port
   end
 end

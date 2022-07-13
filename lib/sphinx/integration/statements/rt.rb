@@ -2,6 +2,12 @@ module Sphinx
   module Integration
     module Statements
       class Rt < Distributed
+        def initialize(index)
+          super
+
+          @process_mutex = ::Redis::Mutex.new(RT_INDEXES_PROCESS_MUTEX_KEY, expire: RT_INDEXES_PROCESS_MUTEX_TTL)
+        end
+
         def within_partition(value)
           @partition = value
           yield self
@@ -20,6 +26,7 @@ module Sphinx
           query_keys = query_data.first.keys
 
           raise ArgumentError.new('invalid schema of data') unless query_data.all? { |item| item.keys == query_keys }
+
           query_values = query_data.map!(&:values)
 
           sql = ::Riddle::Query::Insert.
@@ -50,7 +57,22 @@ module Sphinx
         #
         # Returns nothing
         def truncate(host = nil)
-          write_to_vip_port("TRUNCATE RTINDEX #{index_name}", host)
+          delay = 60.seconds
+          retries_count = 15
+
+          begin
+            @process_mutex.lock!
+            write_to_vip_port("TRUNCATE RTINDEX #{index_name}", host)
+          rescue ::Redis::Mutex::LockError
+            if (retries_count -= 1) > 0
+              sleep delay
+              retry
+            end
+
+            raise
+          end
+        ensure
+          @process_mutex.unlock(_force = true)
         end
 
         private

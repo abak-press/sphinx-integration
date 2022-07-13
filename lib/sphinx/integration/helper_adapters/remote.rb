@@ -155,7 +155,7 @@ module Sphinx
               sleep(waiting_duration)
 
               if idx.rt?
-                logger.info 'Truncate RT...'
+                logger.info "Truncate RT on host #{host}..."
 
                 idx.truncate_prev_rt(host)
               end
