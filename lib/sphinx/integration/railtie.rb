@@ -28,7 +28,7 @@ module Sphinx::Integration
         ThinkingSphinx::Property,
         ThinkingSphinx::Search,
         ThinkingSphinx::Index,
-        ThinkingSphinx::PostgreSQLAdapter
+        ThinkingSphinx::PostgreSQLAdapter,
       ].each do |klass|
         klass.include "Sphinx::Integration::Extensions::#{klass.name}".constantize
       end
@@ -43,6 +43,7 @@ module Sphinx::Integration
         socket_read_timeout_sec: nil, # not constrained by default
         vip_client_read_timeout: nil,
         rebuild: {pass_sphinx_stop: false},
+        ionice_on_copy_indexes: true,
         # Custom DI container
         di: {
           loggers: {
@@ -63,14 +64,14 @@ module Sphinx::Integration
               logger.formatter = ::Logger::Formatter.new
               logger.level = ::Logger::INFO
               logger
-            }
+            },
           },
           error_notificator: ->(message) {
             client = ::Twinkle::Client
             client.create_message("sadness", "#{message} on #{`hostname`}", hashtags: ["#sphinx"]) if client.config.token
             client
-          }
-        }
+          },
+        },
       }
 
       app.config.sphinx_integration[:send_index_notification] = ->(subject) do
