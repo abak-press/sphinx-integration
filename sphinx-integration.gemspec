@@ -19,7 +19,7 @@ Gem::Specification.new do |gem|
 
   gem.metadata['allowed_push_host'] = 'https://gems.railsc.ru'
 
-  gem.add_runtime_dependency 'activesupport', '>= 4.0', '< 5.0'
+  gem.add_runtime_dependency 'activesupport', '>= 4.2.0', '< 5.0'
   gem.add_runtime_dependency 'redis-mutex', '>= 2.1'
   gem.add_runtime_dependency 'redis', '>= 3.0'
   gem.add_runtime_dependency 'mysql2', '>= 0.2.19b5'
