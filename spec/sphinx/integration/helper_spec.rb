@@ -23,7 +23,7 @@ describe Sphinx::Integration::Helper do
         expect(::ThinkingSphinx::Configuration.instance.mysql_client).
           not_to receive(:write).with('TRUNCATE RTINDEX model_with_rt_rt0')
         expect(::ThinkingSphinx::Configuration.instance.mysql_vip_client).
-          to receive(:write).with('TRUNCATE RTINDEX model_with_rt_rt0')
+          not_to receive(:write).with('TRUNCATE RTINDEX model_with_rt_rt0')
         expect(::Sphinx::Integration::ReplayerJob).to receive(:enqueue).with('model_with_rt_core')
         helper.index
         expect(ModelWithRt.sphinx_indexes.first.recent_rt.current).to eq 1

@@ -120,8 +120,8 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
     recent_rt.switch
   end
 
-  def truncate_prev_rt
-    rt.within_partition(recent_rt.prev, &:truncate)
+  def truncate_prev_rt(host = nil)
+    rt.within_partition(recent_rt.prev) { |p| p.truncate(host) }
   end
 
   def merged_with_core?

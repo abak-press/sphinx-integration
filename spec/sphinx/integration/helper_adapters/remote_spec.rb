@@ -101,7 +101,11 @@ describe Sphinx::Integration::HelperAdapters::Remote do
 
           expect(adapter).to receive(:sleep).with(300).twice
 
-          adapter.index(double('Index', core_name: 'index_name', local_options: {rotation_time: 5 * 60}))
+          adapter.index(double('Index',
+                               core_name: 'index_name',
+                               local_options: {rotation_time: 5 * 60},
+                               rt?: true,
+                               truncate_prev_rt: nil))
         end
       end
 
@@ -124,7 +128,12 @@ describe Sphinx::Integration::HelperAdapters::Remote do
 
           expect(adapter).to receive(:sleep).with(5 * 60)
 
-          adapter.index(double('Index', core_name: 'index_name', local_options: {rotation_time: 5 * 60}))
+          adapter.index(double('Index',
+                               core_name:
+                               'index_name',
+                               local_options: {rotation_time: 5 * 60},
+                               rt?: true,
+                               truncate_prev_rt: nil))
         end
       end
     end
