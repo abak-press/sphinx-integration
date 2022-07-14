@@ -1,10 +1,22 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe Sphinx::Integration::Statements::Rt do
   subject(:statements) { index.rt }
   let(:index) { ModelWithRt.sphinx_indexes.first }
-  let(:client) { ::ThinkingSphinx::Configuration.instance.mysql_client }
-  let(:vip_client) { ::ThinkingSphinx::Configuration.instance.mysql_vip_client }
+  let(:client) { ::Sphinx::Integration::Mysql::Client.new('127.0.0.1', 9306) }
+  let(:vip_client) { ::Sphinx::Integration::Mysql::Client.new('127.0.0.1', 9111) }
+
+  before do
+    allow_any_instance_of(::Sphinx::Integration::Mysql::Client).to receive_messages(
+      write: true,
+      read: []
+    )
+
+    allow(::ThinkingSphinx::Configuration.instance).to receive(:mysql_vip_client).and_return vip_client
+    allow(::ThinkingSphinx::Configuration.instance).to receive(:mysql_client).and_return client
+  end
 
   describe "#replace" do
     context 'when single data' do

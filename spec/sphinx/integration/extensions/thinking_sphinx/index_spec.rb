@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe ThinkingSphinx::Index do
@@ -83,13 +85,23 @@ describe ThinkingSphinx::Index do
   end
 
   describe '#truncate_prev_rt' do
+    let(:client) { ::Sphinx::Integration::Mysql::Client.new('127.0.0.1', 9306) }
+    let(:vip_client) { ::Sphinx::Integration::Mysql::Client.new('127.0.0.1', 9111) }
+
+    before do
+      allow_any_instance_of(::Sphinx::Integration::Mysql::Client).to receive_messages(
+        write: true,
+        read: []
+      )
+
+      allow(::ThinkingSphinx::Configuration.instance).to receive(:mysql_vip_client).and_return vip_client
+      allow(::ThinkingSphinx::Configuration.instance).to receive(:mysql_client).and_return client
+    end
+
     it do
       expect(index.rt_name).to eq 'model_with_disk_rt0'
-      expect(::ThinkingSphinx::Configuration.instance.mysql_client).
-        not_to receive(:write).with('TRUNCATE RTINDEX model_with_disk_rt1')
-
-      expect(::ThinkingSphinx::Configuration.instance.mysql_vip_client).
-        to receive(:write).with('TRUNCATE RTINDEX model_with_disk_rt1')
+      expect(client).not_to receive(:write).with('TRUNCATE RTINDEX model_with_disk_rt1')
+      expect(vip_client).to receive(:write).with('TRUNCATE RTINDEX model_with_disk_rt1')
 
       index.truncate_prev_rt
     end

@@ -160,11 +160,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Index
 
   def mutex(lock_name)
     @mutex ||= {}
-    @mutex[lock_name] ||= mutex_class.new("sphinx:index:#{name}:#{lock_name}", expire: MUTEX_EXPIRE)
-  end
-
-  def mutex_class
-    @mutex_class ||= defined?(::RedisMutex) ? ::RedisMutex : ::Redis::Mutex
+    @mutex[lock_name] ||= ::Sphinx.mutex_class.new("sphinx:index:#{name}:#{lock_name}", expire: MUTEX_EXPIRE)
   end
 
   def indexing?

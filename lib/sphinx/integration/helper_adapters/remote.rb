@@ -155,7 +155,7 @@ module Sphinx
               sleep(waiting_duration)
 
               if idx.rt?
-                logger.info 'Truncate RT...'
+                logger.info "Truncate RT on host #{host}..."
 
                 idx.truncate_prev_rt(host)
               end
@@ -191,12 +191,13 @@ module Sphinx
           files = "#{config.searchd_file_path}/*_#{CORE_POSTFIX}#{'.new' if rotate?}.*"
 
           @ssh.without(reindex_host) do |server|
+            rsync = ::Sphinx::Integration[:ionice_on_copy_indexes] ? 'ionice -c3 rsync' : 'rsync'
             @ssh.execute(
-              'ionice -c3 rsync',
+              rsync,
               '-ptzv',
               '--bwlimit=70M',
               '--compress-level=1',
-              '--rsync-path="ionice -c3 rsync"',
+              %(--rsync-path="#{rsync}"),
               "-e 'ssh -p #{server.opts[:port]}'",
               "#{server.user}@#{server.host}:#{files} #{config.searchd_file_path}"
             )
