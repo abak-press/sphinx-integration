@@ -9,6 +9,15 @@ require 'string_tools'
 module Sphinx
   RT_INDEXES_PROCESS_MUTEX_KEY = 'process_rt_indexes'
   RT_INDEXES_PROCESS_MUTEX_TTL = 3.hours
+
+  def self.mutex_class
+    @mutex_class ||= defined?(::RedisMutex) ? ::RedisMutex : ::Redis::Mutex
+  end
+
+  def self.mutex_lock_error_class
+    @mutex_lock_error_class ||= defined?(::RedisMutex) ? ::RedisMutex::LockError : ::Redis::Mutex::LockError
+  end
+
   module Integration
     extend SingleForwardable
 

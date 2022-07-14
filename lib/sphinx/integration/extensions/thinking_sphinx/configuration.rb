@@ -157,20 +157,11 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::Configuration
     }
   end
 
-  def build_mysql_client(privileged: false, address: shuffled_addresses)
-    ::Sphinx::Integration::Mysql::Client.new(address, privileged ? vip_port : port)
-  end
+  def build_mysql_client(privileged: false, address: nil)
+    cfg_port = configuration.searchd.mysql41.presence
+    port = cfg_port.nil? || cfg_port.is_a?(TrueClass) ? DEFAULT_MYSQL_PORT : cfg_port
+    vip_port = configuration.searchd.mysql41_vip.presence || port
 
-  private
-
-  def vip_port
-    configuration.searchd.mysql41_vip.presence || port
-  end
-
-  def port
-    return @port if defined?(@port)
-
-    @port = configuration.searchd.mysql41.presence
-    @port.nil? || @port.is_a?(TrueClass) ? @port = DEFAULT_MYSQL_PORT : @port
+    ::Sphinx::Integration::Mysql::Client.new(address.presence || shuffled_addresses, privileged ? vip_port : port)
   end
 end

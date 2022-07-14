@@ -5,7 +5,7 @@ module Sphinx
         def initialize(index)
           super
 
-          @process_mutex = ::Redis::Mutex.new(RT_INDEXES_PROCESS_MUTEX_KEY, expire: RT_INDEXES_PROCESS_MUTEX_TTL)
+          @process_mutex = ::Sphinx.mutex_class.new(RT_INDEXES_PROCESS_MUTEX_KEY, expire: RT_INDEXES_PROCESS_MUTEX_TTL)
         end
 
         def within_partition(value)
@@ -63,7 +63,7 @@ module Sphinx
           begin
             @process_mutex.lock!
             write_to_vip_port("TRUNCATE RTINDEX #{index_name}", host)
-          rescue ::Redis::Mutex::LockError
+          rescue ::Sphinx.mutex_lock_error_class
             if (retries_count -= 1) > 0
               sleep delay
               retry

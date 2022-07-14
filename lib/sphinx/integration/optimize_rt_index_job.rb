@@ -13,11 +13,12 @@ module Sphinx
       class << self
         def perform(options)
           indexes = rt_indexes(options.fetch(:index))
-          mutex = ::Redis::Mutex.new(RT_INDEXES_PROCESS_MUTEX_KEY, expire: RT_INDEXES_PROCESS_MUTEX_TTL)
+          mutex = ::Sphinx.mutex_class.new(RT_INDEXES_PROCESS_MUTEX_KEY, expire: RT_INDEXES_PROCESS_MUTEX_TTL)
+          addresses = Array.wrap(sphinx.address)
 
           begin
-            sphinx.address.each do |node|
-              vip_client = sphinx.build_mysql_client(addresses: node, privileged: true)
+            addresses.each do |node|
+              vip_client = sphinx.mysql_vip_client(node)
               disable_node(node)
 
               indexes.each { |index| optimize_rt_index(vip_client, index, mutex) }
@@ -25,7 +26,7 @@ module Sphinx
               enable_node(node)
             end
           ensure
-            sphinx.address.each { |node| enable_node(node) }
+            addresses.each { |node| enable_node(node) }
 
             mutex.unlock(_force = true)
           end
@@ -51,7 +52,7 @@ module Sphinx
           end
 
           notificator.call("🎸 real time indexes optimization done")
-        rescue ::Redis::Mutex::LockError
+        rescue ::Sphinx.mutext_lock_error_class
           logger.add(::Logger::ERROR, "optimize rt index #{index}: lock mutex error")
 
           if (attempt += 1) <= RETRY_MAX_ATTEMPTS
