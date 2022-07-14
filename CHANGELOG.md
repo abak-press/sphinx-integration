@@ -1,6 +1,14 @@
+# v7.17.0
+
+* 2022-07-14 [d9badda](../../commit/d9badda) - __(Gelani Geliskhanov)__ Release v7.17.0 
+move truncate into main block
+you should set vip_client_read_timeout in the project
+
+* 2022-04-21 [b5bd514](../../commit/b5bd514) - __(Gelani Geliskhanov)__ feat: move truncate into main block 
+https://jira.railsc.ru/browse/PC4-28154
+
 # v7.16.1
 
-* 2022-03-04 [76736f4](../../commit/76736f4) - __(git1-railsc)__ Release 7.16.1 
 * 2022-02-25 [ff9742f](../../commit/ff9742f) - __(Andrew N. Shalaev)__ fix: send TRUNCATE RTINDEX to privileged port 
 https://jira.railsc.ru/browse/BPC-20220
 

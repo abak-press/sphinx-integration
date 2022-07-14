@@ -153,6 +153,12 @@ module Sphinx
               @ssh.within(host) { sighup }
 
               sleep(waiting_duration)
+
+              if idx.rt?
+                logger.info 'Truncate RT...'
+
+                idx.truncate_prev_rt(host)
+              end
             end
           end
         end
