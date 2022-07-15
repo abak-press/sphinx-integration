@@ -25,7 +25,8 @@ module Sphinx
 
               enable_node(node)
             end
-            notificator.call("🎸 all rt-indexes optimization done")
+            logger.add(::Logger::INFO, 'optimization of all rt-indexes finished')
+            notificator.call("🎸 optimization of all rt-indexes finished")
           ensure
             addresses.each { |node| enable_node(node) }
 
@@ -49,11 +50,11 @@ module Sphinx
           logger.add(::Logger::INFO, "attemt ##{attempt} to optimize rt index #{index}")
           mutex.with_lock do
             client.read "OPTIMIZE INDEX #{index}"
+            sleep(3)
             check_optimization_finish(client)
           end
-
-          notificator.call("🎾 optimize #{index} on #{node} complete")
-        rescue ::Sphinx.mutext_lock_error_class
+          logger.add(::Logger::INFO, "optimize rt index #{index} complete")
+        rescue ::Sphinx.mutex_lock_error_class
           logger.add(::Logger::ERROR, "optimize rt index #{index}: lock mutex error")
 
           if (attempt += 1) <= RETRY_MAX_ATTEMPTS
