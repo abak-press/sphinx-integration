@@ -21,10 +21,11 @@ module Sphinx
               vip_client = sphinx.mysql_vip_client(node)
               disable_node(node)
 
-              indexes.each { |index| optimize_rt_index(vip_client, index, mutex) }
+              indexes.each { |index| optimize_rt_index(vip_client, index, mutex, node) }
 
               enable_node(node)
             end
+            notificator.call("🎸 all rt-indexes optimization done")
           ensure
             addresses.each { |node| enable_node(node) }
 
@@ -42,16 +43,16 @@ module Sphinx
           end
         end
 
-        def optimize_rt_index(client, index, mutex)
+        def optimize_rt_index(client, index, mutex, node)
           attempt = 1
 
           logger.add(::Logger::INFO, "attemt ##{attempt} to optimize rt index #{index}")
           mutex.with_lock do
-            client.write "OPTIMIZE INDEX #{index}"
+            client.read "OPTIMIZE INDEX #{index}"
             check_optimization_finish(client)
           end
 
-          notificator.call("🎸 real time indexes optimization done")
+          notificator.call("🎾 optimize #{index} on #{node} complete")
         rescue ::Sphinx.mutext_lock_error_class
           logger.add(::Logger::ERROR, "optimize rt index #{index}: lock mutex error")
 
@@ -61,7 +62,7 @@ module Sphinx
           end
 
           logger.add(::Logger::ERROR, "optimize rt index #{index}: mutex still locked")
-          notificator.call("😣 optimize rt index #{index}: mutex still locked")
+          notificator.call("😣 optimize #{index}: mutex still locked")
 
           raise
         rescue StandardError => e
