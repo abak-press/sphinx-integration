@@ -12,6 +12,7 @@ RSpec.describe Sphinx::Integration::OptimizeRtIndexJob do
     let(:server_status) { ::Sphinx::Integration::ServerStatus.new('127.0.0.1') }
 
     before do
+      allow(described_class).to receive(:sleep)
       allow_any_instance_of(::Sphinx::Integration::Mysql::Client).to receive_messages(
         write: true,
         read: []
@@ -26,11 +27,13 @@ RSpec.describe Sphinx::Integration::OptimizeRtIndexJob do
       allow(::ThinkingSphinx::Configuration.instance).to receive(:client).and_return riddle_client
     end
 
-    it do
+    it 'disables the node' do
       expect(server_status).to receive(:available=).ordered.with(false)
 
-      expect(vip_client).to receive(:write).ordered.with('OPTIMIZE INDEX model_with_rt_rt0')
-      expect(vip_client).to receive(:write).ordered.with('OPTIMIZE INDEX model_with_rt_rt1')
+      expect(vip_client).to receive(:read).ordered.with('OPTIMIZE INDEX model_with_rt_rt0')
+      expect(vip_client).to receive(:read).ordered.with('SHOW THREADS')
+      expect(vip_client).to receive(:read).ordered.with('OPTIMIZE INDEX model_with_rt_rt1')
+      expect(vip_client).to receive(:read).ordered.with('SHOW THREADS')
 
       expect(server_status).to receive(:available=).ordered.with(true).twice
 
@@ -39,18 +42,18 @@ RSpec.describe Sphinx::Integration::OptimizeRtIndexJob do
 
     context 'when optimization in progress' do
       before do
-        allow(described_class).to receive(:sleep)
-
         allow(vip_client).to receive(:read).with('SHOW THREADS').and_return(
           [{'Info' => 'SYSTEM OPTIMIZE'}],
           []
         )
       end
 
-      it do
+      it 'retries if in progress' do
+        expect(vip_client).to receive(:read).ordered.with('OPTIMIZE INDEX model_with_rt_rt0')
         # два rt-индекса, на первом 2 попытки чтения SHOW THREADS, на втором 1 попытка
-        expect(vip_client).to receive(:read).with('SHOW THREADS').exactly(3).times
-        expect(described_class).to receive(:sleep)
+        expect(vip_client).to receive(:read).ordered.with('SHOW THREADS').exactly(3).times
+        expect(vip_client).to receive(:read).ordered.with('OPTIMIZE INDEX model_with_rt_rt1')
+        expect(described_class).to receive(:sleep).exactly(3).times
         described_class.perform(index: 'model_with_rt')
       end
     end
