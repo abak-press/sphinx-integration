@@ -12,6 +12,7 @@ module Sphinx
 
       class << self
         def perform(options)
+          options.symbolize_keys!
           indexes = rt_indexes(options.fetch(:index))
           mutex = ::Sphinx.mutex_class.new(RT_INDEXES_PROCESS_MUTEX_KEY, expire: RT_INDEXES_PROCESS_MUTEX_TTL)
           addresses = Array.wrap(sphinx.address)
