@@ -1,6 +1,18 @@
+# v7.18.0
+
+* 2022-07-18 [f051cb3](../../commit/f051cb3) - __(git1-railsc)__ Release 7.18.0 
+* 2022-07-28 [5cdeb51](../../commit/5cdeb51) - __(Andrew N. Shalaev)__ fix: symbolize options keys 
+* 2022-07-15 [c5de5b8](../../commit/c5de5b8) - __(Andrew N. Shalaev)__ fix: add delay after send OPTIMIZE 
+* 2022-07-15 [79a795e](../../commit/79a795e) - __(Andrew N. Shalaev)__ fix: use read instead write and fix notifications 
+* 2022-07-14 [8a06846](../../commit/8a06846) - __(Andrew N. Shalaev)__ fix: additional specs 
+* 2022-07-13 [e5d2fcd](../../commit/e5d2fcd) - __(Andrew N. Shalaev)__ feat: optimize rt indexes job 
+https://jira.railsc.ru/browse/BPC-20841
+
+* 2022-07-13 [4c749e2](../../commit/4c749e2) - __(Andrew N. Shalaev)__ feat: remove old rubies and rails support 
+* 2022-07-13 [d5af4de](../../commit/d5af4de) - __(Andrew N. Shalaev)__ feat: configure ionice for rsync 
+
 # v7.17.0
 
-* 2022-07-14 [d9badda](../../commit/d9badda) - __(Gelani Geliskhanov)__ Release v7.17.0 
 move truncate into main block
 you should set vip_client_read_timeout in the project
 
