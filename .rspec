@@ -2,4 +2,3 @@
 --tty
 --format progress
 --order random
---fail-fast

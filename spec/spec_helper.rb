@@ -15,6 +15,9 @@ require 'rspec/rails'
 
 require 'mock_redis'
 
+Redis.silence_deprecations = true
+Redis.exists_returns_integer = false if Redis.respond_to?(:exists_returns_integer)
+
 Redis.current = MockRedis.new
 RedisClassy.redis = Redis.current
 Resque.redis = Redis.current
