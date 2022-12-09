@@ -27,7 +27,6 @@ module Sphinx
               enable_node(node)
             end
             logger.add(::Logger::INFO, 'optimization of all rt-indexes finished')
-            notificator.call("🎸 optimization of all rt-indexes finished")
           ensure
             addresses.each { |node| enable_node(node) }
 
