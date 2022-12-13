@@ -1,6 +1,10 @@
+# v7.18.1
+
+* 2022-12-09 [19d4b5c](../../commit/19d4b5c) - __(Andrew N. Shalaev)__ Release v7.18.1 
+* 2022-12-09 [75d5213](../../commit/75d5213) - __(Andrew N. Shalaev)__ feature(optimize rt idxs): disable info notification to telegram 
+
 # v7.18.0
 
-* 2022-07-18 [f051cb3](../../commit/f051cb3) - __(git1-railsc)__ Release 7.18.0 
 * 2022-07-28 [5cdeb51](../../commit/5cdeb51) - __(Andrew N. Shalaev)__ fix: symbolize options keys 
 * 2022-07-15 [c5de5b8](../../commit/c5de5b8) - __(Andrew N. Shalaev)__ fix: add delay after send OPTIMIZE 
 * 2022-07-15 [79a795e](../../commit/79a795e) - __(Andrew N. Shalaev)__ fix: use read instead write and fix notifications 
