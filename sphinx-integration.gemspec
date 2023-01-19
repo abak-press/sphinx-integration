@@ -27,7 +27,7 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency 'innertube'
   gem.add_runtime_dependency 'rye'
   gem.add_runtime_dependency 'riddle', '>= 1.5.8'
-  gem.add_runtime_dependency 'thinking-sphinx', '= 2.0.14'
+  gem.add_runtime_dependency 'thinking-sphinx', '~> 2.0.14'
   gem.add_runtime_dependency 'net-ssh'
   gem.add_runtime_dependency 'request_store', '>= 1.2.1'
   gem.add_runtime_dependency 'twinkle-client', '>= 0.2.0'
