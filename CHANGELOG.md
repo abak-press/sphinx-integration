@@ -1,6 +1,11 @@
+# v7.18.2
+
+* 2023-01-19 [bef21cd](../../commit/bef21cd) - __(Andrew N. Shalaev)__ Release v7.18.2 
+* 2023-01-19 [93e4510](../../commit/93e4510) - __(Andrew N. Shalaev)__ fix: do not ignore lock-files and use riddle from our source 
+* 2023-01-19 [0f89cac](../../commit/0f89cac) - __(Andrew N. Shalaev)__ fix: relax version of the thinking-sphinx 
+
 # v7.18.1
 
-* 2022-12-09 [19d4b5c](../../commit/19d4b5c) - __(Andrew N. Shalaev)__ Release v7.18.1 
 * 2022-12-09 [75d5213](../../commit/75d5213) - __(Andrew N. Shalaev)__ feature(optimize rt idxs): disable info notification to telegram 
 
 # v7.18.0
