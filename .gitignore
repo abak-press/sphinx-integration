@@ -4,7 +4,6 @@
 .config
 .yardoc
 .idea
-Gemfile.lock
 InstalledFiles
 _yardoc
 coverage
@@ -19,4 +18,3 @@ tmp
 combustion
 .ruby-version
 Makefile.local
-gemfiles/
