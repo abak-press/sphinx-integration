@@ -1,21 +1,22 @@
 require 'spec_helper'
 
 describe Sphinx::Integration::Transmitter do
-  let(:record) { mock_model ModelWithRt }
+  let(:model) { ModelWithRt }
+  let(:record) { mock_model model }
   let(:records) { [record] }
   let(:transmitter) { described_class.new(record.class) }
   let(:client) { ::ThinkingSphinx::Configuration.instance.mysql_client }
   let(:plain_index) { record.class.sphinx_indexes.find(&:rt?).plain }
-  let(:model_with_rt_index) { ModelWithRt.sphinx_indexes.first }
+  let(:model_with_rt_index) { model.sphinx_indexes.first }
 
   before(:all) { ThinkingSphinx.context.define_indexes }
 
   before do
-    allow(transmitter).to receive(:write_disabled?).and_return(false)
+    allow(transmitter).to receive(:write_disabled).and_return(false) if model != ::Product
 
     allow(record).to receive_messages(
       id: 1,
-      sphinx_document_id: (1 * ::ThinkingSphinx.context.indexed_models.size + ModelWithRt.sphinx_offset),
+      sphinx_document_id: (1 * ::ThinkingSphinx.context.indexed_models.size + model.sphinx_offset),
       exists_in_sphinx?: true,
       model_with_rt_rubrics: []
     )
@@ -59,14 +60,37 @@ describe Sphinx::Integration::Transmitter do
         end
       end
 
+      context 'when product' do
+        let(:model) { Product }
+
+        it do
+          expect(record.class.connection).to_not receive(:select_all)
+          expect(client).to_not receive(:write)
+
+          transmitter.replace(records)
+          expect(records.first).to eq record
+        end
+
+        context 'when indexing' do
+          it do
+            expect(record.class.connection).to_not receive(:select_all)
+            expect(client).to_not receive(:write)
+
+            model_with_rt_index.indexing do
+              transmitter.replace(record)
+            end
+          end
+        end
+      end
+
       it 'rasises error if need instances' do
         expect { transmitter.replace(record.id) }.to raise_error(/instance of ModelWithRt needed/)
       end
     end
 
     context 'when multi result from db' do
-      let(:record1) { mock_model ModelWithRt }
-      let(:record2) { mock_model ModelWithRt }
+      let(:record1) { mock_model model }
+      let(:record2) { mock_model model }
 
       before do
         allow(record1).to receive_messages(
@@ -101,6 +125,17 @@ describe Sphinx::Integration::Transmitter do
 
         transmitter.replace([record1, record2])
       end
+
+      context 'when product' do
+        let(:model) { Product }
+
+        it do
+          expect(record.class.connection).to_not receive(:select_all)
+          expect(client).to_not receive(:write)
+
+          transmitter.replace([record1, record2])
+        end
+      end
     end
   end
 
@@ -125,6 +160,27 @@ describe Sphinx::Integration::Transmitter do
 
         model_with_rt_index.indexing do
           transmitter.delete(record)
+        end
+      end
+    end
+
+    context 'when product' do
+      let(:model) { Product }
+
+      it do
+        expect(client).to_not receive(:write)
+
+        transmitter.delete(record)
+      end
+
+      context 'when indexing' do
+        it do
+          expect(client).to_not receive(:write)
+          expect(plain_index).to_not receive(:soft_delete)
+
+          model_with_rt_index.indexing do
+            transmitter.delete(record)
+          end
         end
       end
     end
@@ -165,6 +221,30 @@ describe Sphinx::Integration::Transmitter do
         end
       end
     end
+
+    context 'when product' do
+      let(:model) { Product }
+
+      it do
+        expect(client).to_not receive(:read)
+        expect(transmitter).to_not receive(:transmit)
+
+        ActiveSupport::Deprecation.silence do
+          transmitter.update_fields({field: 2}, matching: "@id_idx 1", id: 1)
+        end
+      end
+
+      context 'when primary key conditions' do
+        it do
+          expect(client).to_not receive(:read)
+          expect(transmitter).to_not receive(:transmit)
+
+          ActiveSupport::Deprecation.silence do
+            transmitter.update_fields({field: 2}, matching: "@id_idx 1", sphinx_internal_id: 11)
+          end
+        end
+      end
+    end
   end
 
   describe '#replace_all' do
@@ -184,6 +264,24 @@ describe Sphinx::Integration::Transmitter do
       it do
         expect { transmitter.replace_all(matching: "@id_idx 1", where: {sphinx_internal_id: 11}) }.
           to raise_error(ArgumentError)
+      end
+    end
+
+    context 'when product' do
+      let(:model) { Product }
+
+      it do
+        expect(client).to_not receive(:read)
+        expect(transmitter).to_not receive(:transmit).with(model_with_rt_index, [11, 12])
+
+        transmitter.replace_all(matching: "@id_idx 1", where: {id: 1})
+      end
+
+      context 'when primary key conditions' do
+        it do
+          expect { transmitter.replace_all(matching: "@id_idx 1", where: {sphinx_internal_id: 11}) }.
+            to_not raise_error
+        end
       end
     end
   end

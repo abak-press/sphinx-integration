@@ -115,6 +115,12 @@ module Sphinx::Integration
       end
     end
 
+    def write_disabled?
+      return true if klass == ::Product
+
+      write_disabled
+    end
+
     private
 
     # Запись объектов в rt index
