@@ -12,10 +12,7 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
 
     # TODO: удалить
     def update_sphinx_fields(*args, **options)
-      return true if transmitter.klass == ::Product
-
-      define_indexes
-      transmitter.update_fields(*args, **options)
+      true
     end
     deprecate :update_sphinx_fields
 
@@ -23,26 +20,15 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
     #
     # @see Sphinx::Integration::Transmitter#retransmit
     def transmitter_update_all(matching: nil, where: {})
-      return true if transmitter.klass == ::Product
-
-      define_indexes
-      transmitter.replace_all(matching: matching, where: where)
+      true
     end
 
     def transmitter_update(ids)
-      return true if transmitter.klass == ::Product
-
-      define_indexes
-
-      transmitter.replace(ids)
+      true
     end
 
     def transmitter_delete(ids)
-      return true if transmitter.klass == ::Product
-
-      define_indexes
-
-      transmitter.delete(ids)
+      true
     end
   end
 
@@ -62,16 +48,12 @@ module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
 
     # обновление данных в сфинксе
     def transmitter_update
-      return true if instance_of?(::Product)
-
-      self.class.transmitter.replace(self)
+      true
     end
 
     # удаление данных в сфинксе
     def transmitter_destroy
-      return true if instance_of?(::Product)
-
-      self.class.transmitter.delete(self)
+      true
     end
   end
 

@@ -5,7 +5,7 @@ RSpec.describe Sphinx::Integration::TransmitterJob do
 
   describe '.perform' do
     it do
-      expect_any_instance_of(Sphinx::Integration::Transmitter).to receive(:replace).with([model.id])
+      expect_any_instance_of(Sphinx::Integration::Transmitter).to_not receive(:replace).with([model.id])
 
       described_class.execute(ModelWithRt.to_s, 'replace', [model.id])
     end

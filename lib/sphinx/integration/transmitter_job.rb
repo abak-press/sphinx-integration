@@ -12,12 +12,8 @@ module Sphinx
       class << self
         def execute(class_name, action, ids)
           check_action(action)
-          klass = class_name.constantize
 
-          return true if klass == ::Product
-
-          klass.define_indexes
-          klass.transmitter.public_send(action, ids)
+          true
         end
 
         def enqueue(class_name, action, ids)

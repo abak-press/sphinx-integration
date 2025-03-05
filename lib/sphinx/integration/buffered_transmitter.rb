@@ -66,27 +66,7 @@ module Sphinx
       private
 
       def try_process_records(action)
-        result = true
-
-        return result if transmitter.klass == ::Product
-
-        if @buffer[action].size > @buffer_size
-          batch = @buffer[action].shift(@batch_size)
-
-          transmitter_result =
-            if @asynchronous
-              transmitter.enqueue_action(action, batch)
-            else
-              transmitter.public_send(action, batch)
-            end
-
-          result &= transmitter_result
-          result &= try_process_records(action)
-        else
-          result &= !transmitter.write_disabled?
-        end
-
-        result
+        true
       end
     end
   end
