@@ -60,23 +60,7 @@ module Sphinx::Integration
       log "Index sphinx"
 
       @indexes.each do |index|
-        next if index.name == 'product'
-
-        rotate_index = rotate? && index.rt?
-
-        ::Sphinx::Integration::Mysql::Replayer.new(index.core_name).reset if rotate_index
-
-        index.indexing(need_lock: rotate_index) do
-          index.switch_rt if rotate_index
-
-          @sphinx.index(index)
-
-          index.last_indexing_time.write
-        end
-
-        if rotate_index
-          ::Sphinx::Integration::ReplayerJob.enqueue(index.core_name)
-        end
+        log "Skip #{index.name} index"
       end
       begin
         Rails.application.config.sphinx_integration.fetch(:send_index_notification).try(:call, SUCCESS)

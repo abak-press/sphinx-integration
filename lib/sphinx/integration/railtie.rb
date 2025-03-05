@@ -93,7 +93,7 @@ module Sphinx::Integration
                 index.rt.truncate
               end
             else
-              Sphinx::Integration::Transmitter.write_disabled = false
+              Sphinx::Integration::Transmitter.write_disabled = true
             end
           end
         end

@@ -52,7 +52,7 @@ describe Sphinx::Integration::BufferedTransmitter do
 
       it do
         callings_args.each do |args|
-          expect(calling.call(args)).to be false # sphinx disabled
+          expect(calling.call(args)).to be true # sphinx disabled
           expect(transmitter).to_not have_received(transmitter_method)
         end
       end
@@ -74,7 +74,7 @@ describe Sphinx::Integration::BufferedTransmitter do
 
       it do
         callings_args.each do |args|
-          expect(calling.call(args)).to be false # sphinx disabled
+          expect(calling.call(args)).to be true # sphinx disabled
           expect(transmitter).to_not have_received(transmitter_method)
         end
       end
@@ -111,13 +111,9 @@ describe Sphinx::Integration::BufferedTransmitter do
               with(*transmitter_first_args + [expectation_batch.flatten] + transmitter_last_args)
 
           expect(transmitter).to_not have_received_batch
-          expect(calling.call(args)).to be false # sphinx disabled
+          expect(calling.call(args)).to be true # sphinx disabled
 
-          if expectation_batch.size == buffer_size
-            expect(transmitter).to have_received_batch
-          else
-            expect(transmitter).to_not have_received_batch
-          end
+          expect(transmitter).to_not have_received_batch
         end
       end
     end
@@ -209,8 +205,8 @@ describe Sphinx::Integration::BufferedTransmitter do
         expect(transmitter).to_not have_received(:replace)
         expect(transmitter).to_not have_received(:delete)
         buffered_transmitter.process_immediate
-        expect(transmitter).to have_received(:replace).with(replace_args.flatten)
-        expect(transmitter).to have_received(:delete).with(delete_args.flatten)
+        expect(transmitter).to_not have_received(:replace)
+        expect(transmitter).to_not have_received(:delete)
       end
 
       context 'when product' do

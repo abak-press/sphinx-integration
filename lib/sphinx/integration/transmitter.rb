@@ -116,9 +116,7 @@ module Sphinx::Integration
     end
 
     def write_disabled?
-      return true if klass == ::Product
-
-      write_disabled
+      true
     end
 
     private
