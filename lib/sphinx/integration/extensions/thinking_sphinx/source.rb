@@ -1,4 +1,5 @@
-# coding: utf-8
+# frozen_string_literal: true
+
 module Sphinx::Integration::Extensions::ThinkingSphinx::Source
   autoload :SQL, 'sphinx/integration/extensions/thinking_sphinx/source/sql'
   extend ActiveSupport::Concern

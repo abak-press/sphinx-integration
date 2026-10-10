@@ -1,8 +1,5 @@
-appraise 'rails3.2' do
-  gem 'rails', '~> 3.2.22'
-  gem 'strong_parameters'
-end
+# frozen_string_literal: true
 
-appraise 'rails4.0' do
-  gem 'rails', '~> 4.0.13'
+appraise 'rails4.2' do
+  gem 'rails', '~> 4.2'
 end

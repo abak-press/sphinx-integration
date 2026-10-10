@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module SphinxConf
   def stub_sphinx_conf(options)
     expect(YAML).to receive(:load).

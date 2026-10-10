@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Sphinx
   module Integration
     # A float value which decays exponentially toward 0 over time.

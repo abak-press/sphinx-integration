@@ -1,4 +1,5 @@
-# coding: utf-8
+# frozen_string_literal: true
+
 module ThinkingSphinx
   def self.indexing_mode=(mode)
     @indexing_mode = mode

@@ -1,4 +1,5 @@
-# coding: utf-8
+# frozen_string_literal: true
+
 [:start, :stop, :running_start, :index, :reindex, :rebuild, :configure].each do |task|
   Rake::Task["thinking_sphinx:#{task}"].clear_actions
 end

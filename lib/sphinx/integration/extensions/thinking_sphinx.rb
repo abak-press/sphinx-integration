@@ -1,4 +1,5 @@
-# coding: utf-8
+# frozen_string_literal: true
+
 require 'sphinx/integration/extensions/thinking_sphinx/indexing_mode'
 
 module Sphinx::Integration::Extensions::ThinkingSphinx
