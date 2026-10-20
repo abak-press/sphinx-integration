@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'redis-mutex'
 
 module Sphinx::Integration

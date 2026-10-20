@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Sphinx::Integration::Extensions::ThinkingSphinx::ActiveRecord
   extend ActiveSupport::Concern
 

@@ -1,11 +1,11 @@
-# coding: utf-8
+# frozen_string_literal: true
+
 require 'riddle/query/insert'
 
 module Sphinx::Integration::Extensions
   module Riddle
     module Query
       class Update < ::Riddle::Query::Insert
-
         def initialize(index, fields, where, matching)
           @index    = index
           @fields   = fields

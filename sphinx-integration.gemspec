@@ -37,7 +37,7 @@ Gem::Specification.new do |gem|
 
   gem.add_development_dependency 'rake'
   gem.add_development_dependency 'bundler', '>= 1.6'
-  gem.add_development_dependency 'rails', '< 4.1'
+  gem.add_development_dependency 'rails', '>= 4.2', '< 5'
   gem.add_development_dependency 'rspec', '>= 3.3'
   gem.add_development_dependency 'rspec-rails'
   gem.add_development_dependency 'appraisal', '>= 1.0.2'
